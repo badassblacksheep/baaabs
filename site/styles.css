@@ -444,6 +444,92 @@ nav a:focus-visible::after {
   font-weight: 700;
 }
 
+.status {
+  padding-block: clamp(100px, 13vw, 180px);
+  border-top: 1px solid var(--rule);
+  background:
+    radial-gradient(circle at 12% 15%, rgba(168, 85, 247, 0.14), transparent 30rem),
+    radial-gradient(circle at 88% 80%, rgba(255, 90, 31, 0.1), transparent 28rem),
+    #0d0b11;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(50px, 9vw, 150px);
+  align-items: end;
+}
+
+.status-heading h2 {
+  margin-bottom: 0;
+  font-size: clamp(3.4rem, 7.6vw, 8rem);
+}
+
+.status-copy {
+  font-size: clamp(1.1rem, 1.7vw, 1.4rem);
+}
+
+.status-copy p:last-child {
+  margin-bottom: 0;
+  color: var(--fleece-muted);
+}
+
+.status-roadmap {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: clamp(75px, 10vw, 135px);
+  padding: 0;
+  border-top: 1px solid var(--rule);
+  list-style: none;
+}
+
+.status-roadmap li {
+  position: relative;
+  min-height: 255px;
+  padding: 34px clamp(22px, 3vw, 45px);
+  border-right: 1px solid var(--rule);
+}
+
+.status-roadmap li:last-child {
+  border-right: 0;
+}
+
+.status-roadmap li::before {
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: 0;
+  height: 7px;
+  background: linear-gradient(90deg, var(--hot-pink), var(--poofer-orange));
+  content: "";
+}
+
+.status-roadmap .is-current::before {
+  width: 100%;
+}
+
+.status-roadmap span {
+  display: block;
+  margin-bottom: 50px;
+  color: var(--hot-pink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.status-roadmap strong {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 1.45rem;
+}
+
+.status-roadmap p {
+  margin: 0;
+  color: var(--fleece-muted);
+  font-size: 0.95rem;
+}
+
 .build {
   padding-block: clamp(100px, 14vw, 190px);
   color: var(--black-wool);
@@ -658,6 +744,7 @@ footer p {
   .intro,
   .identity-grid,
   .lineage,
+  .status-grid,
   .build-heading {
     grid-template-columns: 1fr;
   }
@@ -698,6 +785,20 @@ footer p {
   .lineage-family {
     width: min(72vw, 400px);
     margin-inline: auto;
+  }
+
+  .status-roadmap {
+    grid-template-columns: 1fr;
+  }
+
+  .status-roadmap li {
+    min-height: 220px;
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .status-roadmap li:last-child {
+    border-bottom: 0;
   }
 
   .build-heading > p:last-child {
