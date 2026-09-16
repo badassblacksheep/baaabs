@@ -530,6 +530,44 @@ nav a:focus-visible::after {
   font-size: 0.95rem;
 }
 
+.bus-report {
+  display: grid;
+  grid-template-columns: 0.58fr 1.42fr;
+  gap: clamp(50px, 9vw, 150px);
+  margin-top: clamp(85px, 11vw, 150px);
+  padding-top: clamp(60px, 8vw, 105px);
+  border-top: 1px solid var(--rule);
+}
+
+.bus-report-heading h3 {
+  max-width: 430px;
+  margin: 0;
+  font-size: clamp(2.8rem, 5vw, 5.4rem);
+  text-wrap: balance;
+}
+
+.bus-report-body {
+  max-width: 800px;
+  font-size: clamp(1.05rem, 1.45vw, 1.25rem);
+}
+
+.bus-report-body p {
+  margin-bottom: 32px;
+}
+
+.bus-report-body p:last-child {
+  margin-bottom: 0;
+}
+
+.bus-report-body p:first-child::first-letter {
+  float: left;
+  margin: 0.08em 0.12em 0 0;
+  color: var(--hot-pink);
+  font-size: 4.5em;
+  font-weight: 700;
+  line-height: 0.72;
+}
+
 .build {
   padding-block: clamp(100px, 14vw, 190px);
   color: var(--black-wool);
@@ -745,6 +783,7 @@ footer p {
   .identity-grid,
   .lineage,
   .status-grid,
+  .bus-report,
   .build-heading {
     grid-template-columns: 1fr;
   }
