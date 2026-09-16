@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://badassblacksheep.github.io/baaabs/sitemap.xml
