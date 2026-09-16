@@ -383,33 +383,52 @@ nav a:focus-visible::after {
   padding-block: 120px;
 }
 
-.lineage-mark {
+.lineage-family {
   position: relative;
-  display: grid;
   width: min(100%, 430px);
-  aspect-ratio: 1;
-  place-items: center;
-  color: var(--warm-fleece);
+  padding: clamp(28px, 4vw, 54px);
   border: 2px solid var(--hot-pink);
-  font-size: clamp(10rem, 24vw, 20rem);
-  font-weight: 700;
-  line-height: 1;
   transform: rotate(-6deg);
+  isolation: isolate;
 }
 
-.lineage-mark::before,
-.lineage-mark::after {
+.lineage-family::before,
+.lineage-family::after {
   position: absolute;
-  inset: 8%;
+  z-index: -1;
+  inset: 5%;
   border: 1px solid var(--electric-violet);
   content: "";
   transform: rotate(13deg);
 }
 
-.lineage-mark::after {
-  inset: 17%;
+.lineage-family::after {
+  inset: 12%;
   border-color: var(--poofer-orange);
   transform: rotate(-17deg);
+}
+
+.lineage-root {
+  position: relative;
+  padding: 10px 6px 28px;
+  border-bottom: 1px solid rgba(255, 60, 172, 0.55);
+}
+
+.lineage-root img,
+.lineage-names img {
+  width: 100%;
+}
+
+.lineage-names {
+  position: relative;
+  display: grid;
+  gap: 24px;
+  padding: 30px 3px 8px;
+}
+
+.lineage-names img:last-child {
+  padding: 14px 8px;
+  background: rgba(245, 241, 232, 0.045);
 }
 
 .lineage-copy p:not(.eyebrow, .aside-line) {
@@ -676,7 +695,7 @@ footer p {
     border-right: 0;
   }
 
-  .lineage-mark {
+  .lineage-family {
     width: min(72vw, 400px);
     margin-inline: auto;
   }
