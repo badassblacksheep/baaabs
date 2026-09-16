@@ -500,7 +500,7 @@ nav a:focus-visible::after {
 
 .finale-glow {
   position: absolute;
-  width: min(80vw, 900px);
+  width: min(88vw, 1100px);
   aspect-ratio: 1;
   border: 2px solid var(--electric-violet);
   border-radius: 50%;
@@ -525,12 +525,13 @@ nav a:focus-visible::after {
 
 .finale-copy {
   position: relative;
-  max-width: 1000px;
+  max-width: 1200px;
 }
 
 .finale h2 {
   margin-bottom: 35px;
-  font-size: clamp(4.5rem, 11vw, 11rem);
+  font-size: clamp(3.2rem, 7.8vw, 8.5rem);
+  text-wrap: balance;
 }
 
 .finale-copy > p:not(.eyebrow) {
