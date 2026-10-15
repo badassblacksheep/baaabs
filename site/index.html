@@ -56,14 +56,22 @@
 
     <main id="main">
       <section class="hero" id="top" aria-labelledby="hero-title">
-        <img
-          class="hero-image"
-          src="assets/baaabs-hero.jpg"
-          alt="BAAABS glowing violet, pink, and orange on the playa, with dancers on her roof and fire erupting from the rear"
-          width="1671"
-          height="941"
-          fetchpriority="high"
-        />
+        <picture>
+          <source
+            media="(max-width: 600px)"
+            srcset="assets/baaabs-hero-mobile.jpg"
+            width="941"
+            height="1672"
+          />
+          <img
+            class="hero-image"
+            src="assets/baaabs-hero.jpg"
+            alt="BAAABS glowing violet, pink, and orange on the playa, with dancers on her roof and fire erupting from the rear"
+            width="1671"
+            height="941"
+            fetchpriority="high"
+          />
+        </picture>
         <div class="hero-shade" aria-hidden="true"></div>
         <div class="hero-content">
           <p class="eyebrow">Seattle, Washington · Bound for Black Rock City</p>

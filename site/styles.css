@@ -142,6 +142,12 @@ nav a:focus-visible::after {
   height: 100%;
 }
 
+.hero > picture {
+  position: absolute;
+  inset: 0;
+  z-index: -3;
+}
+
 .hero-image {
   z-index: -3;
   object-fit: cover;
@@ -870,23 +876,37 @@ footer p {
   }
 
   .hero {
-    min-height: 720px;
+    min-height: max(720px, 100svh, calc(100vw * 1672 / 941));
   }
 
   .hero-image {
-    object-position: 67% 50%;
+    /* Keep the portrait's full width, including the head and rear fire. */
+    height: auto;
+    object-fit: contain;
+    object-position: center top;
+    animation: none;
+  }
+
+  .hero-shade {
+    background:
+      linear-gradient(0deg, #030306 0%, rgba(3, 3, 6, 0.92) 18%, transparent 52%),
+      linear-gradient(180deg, rgba(3, 3, 6, 0.28), transparent 25%);
   }
 
   .hero-content {
-    padding-top: 190px;
+    align-self: start;
+    margin: 0 auto;
+    /* Begin the copy below the vehicle in the portrait composition. */
+    padding: 110vw 0 100px;
   }
 
   .hero-wordmark {
     width: 78vw;
+    margin: 20px 0 24px;
   }
 
   .hero h1 {
-    font-size: clamp(3.25rem, 17vw, 5.5rem);
+    font-size: clamp(2.5rem, 12vw, 3.5rem);
   }
 
   .scroll-cue {
