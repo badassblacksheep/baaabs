@@ -1091,3 +1091,10 @@ footer p {
 .hero-actions .fundraiser-link { border-color: var(--hot-pink); background: rgba(255, 60, 172, .12); }
 .hero-actions .fundraiser-link:hover { background: rgba(255, 60, 172, .24); }
 .contribution-card h3 { margin: 0 0 18px; font-size: clamp(1.6rem, 2.6vw, 2.3rem); line-height: 1.15; }
+
+.site-header nav { align-items: center; }
+nav .nav-donate { padding: 10px 15px; border: 1px solid var(--hot-pink); background: var(--hot-pink); color: var(--black-wool); }
+nav .nav-donate::after { display: none; }
+nav .nav-donate:hover { background: var(--warm-fleece); border-color: var(--warm-fleece); }
+nav .nav-donate:focus-visible { outline: 2px solid var(--warm-fleece); outline-offset: 4px; }
+@media (max-width: 600px) { nav .nav-donate { justify-self: end; margin-bottom: 3px; } }
