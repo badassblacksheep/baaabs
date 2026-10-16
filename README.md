@@ -7,6 +7,13 @@ BAAABS is a towering, fire-eyed black sheep, a rooftop dance floor, who suffers 
 The website is published with GitHub Pages at
 <https://badassblacksheep.github.io/baaabs/>.
 
+## Contributions
+
+“Help Build BAAABS” offers one-time preset amounts and a custom amount at
+hosted checkout, with private ownership, tax, and planned use-of-funds disclosures.
+Checkout remains unavailable until verified payment links are configured.
+See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for connection and verification steps.
+
 ## Model and responsive heroes
 
 The website uses the October 15, 2026 assembly v15, with all-black exterior

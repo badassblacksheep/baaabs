@@ -51,6 +51,7 @@
         <a href="#vision">The vision</a>
         <a href="#status">Status</a>
         <a href="#build">The build</a>
+        <a href="#contribute">Help build</a>
       </nav>
     </header>
 
@@ -383,6 +384,55 @@
         </div>
       </section>
 
+      <section class="contribute" id="contribute" aria-labelledby="contribute-title">
+        <div class="section-shell">
+          <div class="contribute-heading">
+            <p class="eyebrow">A little help from the flock</p>
+            <h2 id="contribute-title">Help Build BAAABS</h2>
+            <p class="contribute-intro">Help turn a bus, a big idea, and a whole lot of queer joy into a black sheep with a place for all of us.</p>
+          </div>
+
+          <div class="contribute-grid">
+            <div class="contribution-card">
+              <p class="eyebrow">One-time support · USD</p>
+              <fieldset class="contribution-options" aria-describedby="contribution-amount-help">
+                <legend>Choose your contribution</legend>
+                <div class="contribution-amounts">
+                  <label><input type="radio" name="contribution" value="25" /><span>$25</span></label>
+                  <label><input type="radio" name="contribution" value="50" checked /><span>$50</span></label>
+                  <label><input type="radio" name="contribution" value="100" /><span>$100</span></label>
+                  <label><input type="radio" name="contribution" value="250" /><span>$250</span></label>
+                  <label class="contribution-custom"><input type="radio" name="contribution" value="custom" /><span>Choose another amount <small>Enter it at secure checkout</small></span></label>
+                </div>
+              </fieldset>
+              <p id="contribution-amount-help" class="contribution-note">A single contribution, with no recurring charge. Custom amounts are entered on the payment provider’s checkout page.</p>
+              <div class="contribution-disclosure" id="contribution-disclosure">
+                <strong>Privately owned. Community supported.</strong>
+                <p>BAAABS is a privately owned art vehicle project, not a charity. Contributions are not tax-deductible charitable donations.</p>
+                <p>Your support does not buy ownership, equity, tickets, camp membership, rides, or other goods or services.</p>
+              </div>
+              <a class="contribution-checkout" id="contribution-checkout" aria-describedby="contribution-disclosure contribution-status" hidden>Continue to secure checkout <span aria-hidden="true">↗</span></a>
+              <button class="contribution-checkout" id="contribution-unavailable" type="button" disabled>Contributions opening soon</button>
+              <p class="contribution-note" id="contribution-status" role="status" aria-live="polite">Online contributions aren’t open yet. No payment will be taken here.</p>
+              <noscript><p class="contribution-note">JavaScript is needed to check checkout availability. Payments cannot be started from this page while it is disabled.</p></noscript>
+            </div>
+
+            <div class="contribution-funds">
+              <h3>What your support helps make possible</h3>
+              <p>First up: finding, inspecting, and bringing home the bus. From there, contributions help cover the practical work behind the spectacle.</p>
+              <dl>
+                <div><dt>Bus + build</dt><dd>Bus purchase and inspection, repairs, steel framing, aluminum panels, fabrication supplies, and the rooftop structure.</dd></div>
+                <div><dt>Light, fire + sound</dt><dd>Lighting, electrical systems, fire effects and controls, and sound equipment as the build develops.</dd></div>
+                <div><dt>Safety + getting there</dt><dd>Engineering, safety equipment, required approvals, insurance, transport, storage, and maintenance.</dd></div>
+              </dl>
+              <p class="contribution-note">These are planned uses, not a fixed allocation. Contributions support the project as a whole; priorities and timing may change as costs and requirements become clearer. Payment-processing fees reduce the amount available to the project.</p>
+              <p class="contribution-note">BAAABS is still in development. A contribution does not guarantee completion, a launch date, or an appearance at Burning Man or any other event.</p>
+              <a class="contribution-progress" href="#status">See where the build stands <span aria-hidden="true">↑</span></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="finale" aria-labelledby="finale-title">
         <div class="finale-glow" aria-hidden="true"></div>
         <div class="finale-copy reveal">
@@ -404,5 +454,7 @@
     </footer>
 
     <script src="script.js" defer></script>
+    <script src="contributions-config.js" defer></script>
+    <script src="contributions.js" defer></script>
   </body>
 </html>
