@@ -16,13 +16,13 @@ See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for connection and verification steps.
 
 ## Model and responsive heroes
 
-The website uses the October 15, 2026 assembly v15, with all-black exterior
+The website uses the October 16, 2026 assembly v16, with all-black exterior
 finishes, translucent panels, animated flame eyes, and party-side speaker
 stacks positioned between the wheel wells. Desktop and mobile hero images
 are rendered from the same model.
 
 The interactive viewer loads only when requested. Both viewing and downloading
-use `site/assets/models/baaabs-panelized-v15.glb`. Eye animation respects
+use `site/assets/models/baaabs-panelized-v16.glb`. Eye animation respects
 reduced-motion preferences and can be paused. The model-viewer 4.1.0 script
 and its license are included in `site/assets/vendor/`.
 
@@ -39,3 +39,7 @@ Revision 13 centers the ears front to back on the broad head sides, translating 
 Revision 14 removes vertex 5 from H-D-001 and H-P-001. Their former vertex 6 becomes vertex 5; both broad side sheets are now pentagons.
 
 Revision 15 removes vertex 3 from H-D-005 and H-P-005, leaving two simple triangles. All 207 panel outlines and connected planar caps pass the validity audit. Selecting or focusing a panel in the workshop briefly highlights only that panel orange, then restores its original black material. Model, spreadsheet and hero assets are refreshed.
+
+Revision 16 widens the side skin around the speaker stations and generator platform and extends the rear closure around the lower poofer equipment. Equipment positions remain unchanged; the exhaust outlet follows its panel. All 207 panels remain flat and valid, with refreshed measurements and enclosure clearance checks. The mobile portrait workshop and orange focus highlight are retained.
+
+Hovering over the model or a panel row highlights that sheet pink and shows its ID, name, blank dimensions and area in a one-row Current panel table above the filters. Hover inspection preserves the selected panel and filtered list; keyboard focus offers the same preview.
