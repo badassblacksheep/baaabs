@@ -1,0 +1,33 @@
+{
+  "revision": "subframe-study-v2",
+  "status": "Provisional space and weight study; no member or connection has been load-rated",
+  "axes": "meters; X aft from bus midpoint, Y passenger side, Z above ground",
+  "donor": {
+    "length_m": 12.446, "width_m": 2.4384, "height_m": 3.2004,
+    "wheelbase_m": 6.9342, "front_axle_x_m": -3.81, "rear_axle_x_m": 3.1242,
+    "rail_center_y_m": 0.43, "rail_center_z_m": 0.65, "rail_length_m": 12.146,
+    "rail_section_m": [0.244475, 0.0762, 0.00635],
+    "basis": "490 in long / 273 in WB scenario retained from donor model, not identified from VIN/photo. 96 in width, 126 in height and 9-5/8 x 3 x 1/4 in C rail section are period Blue Bird family specifications. Rail spacing, elevation and cut length are unverified inherited assumptions."
+  },
+  "stations": [
+    {"id": "A", "x_m": -4.75, "purpose": "Behind door / head-support interface", "verify": "Stepwell, front suspension and head load transfer"},
+    {"id": "B", "x_m": -2.2, "purpose": "Behind front wheel and speaker", "verify": "Luggage bay and speaker brackets"},
+    {"id": "C", "x_m": -0.85, "purpose": "Ahead of generator envelope", "verify": "Tank, driveshaft, generator service and body mounts"},
+    {"id": "D", "x_m": 1.4, "purpose": "Ahead of rear speaker and axle", "verify": "Rear suspension travel and luggage bay"},
+    {"id": "E", "x_m": 4.45, "purpose": "Rear deck / rump interface", "verify": "Rear engine, cooling and service access"}
+  ],
+  "upright_y_m": 1.30,
+  "permanent_top_z_m": 3.15,
+  "deck": {"length_m": 11.396, "width_m": 2.6984, "surface_z_m": 3.4004, "plywood_thickness_m": 0.01905, "joist_max_spacing_m": 0.4064},
+  "sections_m": {
+    "upright": [0.0762, 0.0762, 0.003175],
+    "crossbearer": [0.0762, 0.1524, 0.0047625],
+    "header": [0.0762, 0.1016, 0.003175],
+    "longitudinal": [0.0762, 0.1524, 0.003175],
+    "joist": [0.0508, 0.0762, 0.003175],
+    "brace": [0.0381, 0.0381, 0.003175]
+  },
+  "section_basis": "Trial rectangular tube outside width x depth x wall for interference and mass budgeting ONLY, not engineering selections. Square corners assumed. 7850 kg/m3 steel, 600 kg/m3 plywood. No claim of minimum weight or capacity for 20 occupants.",
+  "sources": ["https://kirkmanbussales.com/wp-content/uploads/2017/01/AM-AARE-1109.pdf", "https://pictures.dealer.com/birdbussales/aaf83ec20a0d028a00eabd2f4f128ce3.pdf"],
+  "open_items": ["Donor wheelbase and overall length", "GVWR, GAWR and loaded axle weights", "Actual rail spacing/profile/elevation and chassis torsional movement", "OEM-compatible mounting brackets; no drilling or welding specified", "Underfloor equipment and suspension envelopes", "Loads from dancers in motion, head, shell wind, equipment and lifting", "Connection strength, deck stiffness, fatigue and rollover stability", "Cassette attachments and removable module weights/assembly sequence"]
+}

@@ -26,7 +26,7 @@ function paintHighlights(){
  restoreHighlights();
  if(!model.model)return;
  for(const material of model.model.materials){
-  const id=material.name.match(/^Panel_([A-Z]-[DPC]-\d{3})_/i)?.[1];
+  const id=material.name.match(/^Panel_([A-Z]-[DPC]-\d{3})(?:_|$)/i)?.[1];
   const orange=id&&id===flashId,pink=id&&id===hovered?.id;
   if(!orange&&!pink)continue;
   painted.push({material,color:[...material.pbrMetallicRoughness.baseColorFactor],emissive:[...material.emissiveFactor]});
@@ -61,7 +61,7 @@ function queuePick(){
  pickFrame=requestAnimationFrame(()=>{
   pickFrame=0;if(!pointer||!model.materialFromPoint)return;
   const material=model.materialFromPoint(pointer.x,pointer.y);
-  const id=material?.name.match(/^Panel_([A-Z]-[DPC]-\d{3})_/i)?.[1];
+  const id=material?.name.match(/^Panel_([A-Z]-[DPC]-\d{3})(?:_|$)/i)?.[1];
   hoverPanel(panelById.get(id)||null);
  });
 }
