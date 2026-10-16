@@ -45,3 +45,5 @@ Revision 16 widens the side skin around the speaker stations and generator platf
 Hovering over the model or a panel row highlights that sheet pink and shows its ID, name, blank dimensions and area in a one-row Current panel table above the filters. Hover inspection preserves the selected panel and filtered list; keyboard focus offers the same preview.
 
 The Help Build section now links directly to the verified public BAAABS GoFundMe fundraiser. Donation amounts and payments are handled on GoFundMe; the former unconfigured Stripe controls are no longer displayed. See CONTRIBUTIONS.md.
+
+The separate subframe layout study at `site/subframe.html` starts with sheep panels, head, and tall poofer masts hidden. Layer controls expose the donor chassis, deck and equipment for station planning. Its GLB retains v16 geometry and changes visibility/materials only. No new structural members or rated connections are implied.
