@@ -43,3 +43,5 @@ Revision 15 removes vertex 3 from H-D-005 and H-P-005, leaving two simple triang
 Revision 16 widens the side skin around the speaker stations and generator platform and extends the rear closure around the lower poofer equipment. Equipment positions remain unchanged; the exhaust outlet follows its panel. All 207 panels remain flat and valid, with refreshed measurements and enclosure clearance checks. The mobile portrait workshop and orange focus highlight are retained.
 
 Hovering over the model or a panel row highlights that sheet pink and shows its ID, name, blank dimensions and area in a one-row Current panel table above the filters. Hover inspection preserves the selected panel and filtered list; keyboard focus offers the same preview.
+
+The Help Build section now links directly to the verified public BAAABS GoFundMe fundraiser. Donation amounts and payments are handled on GoFundMe; the former unconfigured Stripe controls are no longer displayed. See CONTRIBUTIONS.md.

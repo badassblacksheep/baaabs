@@ -1084,3 +1084,10 @@ footer p {
 .material-specs dt { font-size: .8rem; color: #554e56; margin-bottom: 6px; }
 .material-specs dd { margin: 0; font-weight: 700; }
 @media (max-width: 800px) { .material-study { grid-template-columns: 1fr; margin-top: 60px; } }
+
+/* A visible invitation beside the model, without interrupting the story. */
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; max-width: 510px; margin-top: 28px; }
+.hero-actions .model-link { margin-top: 0; }
+.hero-actions .fundraiser-link { border-color: var(--hot-pink); background: rgba(255, 60, 172, .12); }
+.hero-actions .fundraiser-link:hover { background: rgba(255, 60, 172, .24); }
+.contribution-card h3 { margin: 0 0 18px; font-size: clamp(1.6rem, 2.6vw, 2.3rem); line-height: 1.15; }

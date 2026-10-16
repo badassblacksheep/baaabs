@@ -35,7 +35,7 @@
       href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20261016-contributions" />
+    <link rel="stylesheet" href="styles.css?v=20261016-gofundme" />
     <script>document.documentElement.classList.add('js');</script>
     <title>BAAABS — Where even black sheep belong</title>
   </head>
@@ -82,7 +82,10 @@
             alt="BAAABS"
           />
           <h1 id="hero-title">Where even black sheep belong.</h1>
-          <a class="model-link" href="#model">Explore her in 3D <span aria-hidden="true">↗</span></a>
+          <div class="hero-actions">
+            <a class="model-link" href="#model">Explore her in 3D <span aria-hidden="true">↗</span></a>
+            <a class="model-link fundraiser-link" href="https://www.gofundme.com/f/help-build-baaabs-a-black-sheep-bound-for-burning-man" target="_blank" rel="noopener noreferrer" aria-label="Help build BAAABS on GoFundMe (opens in a new tab)">Help build BAAABS <span aria-hidden="true">↗</span></a>
+          </div>
         </div>
         <a class="scroll-cue" href="#meet">
           Meet her <span aria-hidden="true">↓</span>
@@ -393,27 +396,16 @@
 
           <div class="contribute-grid">
             <div class="contribution-card">
-              <p class="eyebrow">One-time support · USD</p>
-              <fieldset class="contribution-options" aria-describedby="contribution-amount-help">
-                <legend>Choose your contribution</legend>
-                <div class="contribution-amounts">
-                  <label><input type="radio" name="contribution" value="25" /><span>$25</span></label>
-                  <label><input type="radio" name="contribution" value="50" checked /><span>$50</span></label>
-                  <label><input type="radio" name="contribution" value="100" /><span>$100</span></label>
-                  <label><input type="radio" name="contribution" value="250" /><span>$250</span></label>
-                  <label class="contribution-custom"><input type="radio" name="contribution" value="custom" /><span>Choose another amount <small>Enter it at secure checkout</small></span></label>
-                </div>
-              </fieldset>
-              <p id="contribution-amount-help" class="contribution-note">A single contribution, with no recurring charge. Custom amounts are entered on the payment provider’s checkout page.</p>
+              <p class="eyebrow">Support the build on GoFundMe</p>
+              <h3>Help this black sheep take shape.</h3>
+              <p class="contribution-note">Visit our fundraiser to read the story, follow updates, and choose how much you’d like to contribute.</p>
+              <a class="contribution-checkout" id="contribution-checkout" href="https://www.gofundme.com/f/help-build-baaabs-a-black-sheep-bound-for-burning-man" target="_blank" rel="noopener noreferrer" aria-describedby="contribution-status">Donate on GoFundMe <span aria-hidden="true">↗</span></a>
+              <p class="contribution-note" id="contribution-status">Opens GoFundMe in a new tab. You’ll choose your amount and complete your donation there.</p>
               <div class="contribution-disclosure" id="contribution-disclosure">
                 <strong>Privately owned. Community supported.</strong>
                 <p>BAAABS is a privately owned art vehicle project, not a charity. Contributions are not tax-deductible charitable donations.</p>
                 <p>Your support does not buy ownership, equity, tickets, camp membership, rides, or other goods or services.</p>
               </div>
-              <a class="contribution-checkout" id="contribution-checkout" aria-describedby="contribution-disclosure contribution-status" hidden>Continue to secure checkout <span aria-hidden="true">↗</span></a>
-              <button class="contribution-checkout" id="contribution-unavailable" type="button" disabled>Contributions opening soon</button>
-              <p class="contribution-note" id="contribution-status" role="status" aria-live="polite">Online contributions aren’t open yet. No payment will be taken here.</p>
-              <noscript><p class="contribution-note">JavaScript is needed to check checkout availability. Payments cannot be started from this page while it is disabled.</p></noscript>
             </div>
 
             <div class="contribution-funds">
@@ -453,7 +445,5 @@
     </footer>
 
     <script src="script.js" defer></script>
-    <script src="contributions-config.js" defer></script>
-    <script src="contributions.js" defer></script>
   </body>
 </html>
