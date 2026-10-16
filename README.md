@@ -6,3 +6,21 @@ BAAABS is a towering, fire-eyed black sheep, a rooftop dance floor, who suffers 
 
 The website is published with GitHub Pages at
 <https://badassblacksheep.github.io/baaabs/>.
+
+## Model and responsive heroes
+
+The website uses the October 15, 2026 assembly v9, with all-black exterior
+finishes, translucent panels, animated flame eyes, and party-side speaker
+stacks positioned between the wheel wells. Desktop and mobile hero images
+are rendered from the same model.
+
+The interactive viewer loads only when requested. Both viewing and downloading
+use `site/assets/models/baaabs-speaker-placement-v9.glb`. Eye animation respects
+reduced-motion preferences and can be paused. The model-viewer 4.1.0 script
+and its license are included in `site/assets/vendor/`.
+
+The build section includes a perforated-metal reference photo and the proposed
+aluminum-sheet specification with a planned black finish.
+
+Local validation covered 390, 768, 1440 and 1920 px layouts, loading on demand,
+mobile sizing, eye animation controls, and a failed-download fallback.
