@@ -1092,9 +1092,43 @@ footer p {
 .hero-actions .fundraiser-link:hover { background: rgba(255, 60, 172, .24); }
 .contribution-card h3 { margin: 0 0 18px; font-size: clamp(1.6rem, 2.6vw, 2.3rem); line-height: 1.15; }
 
-.site-header nav { align-items: center; }
-nav .nav-donate { padding: 10px 15px; border: 1px solid var(--hot-pink); background: var(--hot-pink); color: var(--black-wool); }
-nav .nav-donate::after { display: none; }
-nav .nav-donate:hover { background: var(--warm-fleece); border-color: var(--warm-fleece); }
-nav .nav-donate:focus-visible { outline: 2px solid var(--warm-fleece); outline-offset: 4px; }
-@media (max-width: 600px) { nav .nav-donate { justify-self: end; margin-bottom: 3px; } }
+/* Keep the fundraiser immediately available without a modal or floating overlay. */
+body { padding-top: 84px; }
+html { scroll-padding-top: 100px; }
+.site-header {
+  position: fixed; top: 0; left: 0; transform: none; width: 100%;
+  display: grid; grid-template-columns: auto 1fr auto; gap: 28px;
+  align-items: center; min-height: 84px;
+  padding: 14px max(24px, calc((100vw - 1180px) / 2));
+  background: rgba(7, 7, 10, .97); border-bottom: 1px solid var(--rule);
+}
+.site-header .brand img { width: 156px; }
+.site-header nav { display: flex; justify-content: flex-end; align-items: center; gap: clamp(16px, 2.5vw, 32px); }
+.site-header nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.site-header nav a::after { display: none; }
+.site-header nav a:hover { color: var(--hot-pink); }
+.site-header .nav-donate {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-width: 148px; min-height: 54px; padding: 8px 18px;
+  border: 2px solid var(--hot-pink); border-radius: 6px;
+  background: var(--hot-pink); color: var(--black-wool);
+  font-size: 18px; font-weight: 700; line-height: 1.15; text-decoration: none;
+}
+.nav-donate small { margin-top: 3px; font-size: 11px; font-weight: 400; }
+.site-header .nav-donate:hover { background: var(--warm-fleece); border-color: var(--warm-fleece); }
+.site-header .nav-donate:active { background: #e82b96; border-color: #e82b96; }
+.site-header a:focus-visible { outline: 3px solid var(--warm-fleece); outline-offset: 4px; }
+@media (max-width: 760px) {
+  body { padding-top: calc(122px + env(safe-area-inset-top, 0px)); }
+  html { scroll-padding-top: calc(138px + env(safe-area-inset-top, 0px)); }
+  .site-header {
+    grid-template-columns: 1fr auto; gap: 2px 12px; min-height: 122px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 8px;
+  }
+  .site-header .brand { grid-column: 1; grid-row: 1; }
+  .site-header .brand img { width: 116px; }
+  .site-header .nav-donate { grid-column: 2; grid-row: 1; min-width: 140px; }
+  .site-header nav { grid-column: 1 / -1; grid-row: 2; justify-content: space-between; gap: 8px; font-size: .65rem; letter-spacing: .07em; }
+  .hero-image { top: 0; }
+  .hero-content { padding-top: 110vw; }
+}
