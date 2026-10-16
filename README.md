@@ -9,13 +9,13 @@ The website is published with GitHub Pages at
 
 ## Model and responsive heroes
 
-The website uses the October 15, 2026 assembly v14, with all-black exterior
+The website uses the October 15, 2026 assembly v15, with all-black exterior
 finishes, translucent panels, animated flame eyes, and party-side speaker
 stacks positioned between the wheel wells. Desktop and mobile hero images
 are rendered from the same model.
 
 The interactive viewer loads only when requested. Both viewing and downloading
-use `site/assets/models/baaabs-panelized-v14.glb`. Eye animation respects
+use `site/assets/models/baaabs-panelized-v15.glb`. Eye animation respects
 reduced-motion preferences and can be paused. The model-viewer 4.1.0 script
 and its license are included in `site/assets/vendor/`.
 
@@ -30,3 +30,5 @@ The panel workshop at `panels.html` indexes 207 named exterior sheets and links 
 Revision 13 centers the ears front to back on the broad head sides, translating them 0.923 m aft without changing their size or height.
 
 Revision 14 removes vertex 5 from H-D-001 and H-P-001. Their former vertex 6 becomes vertex 5; both broad side sheets are now pentagons.
+
+Revision 15 removes vertex 3 from H-D-005 and H-P-005, leaving two simple triangles. All 207 panel outlines and connected planar caps pass the validity audit. Selecting or focusing a panel in the workshop briefly highlights only that panel orange, then restores its original black material. Model, spreadsheet and hero assets are refreshed.
