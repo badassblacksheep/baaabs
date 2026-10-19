@@ -34,6 +34,12 @@ jobs:
           node --test tests/frame-comparison.test.mjs
           python3 tools/build-frame-comparison.py
           git diff --exit-code -- site/assets/frame-comparison.json
+      - name: Check individual interior support study
+        run: |
+          python3 -m unittest discover -s tests -p 'test_interior_supports.py'
+          node --test tests/interior-supports.test.mjs
+          python3 tools/build-interior-support-study.py
+          git diff --exit-code -- site/assets/interior-support-study.json
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:

@@ -1,5 +1,5 @@
 {
-  "revision": "lightweight-brief-1",
+  "revision": "lightweight-brief-2",
   "date": "2026-10-19",
   "status": "Requirements fixed for concept comparison; neither concept is selected, load-rated or approved for fabrication",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -9,7 +9,10 @@
     "total_people_allowance_lb": 4500,
     "use": "Dancing while the bus moves at up to 5 mph",
     "maximum_event_speed_mph": 5,
-    "deck_footprint_m": [11.396, 2.6984],
+    "deck_footprint_m": [
+      11.396,
+      2.6984
+    ],
     "deck_surface_height_m": 3.4004,
     "deck_geometry_basis": "Preserve current modeled footprint and height for both concepts; donor geometry remains unmeasured",
     "exterior_panel_count": 206,
@@ -28,8 +31,30 @@
     "Panel subframes and dedicated equipment supports"
   ],
   "concepts": [
-    {"id": "six", "name": "Optimized six-station frame", "station_ids": ["A", "B", "C", "D", "E", "F"], "status": "Concept; existing v5 is a mass and geometry reference only"},
-    {"id": "four", "name": "Four-station frame with longitudinal trusses", "station_ids": ["A", "C", "D", "F"], "status": "Concept; retained positions are a first comparison, not optimized or field-verified"}
+    {
+      "id": "six",
+      "name": "Optimized six-station frame",
+      "station_ids": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "status": "Concept; existing v5 is a mass and geometry reference only"
+    },
+    {
+      "id": "four",
+      "name": "Four-station frame with longitudinal trusses",
+      "station_ids": [
+        "A",
+        "C",
+        "D",
+        "F"
+      ],
+      "status": "Concept; retained positions are a first comparison, not optimized or field-verified"
+    }
   ],
   "deferred_measurements": [
     "Actual exterior and rub-rail width and clearances along uprights",
@@ -49,5 +74,12 @@
     "Using the existing body as an assumed dance-floor support",
     "Treating a 2x live-load sensitivity as a validated dancing factor",
     "Any final member sizes, connection details or fabrication drawings"
-  ]
+  ],
+  "interior_investigation": {
+    "page": "interior-supports.html",
+    "data": "interior-support-study.json",
+    "basis": "User confirms BAAAHS has individual cabin posts, not paired wall portals. Exact structure unknown.",
+    "trials": "Three and four individual posts; centerline, over one rail, or near one wall. Illustrative positions only.",
+    "status": "Supplementary concept investigation; no final sections, mass, capacity or road-envelope acceptance."
+  }
 }

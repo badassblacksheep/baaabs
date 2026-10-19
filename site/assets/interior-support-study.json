@@ -1,0 +1,172 @@
+{
+  "revision": "interior-mast-study-1",
+  "status": "Concept investigation; not sized, load-rated, field-verified or accepted for road use",
+  "observation": {
+    "source": "User description of BAAAHS",
+    "confirmed": "Three individual posts within the cabin, not paired wall posts and cross-bus portals",
+    "unknown": "Exact locations, offsets, sections, roof framing and chassis attachments; no verified drawings or load ratings"
+  },
+  "brief": "frame-design-brief.json",
+  "geometry": {
+    "donor_length_m": 12.446,
+    "donor_outer_width_in": 96.00000000000001,
+    "deck_length_m": 11.396,
+    "deck_width_in": 106.23622047244095,
+    "deck_surface_height_m": 3.4004,
+    "donor_roof_height_m": 3.2004,
+    "nominal_roof_to_deck_surface_in": 7.874015748031486,
+    "rail_half_spacing_in": 16.92913385826772,
+    "reference_exterior_post_offset_in": 50.43700787401575,
+    "axle_x_m": [
+      -3.81,
+      3.1242
+    ]
+  },
+  "defaults": {
+    "layout": "four",
+    "placement": "rail",
+    "clear_interior_width_in": 90,
+    "post_width_in": 4,
+    "finish_allowance_each_side_in": 1,
+    "centered_aisle_band_in": 30
+  },
+  "assumptions": [
+    "Cabin width and aisle band are unmeasured layout inputs, not legal minimums.",
+    "Square post size is a space reservation only: material and wall thickness are not selected.",
+    "All posts share one transverse offset in this first comparison. Staggered posts require a different roof-frame analysis.",
+    "Three-post longitudinal positions are an evenly spaced trial between existing A and F, not BAAAHS measurements.",
+    "Four-post longitudinal positions retain A/C/D/F only as a comparison; access and clashes are unresolved.",
+    "The existing body receives no assumed dance-floor support capacity."
+  ],
+  "load_basis": {
+    "people_lb": 4500,
+    "dead_load_scenario_lb": 8500,
+    "total_lb": 13000,
+    "method": "Uniform static load allocated by midpoint tributary lengths, divided equally between posts at a paired station. Not a solved roof grillage.",
+    "limits": "Same unmeasured dead-load scenario for all layouts, not rebalanced for new frame mass. Excludes crowd clustering, dynamics, wind, eccentric equipment and connection moments. No allowable capacity is calculated."
+  },
+  "layouts": [
+    {
+      "id": "three",
+      "name": "Three individual interior posts",
+      "x_m": [
+        -4.75,
+        0.3999999999999999,
+        5.55
+      ],
+      "posts_per_station": 1,
+      "post_count": 3,
+      "spans_m": [
+        5.15,
+        5.15
+      ],
+      "max_span_m": 5.15,
+      "end_overhangs_m": [
+        0.9480000000000004,
+        0.14800000000000058
+      ],
+      "tributary_fractions": [
+        0.3091435591435592,
+        0.45191295191295183,
+        0.238943488943489
+      ],
+      "uniform_static_load_per_post_lb": [
+        4018.8662688662694,
+        5874.868374868373,
+        3106.265356265357
+      ],
+      "peak_uniform_static_load_per_post_lb": 5874.868374868373,
+      "unchanged_beam_moment_ratio": 2.5326232599666687,
+      "unchanged_beam_deflection_ratio": 6.4141805769241955
+    },
+    {
+      "id": "four",
+      "name": "Four individual interior posts",
+      "x_m": [
+        -4.75,
+        -0.85,
+        2.3861,
+        5.55
+      ],
+      "posts_per_station": 1,
+      "post_count": 4,
+      "spans_m": [
+        3.9,
+        3.2361,
+        3.1639
+      ],
+      "max_span_m": 3.9,
+      "end_overhangs_m": [
+        0.9480000000000004,
+        0.14800000000000058
+      ],
+      "tributary_fractions": [
+        0.2542997542997543,
+        0.31309670059670053,
+        0.2808002808002808,
+        0.15180326430326435
+      ],
+      "uniform_static_load_per_post_lb": [
+        3305.896805896806,
+        4070.257107757107,
+        3650.4036504036503,
+        1973.4424359424365
+      ],
+      "peak_uniform_static_load_per_post_lb": 4070.257107757107,
+      "unchanged_beam_moment_ratio": 1.4523970132564057,
+      "unchanged_beam_deflection_ratio": 2.1094570841161278
+    },
+    {
+      "id": "six-reference",
+      "name": "Six exterior station pairs",
+      "x_m": [
+        -4.75,
+        -3.0719,
+        -0.85,
+        2.3861,
+        4.45,
+        5.55
+      ],
+      "posts_per_station": 2,
+      "post_count": 12,
+      "spans_m": [
+        1.6781000000000001,
+        2.2218999999999998,
+        3.2361,
+        2.0639000000000003,
+        1.0999999999999996
+      ],
+      "max_span_m": 3.2361,
+      "end_overhangs_m": [
+        0.9480000000000004,
+        0.14800000000000058
+      ],
+      "tributary_fractions": [
+        0.15681379431379436,
+        0.1711126711126711,
+        0.23946998946998946,
+        0.23253773253773255,
+        0.1388162513162513,
+        0.06124956124956128
+      ],
+      "uniform_static_load_per_post_lb": [
+        1019.2896630396633,
+        1112.232362232362,
+        1556.5549315549315,
+        1511.4952614952615,
+        902.3056335556334,
+        398.12214812214836
+      ],
+      "peak_uniform_static_load_per_post_lb": 1556.5549315549315,
+      "unchanged_beam_moment_ratio": 1.0,
+      "unchanged_beam_deflection_ratio": 1.0
+    }
+  ],
+  "mass_status": "Unknown: roof grillage/trusses, transverse bending/torsion restraint, connections and foundations are unsized. Fewer posts do not establish a lighter complete design.",
+  "preferred_next_test": "Four individual interior posts, near chassis-rail lines where integration with furniture is possible, with an independently designed roof grillage and chassis-connected bases. Compare three posts after checking span and concentrated-load penalties.",
+  "width_status": "Inboard posts can avoid adding side width if every retained fitting remains inside the existing exterior. No complete candidate geometry audit exists; current v5 exterior reference still fails.",
+  "sources": [
+    "https://centralstatesbus.com/wp-content/uploads/2010Manuals/D3FE/ServiceManual/ChassisFrame.pdf",
+    "https://centralstatesbus.com/wp-content/uploads/2010Manuals/D3FE/ServiceManual/BodyStructure.pdf"
+  ]
+}

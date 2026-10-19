@@ -1,7 +1,7 @@
 {
   "revision": "lightweight-comparison-1",
   "brief": {
-    "revision": "lightweight-brief-1",
+    "revision": "lightweight-brief-2",
     "date": "2026-10-19",
     "status": "Requirements fixed for concept comparison; neither concept is selected, load-rated or approved for fabrication",
     "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -76,7 +76,14 @@
       "Using the existing body as an assumed dance-floor support",
       "Treating a 2x live-load sensitivity as a validated dancing factor",
       "Any final member sizes, connection details or fabrication drawings"
-    ]
+    ],
+    "interior_investigation": {
+      "page": "interior-supports.html",
+      "data": "interior-support-study.json",
+      "basis": "User confirms BAAAHS has individual cabin posts, not paired wall portals. Exact structure unknown.",
+      "trials": "Three and four individual posts; centerline, over one rail, or near one wall. Illustrative positions only.",
+      "status": "Supplementary concept investigation; no final sections, mass, capacity or road-envelope acceptance."
+    }
   },
   "reference": "subframe-study-v5",
   "mass_basis": "Current schedule: nominal sharp-corner steel at 7850 kg/m\u00b3; plywood at 600 kg/m\u00b3. Rounded source member masses. No structural adequacy implied.",
