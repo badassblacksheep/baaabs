@@ -78,9 +78,10 @@
  for(const [id,t,p]of [['#rotate-left',-15,0],['#rotate-right',15,0],['#rotate-up',0,-15],['#rotate-down',0,15]])q(id).addEventListener('click',()=>rotate(t,p));
  q('#entrance-example').addEventListener('click',()=>{select(panelById.get('B-P-052'));state.reference='B-P-033';state.edgeA=0;state.edgeB=2;q('#inspect-vertices').checked=true;refresh();fit(180,90)});
  const audit=window.PANEL_ALIGNMENT_AUDIT,pairs=[...audit.corrected,...audit.reviewPairs];
- q('#audit-summary').textContent=`${audit.triangleCount} triangles audited across ${audit.panelCount} panels. Three entrance seams corrected; ${audit.reviewPairs.length} surface-crossing pairs remain for review. No remaining tapered nearby seams under the audit thresholds.`;
+ q('#audit-summary').textContent=`All ${audit.panelCount} panel surfaces audited, including ${audit.triangleCount} triangles and the merged crown panels. ${audit.reviewPairs.length} existing surface-crossing pairs remain for review; no new junction pairs after matching changed panel IDs. The audit now also includes quadrilateral-to-quadrilateral crossings.`;
  pairs.forEach((pair,i)=>{const o=text('option',`${i<audit.corrected.length?'Corrected':'Review'} · ${pair.a} / ${pair.b}`);o.value=String(i);q('#audit-pair').append(o)});q('#audit-pair').value='0';
  q('#inspect-audit-pair').addEventListener('click',()=>{const pair=pairs[Number(q('#audit-pair').value)];if(!pair)return;select(panelById.get(pair.a));state.reference=pair.b;state.edgeA=pair.edgeA;state.edgeB=pair.edgeB;q('#inspect-vertices').checked=true;refresh();fit(selected.side==='Driver'?0:180,90)});
+ q('#handling-example').addEventListener('click',()=>{const pair=audit.handlingExample;select(panelById.get(pair.a));state.reference=pair.b;state.edgeA=pair.edgeA;state.edgeB=pair.edgeB;q('#inspect-vertices').checked=true;refresh();fit(180,90)});
  viewer.addEventListener('camera-change',()=>{orientation();scheduleOverlay()});viewer.addEventListener('load',()=>{refresh();requestAnimationFrame(scheduleOverlay)});window.addEventListener('resize',scheduleOverlay);
  refresh();
 })();

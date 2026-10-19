@@ -16,13 +16,13 @@ See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for connection and verification steps.
 
 ## Model and responsive heroes
 
-The interactive website uses assembly v23, with all-black exterior finishes,
+The interactive website uses assembly v24, with all-black exterior finishes,
 translucent panels, animated flame eyes, and party-side speaker stacks
 positioned between the wheel wells. Desktop and mobile hero images retain
 the October 16, 2026 assembly v16.
 
 The interactive viewer loads only when requested. Both viewing and downloading
-use `site/assets/models/baaabs-panelized-v23.glb`. Eye animation respects
+use `site/assets/models/baaabs-panelized-v24.glb`. Eye animation respects
 reduced-motion preferences and can be paused. The model-viewer 4.1.0 script
 and its license are included in `site/assets/vendor/`.
 
@@ -54,6 +54,8 @@ Revision 21 raises the entrance panel tips and rectangular sill, exposing the fr
 
 Revision 22 places B-P-065 exactly one inch below the modeled door bottom and joins the four adjoining triangular panels to its lower corners. The outer hem and exposed front-right hoof are preserved. That update introduced v22 with 206 panels; click selection and name-only hover tooltips are retained.
 
-Revision 23 corrects three entrance seams while preserving the vertical door jamb, sill clearance and exposed passenger-front hoof. Model and spreadsheet use v23 with 206 panels. The workshop adds numbered A/B vertices, highlighted edges, 3D and side-view angle measurements, coordinates, camera presets and 15-degree orbit steps. An audit of all 167 triangles flags 21 remaining surface-crossing pairs at body/head/collar junctions and the driver-front hoof for review; each pair can be loaded into the inspector. The audit thresholds and detailed findings are downloadable.
+Revision 23 corrects three entrance seams while preserving the vertical door jamb, sill clearance and exposed passenger-front hoof. That update introduced v23 with 206 panels. The workshop adds numbered A/B vertices, highlighted edges, 3D and side-view angle measurements, coordinates, camera presets and 15-degree orbit steps. An audit of all 167 triangles flags 21 remaining surface-crossing pairs at body/head/collar junctions and the driver-front hoof for review; each pair can be loaded into the inspector. The audit thresholds and detailed findings are downloadable.
 
 Workshop interaction checks: `node tests/workshop.cjs`. These exercise selection, name-only hover, drag suppression, vertex/edge comparison, camera controls and audit navigation against the shipped panel data; they do not replace a browser layout check.
+
+Revision 24 merges 16 crown triangle pairs into 16 single flat quadrilaterals and splits 16 heavy side panels into equal-weight pieces, retaining 206 panels. B-P-061 becomes B-P-061/B-P-067 at approximately 8.25 lb each. New IDs retain source lineage; retired crown IDs remain searchable. The model and spreadsheet use v24. The expanded all-shape audit identifies 27 existing crossing pairs and no new junction pairs after matching changed IDs. The workshop offers an “Inspect lighter B-P-061” shortcut.
