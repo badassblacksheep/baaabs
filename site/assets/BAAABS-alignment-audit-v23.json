@@ -1,0 +1,731 @@
+{
+  "revision": "v23",
+  "panelCount": 206,
+  "triangleCount": 167,
+  "corrected": [
+    {
+      "a": "B-P-052",
+      "b": "B-P-033",
+      "edgeA": 0,
+      "edgeB": 2,
+      "status": "Corrected in side view; vertical door edge preserved"
+    },
+    {
+      "a": "B-P-049",
+      "b": "B-P-003",
+      "edgeA": 0,
+      "edgeB": 1,
+      "status": "Corrected in 3D; hem height preserved"
+    },
+    {
+      "a": "B-P-053",
+      "b": "B-P-051",
+      "edgeA": 2,
+      "edgeB": 1,
+      "status": "Corrected in 3D; hoof clearance preserved"
+    }
+  ],
+  "reviewPairs": [
+    {
+      "a": "B-P-007",
+      "b": "B-P-017",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 87.1
+    },
+    {
+      "a": "B-P-007",
+      "b": "C-P-002",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 727.8
+    },
+    {
+      "a": "B-P-007",
+      "b": "H-P-008",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 316.5
+    },
+    {
+      "a": "B-P-007",
+      "b": "H-P-012",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 332.6
+    },
+    {
+      "a": "B-P-008",
+      "b": "C-P-002",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 110.7
+    },
+    {
+      "a": "B-P-008",
+      "b": "H-P-012",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 116.0
+    },
+    {
+      "a": "B-D-003",
+      "b": "B-D-009",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 87.1
+    },
+    {
+      "a": "B-D-003",
+      "b": "C-D-002",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 727.8
+    },
+    {
+      "a": "B-D-003",
+      "b": "H-D-008",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 316.5
+    },
+    {
+      "a": "B-D-003",
+      "b": "H-D-012",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 332.6
+    },
+    {
+      "a": "B-D-004",
+      "b": "C-D-002",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 110.7
+    },
+    {
+      "a": "B-D-004",
+      "b": "H-D-012",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 116.0
+    },
+    {
+      "a": "B-D-010",
+      "b": "H-D-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 53.7
+    },
+    {
+      "a": "B-D-010",
+      "b": "H-D-008",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 511.6
+    },
+    {
+      "a": "B-D-011",
+      "b": "H-D-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 1307.1
+    },
+    {
+      "a": "B-D-012",
+      "b": "H-D-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 482.3
+    },
+    {
+      "a": "B-D-043",
+      "b": "K-D-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 105.7
+    },
+    {
+      "a": "B-P-018",
+      "b": "H-P-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 53.7
+    },
+    {
+      "a": "B-P-018",
+      "b": "H-P-008",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 511.6
+    },
+    {
+      "a": "B-P-019",
+      "b": "H-P-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 1307.1
+    },
+    {
+      "a": "B-P-020",
+      "b": "H-P-001",
+      "edgeA": 0,
+      "edgeB": 0,
+      "status": "Surface crossing \u2014 review junction",
+      "maxCrossingMm": 482.3
+    }
+  ],
+  "remainingTaperedSeams": 0,
+  "nearCoplanarOverlaps": [],
+  "methods": {
+    "crossings": "All 206 exterior panel cap surfaces, including cutouts, checked where at least one outline is triangular. Interior 3D crossing segments over 2 mm; shared boundary contacts excluded. Coplanar overlaps checked separately.",
+    "seams": "Candidate shared edges with both endpoint gaps under 120 mm; flagged when undirected 3D angle exceeds 0.25 degrees and one endpoint gap exceeds 10 mm. Proximity does not establish intended adjacency."
+  },
+  "intersections": [
+    {
+      "a": "B-P-007",
+      "b": "B-P-017",
+      "regions": [
+        "Body",
+        "Body"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 87.11933987580522,
+          "endpoints_m": [
+            [
+              -6.595721244812012,
+              1.4426158666610718,
+              3.6232872009277344
+            ],
+            [
+              -6.597799301147461,
+              1.5287394523620605,
+              3.636255979537964
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-007",
+      "b": "C-P-002",
+      "regions": [
+        "Body",
+        "Collar"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 727.7508187670977,
+          "endpoints_m": [
+            [
+              -6.620126247406006,
+              1.0439701080322266,
+              3.191253185272217
+            ],
+            [
+              -6.600244998931885,
+              1.6130353212356567,
+              3.644453763961792
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-007",
+      "b": "H-P-008",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 316.5068315684468,
+          "endpoints_m": [
+            [
+              -6.572062015533447,
+              1.2698490619659424,
+              3.8103644847869873
+            ],
+            [
+              -6.597357273101807,
+              1.1966705322265625,
+              3.503474235534668
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-007",
+      "b": "H-P-012",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 332.6174630147439,
+          "endpoints_m": [
+            [
+              -6.616407871246338,
+              1.0181496143341064,
+              3.221204996109009
+            ],
+            [
+              -6.597494125366211,
+              1.1959459781646729,
+              3.501677989959717
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-008",
+      "b": "C-P-002",
+      "regions": [
+        "Body",
+        "Collar"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 110.6709967136338,
+          "endpoints_m": [
+            [
+              -6.620337009429932,
+              1.0415072441101074,
+              3.1892917156219482
+            ],
+            [
+              -6.631628513336182,
+              0.9553874731063843,
+              3.12070631980896
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-008",
+      "b": "H-P-012",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 115.96737277992199,
+          "endpoints_m": [
+            [
+              -6.616719722747803,
+              1.0163893699645996,
+              3.218428373336792
+            ],
+            [
+              -6.631557941436768,
+              0.954810380935669,
+              3.1212878227233887
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-003",
+      "b": "B-D-009",
+      "regions": [
+        "Body",
+        "Body"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 87.09620546537236,
+          "endpoints_m": [
+            [
+              -6.595721244812012,
+              -1.4426157474517822,
+              3.623286247253418
+            ],
+            [
+              -6.597798824310303,
+              -1.5287164449691772,
+              3.63625168800354
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-003",
+      "b": "C-D-002",
+      "regions": [
+        "Body",
+        "Collar"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 727.7507163889082,
+          "endpoints_m": [
+            [
+              -6.600244998931885,
+              -1.6130353212356567,
+              3.644453763961792
+            ],
+            [
+              -6.620126247406006,
+              -1.0439702272415161,
+              3.191253185272217
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-003",
+      "b": "H-D-008",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 316.50639892812995,
+          "endpoints_m": [
+            [
+              -6.572062015533447,
+              -1.2698500156402588,
+              3.810364007949829
+            ],
+            [
+              -6.597357749938965,
+              -1.196671485900879,
+              3.503474235534668
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-003",
+      "b": "H-D-012",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 332.6169982175742,
+          "endpoints_m": [
+            [
+              -6.616407871246338,
+              -1.018149733543396,
+              3.221204996109009
+            ],
+            [
+              -6.597494125366211,
+              -1.1959459781646729,
+              3.5016775131225586
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-004",
+      "b": "C-D-002",
+      "regions": [
+        "Body",
+        "Collar"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 110.6709967136338,
+          "endpoints_m": [
+            [
+              -6.620337963104248,
+              -1.0415072441101074,
+              3.1892917156219482
+            ],
+            [
+              -6.631629467010498,
+              -0.9553874731063843,
+              3.12070631980896
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-004",
+      "b": "H-D-012",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 115.96720413086304,
+          "endpoints_m": [
+            [
+              -6.616720676422119,
+              -1.0163896083831787,
+              3.218428134918213
+            ],
+            [
+              -6.631558895111084,
+              -0.9548105597496033,
+              3.1212878227233887
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-010",
+      "b": "H-D-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 53.72389683113289,
+          "endpoints_m": [
+            [
+              -5.502200126647949,
+              -1.7317745685577393,
+              4.4334917068481445
+            ],
+            [
+              -5.544088363647461,
+              -1.7190104722976685,
+              4.40236759185791
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-010",
+      "b": "H-D-008",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 511.59695639178426,
+          "endpoints_m": [
+            [
+              -6.177932262420654,
+              -1.4411600828170776,
+              3.927018404006958
+            ],
+            [
+              -5.801836013793945,
+              -1.6404625177383423,
+              4.210852146148682
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-011",
+      "b": "H-D-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 1307.0784150419079,
+          "endpoints_m": [
+            [
+              -3.908687114715576,
+              -2.2173540592193604,
+              5.1163010597229
+            ],
+            [
+              -5.066689491271973,
+              -1.8644847869873047,
+              4.623383522033691
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-012",
+      "b": "H-D-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 482.314315959932,
+          "endpoints_m": [
+            [
+              -5.070765495300293,
+              -1.8632426261901855,
+              4.621633052825928
+            ],
+            [
+              -5.496799468994141,
+              -1.7334206104278564,
+              4.436515808105469
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-D-043",
+      "b": "K-D-001",
+      "regions": [
+        "Body",
+        "Hoof"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 105.66653860878709,
+          "endpoints_m": [
+            [
+              -4.269850730895996,
+              -2.3580000400543213,
+              0.6782541871070862
+            ],
+            [
+              -4.3043599128723145,
+              -2.3580000400543213,
+              0.7781267762184143
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-018",
+      "b": "H-P-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 53.7239251365022,
+          "endpoints_m": [
+            [
+              -5.502200126647949,
+              1.7317726612091064,
+              4.4334917068481445
+            ],
+            [
+              -5.544088363647461,
+              1.719008445739746,
+              4.40236759185791
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-018",
+      "b": "H-P-008",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 511.5947281898774,
+          "endpoints_m": [
+            [
+              -6.1779303550720215,
+              1.4411600828170776,
+              3.9270198345184326
+            ],
+            [
+              -5.801835536956787,
+              1.6404615640640259,
+              4.210852146148682
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-019",
+      "b": "H-P-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 1307.0887978762503,
+          "endpoints_m": [
+            [
+              -3.908674716949463,
+              2.217355728149414,
+              5.116306304931641
+            ],
+            [
+              -5.066686153411865,
+              1.8644837141036987,
+              4.623384475708008
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "a": "B-P-020",
+      "b": "H-P-001",
+      "regions": [
+        "Body",
+        "Head shell"
+      ],
+      "crossing_segments": [
+        {
+          "length_mm": 482.31770282614434,
+          "endpoints_m": [
+            [
+              -5.070763111114502,
+              1.86324143409729,
+              4.621635913848877
+            ],
+            [
+              -5.496799945831299,
+              1.7334182262420654,
+              4.436517238616943
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
