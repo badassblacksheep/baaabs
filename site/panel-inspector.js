@@ -1,9 +1,36 @@
 /* Coordinates and edge comparisons use the same numbered register as the workbook. */
 (()=>{
  const q=s=>document.querySelector(s),viewer=q('#model'),NS='http://www.w3.org/2000/svg';
- const state={reference:'',edgeA:0,edgeB:0,lastId:null,markers:[],frame:0};
+ const state={reference:'',edgeA:0,edgeB:0,lastId:null,neighbors:new Set(),markers:[],frame:0};
  const sub=(a,b)=>a.map((x,i)=>x-b[i]),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),length=v=>Math.hypot(...v),degrees=r=>r*180/Math.PI;
  const ref=()=>panelById.get(state.reference),enabled=()=>q('#inspect-vertices').checked;
+ // Nearby boundaries include imperfect seams; audited crossings remain available for repair.
+ const neighborTolerance=.0254,neighborCache=new Map();
+ const auditNeighbors=[...window.PANEL_ALIGNMENT_AUDIT.corrected,...window.PANEL_ALIGNMENT_AUDIT.reviewPairs];
+ function pointSegmentDistance(p,a,b){
+  const v=sub(b,a),w=sub(p,a),vv=dot(v,v),t=vv?Math.max(0,Math.min(1,dot(w,v)/vv)):0;
+  return length(w.map((x,i)=>x-t*v[i]));
+ }
+ function segmentDistance(p,q,r,s){
+  const u=sub(q,p),v=sub(s,r),w=sub(p,r),a=dot(u,u),b=dot(u,v),c=dot(v,v),d=dot(u,w),e=dot(v,w),den=a*c-b*b;
+  let distance=Math.min(pointSegmentDistance(p,r,s),pointSegmentDistance(q,r,s),pointSegmentDistance(r,p,q),pointSegmentDistance(s,p,q));
+  if(den>1e-12*a*c){const t=(b*e-c*d)/den,k=(a*e-b*d)/den;if(t>=0&&t<=1&&k>=0&&k<=1)distance=Math.min(distance,length(w.map((x,i)=>x+t*u[i]-k*v[i])))}
+  return distance;
+ }
+ function neighbors(p){
+  if(!neighborCache.has(p.id))neighborCache.set(p.id,DATA.panels.filter(other=>other.id!==p.id&&(
+   auditNeighbors.some(pair=>(pair.a===p.id&&pair.b===other.id)||(pair.b===p.id&&pair.a===other.id))||
+   p.vertices_m.some((a,i)=>other.vertices_m.some((b,j)=>segmentDistance(a,p.vertices_m[(i+1)%p.vertices_m.length],b,other.vertices_m[(j+1)%other.vertices_m.length])<=neighborTolerance))
+  )));
+  return neighborCache.get(p.id);
+ }
+ function comparisonOptions(){
+  const nearby=neighbors(selected);state.neighbors=new Set(nearby.map(p=>p.id));choose.replaceChildren();
+  const none=text('option',nearby.length?'None':'No neighboring panels');none.value='';choose.append(none);
+  for(const p of nearby){const o=text('option',`${p.id} · ${p.name}`);o.value=p.id;choose.append(o)}
+  choose.disabled=!nearby.length;
+ }
+
  const edge=(p,i)=>sub(p.vertices_m[(i+1)%p.vertices_m.length],p.vertices_m[i]);
  const angle=(a,b)=>length(a)<1e-10||length(b)<1e-10?null:degrees(Math.acos(Math.min(1,Math.max(0,Math.abs(dot(a,b)/(length(a)*length(b)))))));
  const num=n=>n.toFixed(2),inches=n=>num(n/.0254),edgeName=(p,i)=>`${i+1}–${(i+1)%p.vertices_m.length+1}`;
@@ -64,13 +91,13 @@
  }
  function rotate(theta,phi){const o=viewer.getCameraOrbit?.();if(!o)return;viewer.cameraOrbit=`${degrees(o.theta)+theta}deg ${Math.max(5,Math.min(175,degrees(o.phi)+phi))}deg ${o.radius}m`}
  function refresh(){
-  if(state.lastId!==selected.id){state.edgeA=0;state.lastId=selected.id}
-  if(state.reference===selected.id)state.reference='';q('#compare-panel').value=state.reference;
+  if(state.lastId!==selected.id){state.edgeA=0;state.lastId=selected.id;comparisonOptions()}
+  if(!state.neighbors.has(state.reference)){state.reference='';state.edgeB=0}q('#compare-panel').value=state.reference;
   options(q('#edge-a'),selected,state.edgeA);options(q('#edge-b'),ref(),state.edgeB);readings();markers();paintHighlights();orientation();
  }
  window.inspectionPanelColors=()=>enabled()?new Map([[selected.id,[1,.58,.16,1]],...(ref()?[[ref().id,[.12,.78,.95,1]]]:[])]):new Map();
  window.refreshPanelInspector=refresh;
- const choose=q('#compare-panel'),none=text('option','None');none.value='';choose.append(none);for(const p of DATA.panels){const o=text('option',`${p.id} · ${p.name}`);o.value=p.id;choose.append(o)}
+ const choose=q('#compare-panel');
  choose.addEventListener('change',()=>{state.reference=choose.value;state.edgeB=0;refresh()});q('#inspect-vertices').addEventListener('change',refresh);
  for(const [id,key]of [['#edge-a','edgeA'],['#edge-b','edgeB']])q(id).addEventListener('change',e=>{state[key]=Number(e.target.value);refresh()});
  q('#view-face').addEventListener('click',()=>{const n=normal(selected);fit(degrees(Math.atan2(n[0],-n[1])),degrees(Math.acos(Math.max(-1,Math.min(1,n[2])))))});

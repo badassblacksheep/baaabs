@@ -84,3 +84,19 @@ check('frame controls act independently and all-layers restores visibility',()=>
  el('#layer-deckframe').checked=false;el('#layer-deckframe').emit('change');assert.equal(roof.pbrMetallicRoughness.baseColorFactor[3],0);assert.equal(frame.pbrMetallicRoughness.baseColorFactor[3],1);el('#restore-layers').emit('click');assert.equal(bus.pbrMetallicRoughness.baseColorFactor[3],1);assert.equal(roof.alpha,'OPAQUE');assert.equal(roof.pbrMetallicRoughness.baseColorFactor[3],1);
 });
 console.log(checks+' total workshop checks passed');
+
+const comparisonIds=()=>el('#compare-panel').children.map(o=>o.value).filter(Boolean);
+check('comparison list contains local seam neighbors and excludes remote panels and self',()=>{
+ el('#handling-example').emit('click');const ids=comparisonIds();assert.ok(ids.includes('B-P-067'));assert.ok(!ids.includes('B-P-061'));assert.ok(!ids.includes('H-D-001'));assert.ok(!ids.includes('B-D-053'));assert.ok(ids.length<20);
+});
+check('changing current panel rebuilds neighbors and clears a stale comparison',()=>{
+ row('B-P-052').emit('click');assert.equal(el('#compare-panel').value,'');assert.equal(el('#edge-b').disabled,true);assert.ok(comparisonIds().includes('B-P-033'));assert.ok(!comparisonIds().includes('B-P-067'));
+ el('#compare-panel').value='B-P-033';el('#compare-panel').emit('change');assert.equal(el('#compare-panel').value,'B-P-033');el('#edge-a').value='1';el('#edge-a').emit('change');assert.equal(el('#compare-panel').value,'B-P-033');
+});
+check('non-neighbor references cannot persist after refresh',()=>{
+ el('#compare-panel').value='H-D-001';el('#compare-panel').emit('change');assert.equal(el('#compare-panel').value,'');assert.equal(el('#edge-b').disabled,true);
+});
+check('all audited crossing neighbors remain reachable from the inspector',()=>{
+ for(let i=0;i<el('#audit-pair').children.length;i++){el('#audit-pair').value=String(i);el('#inspect-audit-pair').emit('click');assert.ok(comparisonIds().includes(el('#compare-panel').value));assert.ok(el('#compare-panel').value)}
+});
+console.log(checks+' total workshop checks passed');
