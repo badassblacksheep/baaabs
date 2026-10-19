@@ -16,13 +16,13 @@ See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for connection and verification steps.
 
 ## Model and responsive heroes
 
-The interactive website uses assembly v21, with all-black exterior finishes,
+The interactive website uses assembly v22, with all-black exterior finishes,
 translucent panels, animated flame eyes, and party-side speaker stacks
 positioned between the wheel wells. Desktop and mobile hero images retain
 the October 16, 2026 assembly v16.
 
 The interactive viewer loads only when requested. Both viewing and downloading
-use `site/assets/models/baaabs-panelized-v21.glb`. Eye animation respects
+use `site/assets/models/baaabs-panelized-v22.glb`. Eye animation respects
 reduced-motion preferences and can be paused. The model-viewer 4.1.0 script
 and its license are included in `site/assets/vendor/`.
 
@@ -50,4 +50,6 @@ The separate subframe layout study at `site/subframe.html` starts with sheep pan
 
 Revision 20 uses exactly 206 panels: redundant crown returns removed, B-P-052 restored, entrance skirts reduced to triangles with one rectangular sill, and the three largest head panels subdivided. This revision introduced the v20 model and matching spreadsheet. Existing hero images and separate subframe studies retain their earlier versions.
 
-Revision 21 raises the entrance panel tips and rectangular sill, exposing the front-right hoof while retaining exactly 206 panels. The interactive model, workshop and matching spreadsheet load v21. Current panel changes only when a panel or table row is clicked; hover shows a mouse tooltip containing only the panel name and retains the pink preview highlight. Camera drags do not change selection.
+Revision 21 raises the entrance panel tips and rectangular sill, exposing the front-right hoof while retaining exactly 206 panels. That update introduced the v21 model and matching spreadsheet. Current panel changes only when a panel or table row is clicked; hover shows a mouse tooltip containing only the panel name and retains the pink preview highlight. Camera drags do not change selection.
+
+Revision 22 places B-P-065 exactly one inch below the modeled door bottom and joins the four adjoining triangular panels to its lower corners. The outer hem and exposed front-right hoof are preserved. Model, workshop and spreadsheet use v22 with 206 panels; click selection and name-only hover tooltips are retained.
