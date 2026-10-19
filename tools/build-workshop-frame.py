@@ -76,6 +76,20 @@ for name in replaced:
  for key in ['matrix','translation','rotation','scale']:assert a.get(key)==b.get(key)
 panelids={n.get('extras',{}).get('panel_id') for n in doc['nodes']}-{None};assert len(panelids)==206
 assert doc.get('animations')==original.get('animations')
+# Only active scene resources belong in the workshop catalog. Unused copies are
+# unloaded material wrappers in model-viewer and must not participate in picking.
+used_meshes=sorted({n['mesh'] for n in doc['nodes'] if 'mesh' in n})
+mesh_map={old:new for new,old in enumerate(used_meshes)}
+doc['meshes']=[doc['meshes'][i] for i in used_meshes]
+for node in doc['nodes']:
+ if 'mesh'in node:node['mesh']=mesh_map[node['mesh']]
+used_materials=sorted({p['material'] for mesh in doc['meshes'] for p in mesh['primitives']})
+material_map={old:new for new,old in enumerate(used_materials)}
+doc['materials']=[doc['materials'][i] for i in used_materials]
+for mesh in doc['meshes']:
+ for primitive in mesh['primitives']:primitive['material']=material_map[primitive['material']]
+assert len({m['name'] for m in doc['materials']})==len(doc['materials'])
+
 doc['buffers'][0]['byteLength']=len(binary);encoded=json.dumps(doc,separators=(',',':')).encode();encoded+=b' '*(-len(encoded)%4);binary.extend(b'\0'*(-len(binary)%4))
 result=struct.pack('<4sII',b'glTF',2,28+len(encoded)+len(binary))+struct.pack('<I4s',len(encoded),b'JSON')+encoded+struct.pack('<I4s',len(binary),b'BIN\0')+binary
 (SITE/'assets/models/baaabs-workshop-v24-six-station.glb').write_bytes(result)

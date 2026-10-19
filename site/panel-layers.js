@@ -10,6 +10,7 @@
   if(!model.model)return;
   stopPicking();restoreHighlights();
   for(const material of model.model.materials){
+   if(material.isLoaded===false)continue;
    const group=groupOf(material);if(!inputs[group])continue;
    if(!originals.has(material))originals.set(material,{color:[...material.pbrMetallicRoughness.baseColorFactor],emissive:[...material.emissiveFactor],alpha:material.getAlphaMode()});
    const base=originals.get(material),visible=inputs[group].checked;

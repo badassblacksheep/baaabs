@@ -100,3 +100,25 @@ check('all audited crossing neighbors remain reachable from the inspector',()=>{
  for(let i=0;i<el('#audit-pair').children.length;i++){el('#audit-pair').value=String(i);el('#inspect-audit-pair').emit('click');assert.ok(comparisonIds().includes(el('#compare-panel').value));assert.ok(el('#compare-panel').value)}
 });
 console.log(checks+' total workshop checks passed');
+
+// Model-viewer exposes unused GLB materials too, but their rendering getters throw.
+const glb=fs.readFileSync(path.join(site,'assets/models/baaabs-workshop-v24-six-station.glb'));
+const gltf=JSON.parse(glb.subarray(20,20+glb.readUInt32LE(12)).toString());
+const usedMaterials=new Set(gltf.nodes.filter(n=>n.mesh!==undefined).flatMap(n=>gltf.meshes[n.mesh].primitives.map(p=>p.material)));
+const realMaterials=gltf.materials.map((m,i)=>{
+ if(usedMaterials.has(i))return Object.assign(layerMaterial(m.name,m.pbrMetallicRoughness?.baseColorFactor||[1,1,1,1],m.alphaMode||'OPAQUE'),{isLoaded:true,isActive:true});
+ return {name:m.name,isLoaded:false,isActive:false,get pbrMetallicRoughness(){throw new Error('Material '+m.name+' has not been loaded')}};
+});
+// Keep a matching unused material even after asset cleanup, to cover future imports.
+realMaterials.unshift({name:'Panel_B-P-052_unused',isLoaded:false,isActive:false,get pbrMetallicRoughness(){throw new Error('Unused panel material accessed')}});
+vm.runInContext('restoreHighlights()',context);model.model.materials=realMaterials;
+model.materialFromPoint=()=>realMaterials.find(m=>m.isLoaded&&m.name.match(/^Panel_([A-Z]-[DPC]-\d{3})(?:_|$)/)?.[1]===hit)||null;
+check('actual GLB material catalog loads without accessing unused materials',()=>{assert.doesNotThrow(()=>model.emit('load'))});
+check('hover and click work with the real model material names and unloaded entries',()=>{
+ row('B-P-050').emit('click');hit='B-P-052';model.emit('pointermove');flush();assert.equal(current(),'B-P-050');assert.equal(el('#panel-tooltip').textContent,panel('B-P-052').name);assert.deepEqual([...model.materialFromPoint().pbrMetallicRoughness.baseColorFactor],[1,.025,.38,1]);
+ model.emit('pointerdown');model.emit('pointerup');model.emit('click');flush();assert.equal(current(),'B-P-052');assert.ok(comparisonIds().includes('B-P-033'));
+});
+check('layer changes and table selection tolerate unloaded model materials',()=>{
+ assert.doesNotThrow(()=>el('#show-framing').emit('click'));row('B-P-061').emit('click');assert.equal(current(),'B-P-061');assert.ok(comparisonIds().includes('B-P-067'));assert.doesNotThrow(()=>el('#restore-layers').emit('click'));
+});
+console.log(checks+' total workshop checks passed');
