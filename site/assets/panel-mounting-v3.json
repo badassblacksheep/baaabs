@@ -1,0 +1,238 @@
+{
+  "status": "Illustrative mounting concept, not load-rated or fabrication-ready",
+  "region": "Driver middle upper flank",
+  "panels": [
+    "B-D-033",
+    "B-D-034"
+  ],
+  "stations": [
+    "C",
+    "D"
+  ],
+  "station_span_m": 3.2361,
+  "outrigger_reach_m": 0.6340999999999999,
+  "removable_arm_assemblies_kg": {
+    "C-lower": 10.28,
+    "C-upper": 5.11,
+    "D-lower": 10.28,
+    "D-upper": 5.11
+  },
+  "transport": {
+    "bare_station_width_in": 104.87401574803151,
+    "width_with_mirrored_docking_pads_in": 105.34645669291339,
+    "standard_WA_width_in": 102,
+    "road_configuration_verified": false,
+    "retained_groups": [
+      "station",
+      "dock",
+      "context"
+    ],
+    "note": "Local bay only. All projecting mounts and their bolts removed. Existing frame references remain; whole-vehicle road clearance is not established."
+  },
+  "skin_outward_offset_from_uprights_m": [
+    0.8440958225250244,
+    1.25554024810791
+  ],
+  "side_fit": {
+    "body_half_width_m": 1.2192,
+    "modeled_rub_rail_projection_m": 0.0305,
+    "provisional_clearance_m": 0.006,
+    "previous_upright_y_m": 1.3,
+    "inward_move_per_side_m": 0.0062,
+    "bare_station_width_in": 104.874015748,
+    "zero_clearance_station_width_in": 104.401574803,
+    "basis": "Clearance to approximate modeled rub rails, not a field measurement or verified movement allowance. No intended bearing on bus skin or rails."
+  },
+  "station_connection": "Internal captive-nut cartridge and flush bus-facing sleeve end; no inward nut cage or bolt tail. Not load-rated; manufacture and service access unresolved.",
+  "mass_kg": {
+    "dock": 8.97,
+    "fixed": 29.92,
+    "stationbolt": 0.89,
+    "isolation": 0.42,
+    "cassette": 13.99,
+    "fastener": 0.56,
+    "skin": 7.73
+  },
+  "moving_region_kg": 21.84,
+  "added_mounting_kg": 54.76,
+  "members": [
+    {
+      "name": "C driver upright",
+      "group": "station",
+      "length_m": 2.6222377048814813,
+      "outside_m": 0.0762,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "C removable cap",
+      "group": "context",
+      "length_m": 0.1805498638590709,
+      "outside_m": 0.0762,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "D driver upright",
+      "group": "station",
+      "length_m": 2.6222377048814813,
+      "outside_m": 0.0762,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "D removable cap",
+      "group": "context",
+      "length_m": 0.1805498638590709,
+      "outside_m": 0.0762,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "Existing C-D side brace",
+      "group": "context",
+      "length_m": 3.7628106328032778,
+      "outside_m": 0.0381,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "C-lower outrigger",
+      "group": "fixed",
+      "length_m": 0.6340999692973112,
+      "outside_m": 0.05,
+      "wall_m": 0.003
+    },
+    {
+      "name": "C-upper outrigger",
+      "group": "fixed",
+      "length_m": 0.6391265592932122,
+      "outside_m": 0.05,
+      "wall_m": 0.003
+    },
+    {
+      "name": "C lower outrigger brace",
+      "group": "fixed",
+      "length_m": 0.818664603111398,
+      "outside_m": 0.0381,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "C cassette back upright",
+      "group": "cassette",
+      "length_m": 0.3769998472046479,
+      "outside_m": 0.04,
+      "wall_m": 0.002
+    },
+    {
+      "name": "D-lower outrigger",
+      "group": "fixed",
+      "length_m": 0.6340999692973112,
+      "outside_m": 0.05,
+      "wall_m": 0.003
+    },
+    {
+      "name": "D-upper outrigger",
+      "group": "fixed",
+      "length_m": 0.6391265592932122,
+      "outside_m": 0.05,
+      "wall_m": 0.003
+    },
+    {
+      "name": "D lower outrigger brace",
+      "group": "fixed",
+      "length_m": 0.818664603111398,
+      "outside_m": 0.0381,
+      "wall_m": 0.003175
+    },
+    {
+      "name": "D cassette back upright",
+      "group": "cassette",
+      "length_m": 0.3769998472046479,
+      "outside_m": 0.04,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Cassette bottom rail",
+      "group": "cassette",
+      "length_m": 3.2361001836313004,
+      "outside_m": 0.04,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Cassette top rail",
+      "group": "cassette",
+      "length_m": 3.2361001836313004,
+      "outside_m": 0.04,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet backing edge (0, 1)",
+      "group": "cassette",
+      "length_m": 2.763799156250436,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet backing edge (0, 2)",
+      "group": "cassette",
+      "length_m": 2.744339867567257,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet backing edge (0, 3)",
+      "group": "cassette",
+      "length_m": 1.0205848664757653,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet backing edge (1, 2)",
+      "group": "cassette",
+      "length_m": 1.2222420505775071,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet backing edge (1, 3)",
+      "group": "cassette",
+      "length_m": 2.2006013265349114,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet corner pickup 0",
+      "group": "cassette",
+      "length_m": 0.6085564098952082,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet corner pickup 1",
+      "group": "cassette",
+      "length_m": 0.8205685374910737,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet corner pickup 2",
+      "group": "cassette",
+      "length_m": 0.4820711015541519,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    },
+    {
+      "name": "Facet corner pickup 3",
+      "group": "cassette",
+      "length_m": 0.8664060112804087,
+      "outside_m": 0.025,
+      "wall_m": 0.002
+    }
+  ],
+  "limits": [
+    "No strength, fatigue, weld, bolt, panel pull-through or chassis torsion calculation",
+    "Internal captive-nut cartridge manufacture, replacement access and connection capacity remain unresolved",
+    "Illustrative 10 mm cassette bolts and 12 mm short station bolts, not selected hardware",
+    "Sleeve welds, upright holes, bolt bearing and local wall capacity unverified",
+    "Current station width exceeds the standard 102-inch WA width before mounting pads",
+    "No speaker loads assigned to this cassette",
+    "Thermal and chassis movement accommodation not designed",
+    "Panel fastener positions are illustrative; isolation sleeves and full edge support require detailing"
+  ]
+}

@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1];SITE=ROOT/'site'
 def read(path):
  raw=path.read_bytes();n=struct.unpack_from('<I',raw,12)[0]
  return json.loads(raw[20:20+n]),bytearray(raw[28+n:])
-base=SITE/'assets/models/baaabs-panelized-v24.glb';study=SITE/'assets/models/baaabs-subframe-study-v3.glb'
+base=SITE/'assets/models/baaabs-panelized-v24.glb';study=SITE/'assets/models/baaabs-subframe-study-v4.glb'
 doc,binary=read(base);original=copy.deepcopy(doc);src,buf=read(study)
 views={};accessors={};materials={}
 def import_accessor(i):
@@ -93,5 +93,5 @@ assert len({m['name'] for m in doc['materials']})==len(doc['materials'])
 doc['buffers'][0]['byteLength']=len(binary);encoded=json.dumps(doc,separators=(',',':')).encode();encoded+=b' '*(-len(encoded)%4);binary.extend(b'\0'*(-len(binary)%4))
 result=struct.pack('<4sII',b'glTF',2,28+len(encoded)+len(binary))+struct.pack('<I4s',len(encoded),b'JSON')+encoded+struct.pack('<I4s',len(binary),b'BIN\0')+binary
 (SITE/'assets/models/baaabs-workshop-v24-six-station.glb').write_bytes(result)
-report={'panel_revision':'v24','framing_revision':'subframe-study-v3','panel_count':206,'panels_and_animations_unchanged':True,'added_frame_nodes':len(added),'reference_replacements':replaced,'layer_counts':dict(counts),'base_sha256':hashlib.sha256(base.read_bytes()).hexdigest(),'study_sha256':hashlib.sha256(study.read_bytes()).hexdigest()}
+report={'panel_revision':'v24','framing_revision':'subframe-study-v4','panel_count':206,'panels_and_animations_unchanged':True,'added_frame_nodes':len(added),'reference_replacements':replaced,'layer_counts':dict(counts),'base_sha256':hashlib.sha256(base.read_bytes()).hexdigest(),'study_sha256':hashlib.sha256(study.read_bytes()).hexdigest()}
 print(json.dumps(report,indent=2))
