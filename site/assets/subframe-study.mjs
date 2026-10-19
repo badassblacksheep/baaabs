@@ -1,7 +1,7 @@
 import {budgetController} from './weight-budget.mjs';
 const viewer=document.querySelector('#study'),status=document.querySelector('#status'),layers=document.querySelector('#layers'),selector=document.querySelector('#frame-layout');
-const layouts={five:{revision:'v2',count:5,label:'five-station study v2'},six:{revision:'v3',count:6,label:'six-station alternative v3'}};
-let manifest,ready=false,activeLayout='five';
+const layouts={five:{revision:'v2',count:5,label:'five-station study v2'},six:{revision:'v3',count:6,label:'six-station first contender v3'}};
+let manifest,ready=false,activeLayout='six';
 const pounds=kg=>Math.round(kg*2.20462),fmt=n=>n.toLocaleString('en-US');
 function applyLayers(){
  if(!ready)return;
@@ -13,9 +13,9 @@ function applyLayers(){
 function drawComparison(){
  const body=document.querySelector('#frame-comparison');body.replaceChildren();
  for(const [label,key]of [['Tube steel','tube_steel_kg'],['Plywood','plywood_kg'],['Steel + floor','subtotal_kg']]){
-  const a=layouts.five.manifest.mass_budget[key],b=layouts.six.manifest.mass_budget[key],row=document.createElement('tr');
+  const a=layouts.six.manifest.mass_budget[key],b=layouts.five.manifest.mass_budget[key],row=document.createElement('tr');
   for(const [i,text]of [label,fmt(pounds(a))+' lb',fmt(pounds(b))+' lb',(b-a>0?'+':'')+fmt(pounds(b-a))+' lb'].entries()){
-   const el=document.createElement(i===0?'th':'td');el.textContent=text;if(i===(activeLayout==='five'?1:2))el.classList.add('active-column');row.append(el)
+   const el=document.createElement(i===0?'th':'td');el.textContent=text;if(i===(activeLayout==='six'?1:2))el.classList.add('active-column');row.append(el)
   }body.append(row)
  }
 }
@@ -43,7 +43,7 @@ async function selectLayout(key){
   document.querySelector('#download-members').href=`assets/subframe-members-${layout.revision}.csv`;
   document.querySelector('#download-parameters').href=`assets/subframe-parameters-${layout.revision}.json`;
   const mass=manifest.mass_budget;document.querySelector('#mass').textContent=`${layout.count}-station layout: tube steel ≈ ${fmt(mass.tube_steel_kg)} kg; plywood ≈ ${fmt(mass.plywood_kg)} kg. Subtotal ≈ ${fmt(mass.subtotal_kg)} kg (${fmt(pounds(mass.subtotal_kg))} lb).`;
-  document.querySelector('#layout-description').textContent=key==='six'?'Alternative: B moves forward to just behind the front wheelwell; D moves aft to just ahead of the rear wheelwell; F adds a rear pair. A, C and E stay put.':'Current layout: five paired stations A–E. Preserved as the comparison baseline.';
+  document.querySelector('#layout-description').textContent=key==='six'?'First contender: six paired stations A–F. B moves forward to just behind the front wheelwell; D moves aft to just ahead of the rear wheelwell; F adds a rear pair. A, C and E stay put.':'Comparison option: five paired stations A–E. Preserved for comparison with the six-station first contender.';
   document.querySelector('#layout-fit').textContent=key==='six'?'B/D posts have 100 mm (3.94 in) longitudinal clearance from the modeled arch edges. F sits 148 mm (5.83 in) ahead of the rear deck edge. Actual suspension, rear-engine service and mounting clearances remain unverified.':'Both alternatives use the same reference bus and unchanged equipment. Comparing mass does not establish equal strength or stiffness.';
   budgetController?.setFrameEstimate(pounds(mass.subtotal_kg),layout.label);
   drawComparison();ready=true;layers.disabled=false;applyLayers();
@@ -64,5 +64,5 @@ document.querySelector('#frame-only').addEventListener('click',()=>{layers.query
 document.querySelector('#reset').addEventListener('click',()=>{layers.querySelectorAll('input').forEach(i=>i.checked=!['skin','head','masts'].includes(i.dataset.group));applyLayers()});
 try{
  await Promise.all(Object.values(layouts).map(async layout=>{const r=await fetch(`assets/subframe-study-${layout.revision}.json?v=compare-1`);if(!r.ok)throw new Error('Layout data unavailable');layout.manifest=await r.json()}));
- await selectLayout(new URLSearchParams(location.search).get('layout')==='six'?'six':'five');
+ await selectLayout(new URLSearchParams(location.search).get('layout')==='five'?'five':'six');
 }catch(error){console.error(error);status.textContent='Comparison data unavailable. Reload to try again.';status.classList.add('error')}

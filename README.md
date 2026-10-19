@@ -59,3 +59,11 @@ Revision 23 corrects three entrance seams while preserving the vertical door jam
 Workshop interaction checks: `node tests/workshop.cjs`. These exercise selection, name-only hover, drag suppression, vertex/edge comparison, camera controls and audit navigation against the shipped panel data; they do not replace a browser layout check.
 
 Revision 24 merges 16 crown triangle pairs into 16 single flat quadrilaterals and splits 16 heavy side panels into equal-weight pieces, retaining 206 panels. B-P-061 becomes B-P-061/B-P-067 at approximately 8.25 lb each. New IDs retain source lineage; retired crown IDs remain searchable. The model and spreadsheet use v24. The expanded all-shape audit identifies 27 existing crossing pairs and no new junction pairs after matching changed IDs. The workshop offers an “Inspect lighter B-P-061” shortcut.
+
+## Workshop framing
+
+The panel workshop combines the v24 exterior (206 panels) with the existing six-station v3 subframe and removable roof deck framing. Six paired stations mean twelve uprights. Visibility controls reveal the frame alone or alongside the panels, bus, floor and equipment. Panel selection reveals hidden skin; hover remains name-only. The six-station layout is the first/default contender in the subframe study; `?layout=five` still opens the comparison.
+
+`site/assets/models/baaabs-workshop-v24-six-station.glb` preserves v24 panel geometry and eye animation. It adds the study's 102 steel members and 12 mounting zones and replaces only 12 generic deck slabs and two generic chassis boxes with the study's plywood and C-channel references. The original v24 assembly download remains available. The framing retains its existing provisional sections and placement; this integration does not load-rate it.
+
+Rebuild with `python3 tools/build-workshop-frame.py`. Check interactions with `node tests/workshop.cjs`, study defaults/switching with `node tests/subframe.cjs`, and weight arithmetic with `node --test tests/weight-budget.test.mjs`.

@@ -63,3 +63,24 @@ check('source ID search finds both lighter pieces',()=>{el('#search').value='B-P
 check('lighter-panel shortcut compares the shared split seam',()=>{el('#handling-example').emit('click');assert.equal(current(),'B-P-061');assert.equal(el('#compare-panel').value,'B-P-067');assert.match(el('#edge-comparison').textContent,/3D angle: 0.00°/)});
 check('16 crown merges and 16 side splits preserve 206 distinct panels',()=>{const audit=win.PANEL_ALIGNMENT_AUDIT;assert.equal(data.panels.length,206);assert.equal(new Set(data.panels.map(p=>p.id)).size,206);assert.equal(audit.crownMerges.length,16);assert.equal(audit.sideSplits.length,16);for(const m of audit.crownMerges){assert.equal(panel(m.retained_id).vertices_m.length,4);assert.equal(panel(m.retired_id),undefined)}for(const p of audit.sideSplits){assert.ok(Math.abs(panel(p.result_ids[0]).net_area_m2-panel(p.result_ids[1]).net_area_m2)<.00015)}});
 console.log(checks+' total workshop, geometry-data and inspector checks passed');
+
+function layerMaterial(name,color=[.1,.2,.3,1],alpha='OPAQUE'){
+ return {name,alpha,pbrMetallicRoughness:{baseColorFactor:color,setBaseColorFactor(v){this.baseColorFactor=v}},emissiveFactor:[0,0,0],setEmissiveFactor(v){this.emissiveFactor=v},getAlphaMode(){return this.alpha},setAlphaMode(v){this.alpha=v}};
+}
+const layers=['subframe','deckframe','panels','bus','deck','equipment'];for(const g of layers)el('#layer-'+g).checked=true;
+const skin=layerMaterial('Panel_B-P-061',[.1,.1,.1,1],'MASK'),frame=layerMaterial('Workshop_subframe_steel'),roof=layerMaterial('Workshop_deckframe_steel'),bus=layerMaterial('Workshop_bus_paint');
+vm.runInContext('restoreHighlights()',context);model.model.materials=[skin,frame,roof,bus];
+vm.runInContext(fs.readFileSync(path.join(site,'panel-layers.js'),'utf8'),context);
+check('frame-only view hides skin and bus while showing both frames',()=>{
+ el('#show-framing').emit('click');assert.equal(skin.alpha,'BLEND');assert.equal(skin.pbrMetallicRoughness.baseColorFactor[3],0);assert.equal(bus.pbrMetallicRoughness.baseColorFactor[3],0);assert.equal(frame.pbrMetallicRoughness.baseColorFactor[3],1);assert.equal(roof.pbrMetallicRoughness.baseColorFactor[3],1);assert.equal(current(),'B-P-061');
+});
+check('hidden skin stays hidden through highlighting and cannot be picked',()=>{
+ vm.runInContext('paintHighlights()',context);assert.equal(skin.pbrMetallicRoughness.baseColorFactor[3],0);hit='B-P-050';model.emit('pointermove');flush();assert.equal(el('#panel-tooltip').hidden,true);model.emit('pointerdown');model.emit('pointerup');model.emit('click');assert.equal(current(),'B-P-061');
+});
+check('table selection reveals skin and restores original alpha mode',()=>{
+ row('B-P-050').emit('click');assert.equal(current(),'B-P-050');assert.equal(el('#layer-panels').checked,true);assert.equal(skin.alpha,'MASK');assert.equal(skin.pbrMetallicRoughness.baseColorFactor[3],1);assert.equal(bus.pbrMetallicRoughness.baseColorFactor[3],0);
+});
+check('frame controls act independently and all-layers restores visibility',()=>{
+ el('#layer-deckframe').checked=false;el('#layer-deckframe').emit('change');assert.equal(roof.pbrMetallicRoughness.baseColorFactor[3],0);assert.equal(frame.pbrMetallicRoughness.baseColorFactor[3],1);el('#restore-layers').emit('click');assert.equal(bus.pbrMetallicRoughness.baseColorFactor[3],1);assert.equal(roof.alpha,'OPAQUE');assert.equal(roof.pbrMetallicRoughness.baseColorFactor[3],1);
+});
+console.log(checks+' total workshop checks passed');
