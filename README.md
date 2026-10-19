@@ -11,7 +11,7 @@ The website is published with GitHub Pages at
 
 The bus must drive from Washington with **no more than 102 inches / 2.5908 m total outside width** in road configuration. This is a project invariant. The retained configuration is the donor bus plus six station pairs and all attached fittings; deck/frame, panels, projecting panel supports, speakers and event equipment come off. The requirement cannot be replaced with an oversize-permit assumption.
 
-The authoritative constraint is `site/assets/project-constraints.json`; contributor instructions are in `AGENTS.md`. The current v4 study **fails** at 104.87 inches across the stations alone, approximately 105.35 inches with mirrored docking pads. These are model dimensions; the 96-inch manufacturer exterior width and the model's added rub rails need reconciliation against field measurements.
+The authoritative constraint is `site/assets/project-constraints.json`; contributor instructions are in `AGENTS.md`. The current v5 2×6 upright study **fails** at 102.87 inches across the stations alone, approximately 103.35 inches with mirrored docking pads. These are model dimensions; the 96-inch manufacturer exterior width and the model's added rub rails need reconciliation against field measurements.
 
 `python3 tools/check-road-width.py --require-pass` rejects an overwidth or incomplete road configuration. `--write` regenerates the visibly labeled study report on all three design pages. Publishing a failing study is allowed; describing it as road-compliant is not. CI tests boundary cases, retained hardware and incomplete inventories, and checks the published report against the model files. Meeting this width check alone does not establish strength, field clearance or compliance with other road rules.
 
@@ -70,7 +70,7 @@ Revision 24 merges 16 crown triangle pairs into 16 single flat quadrilaterals an
 
 ## Workshop framing
 
-The panel workshop combines the v24 exterior (206 panels) with the six-station v4 subframe and removable roof deck framing. Six paired stations mean twelve uprights. Visibility controls reveal the frame alone or alongside the panels, bus, floor and equipment. Panel selection reveals hidden skin; hover remains name-only. The six-station layout is the first/default contender in the subframe study; `?layout=five` still opens the comparison.
+The panel workshop combines the v24 exterior (206 panels) with the six-station v5 subframe and removable roof deck framing. Six paired stations mean twelve uprights. Visibility controls reveal the frame alone or alongside the panels, bus, floor and equipment. Panel selection reveals hidden skin; hover remains name-only. The six-station layout is the first/default contender in the subframe study; `?layout=five` still opens the comparison.
 
 `site/assets/models/baaabs-workshop-v24-six-station.glb` preserves v24 panel geometry and eye animation. It adds the study's 102 steel members and 12 mounting zones and replaces only 12 generic deck slabs and two generic chassis boxes with the study's plywood and C-channel references. The original v24 assembly download remains available. The framing retains its provisional sections and longitudinal station locations; this integration does not load-rate it.
 
@@ -80,7 +80,7 @@ Rebuild with `python3 tools/build-workshop-frame.py`. Check interactions with `n
 
 `site/panel-mounting.html` shows an assembled/exploded local bay using existing panels B-D-033/B-D-034 and exact C/D station positions. Orange steel outriggers carry a teal aluminum cassette on two lower seats, with four bolted flanges and isolation pads. The detail is provisional: no section, weld, fastener, local tube-wall, vehicle-motion or access design is approved. Existing workshop geometry is unchanged; the concept is linked from the workshop and subframe study.
 
-Rebuild with Blender: `blender -b --python tools/build-panel-mounting.py`. The script exports three current concept GLBs, modeled mass assumptions and local QA renders under the parent project's `outputs/panel-mounting-v3/`. Test concept controls with `node tests/panel-mounting.cjs`. The skin remains 206 panels; this example groups two sheets without merging or renumbering them.
+Rebuild with Blender: `blender -b --python tools/build-panel-mounting.py`. The script exports three current concept GLBs, modeled mass assumptions and local QA renders under the parent project's `outputs/panel-mounting-v4/`. Test concept controls with `node tests/panel-mounting.cjs`. The skin remains 206 panels; this example groups two sheets without merging or renumbering them.
 
 ## Removable station mounts — concept 02
 
@@ -90,4 +90,10 @@ That preserved stripped local model retains only station tubes, stationary pads/
 
 ## Closer station fit — concept 03
 
-The current v4 six-station study moves each side inward 6.2 mm, leaving a provisional 6 mm gap to modeled rub rails. The bare post width is 104.87 in; mirrored mounting pads reach 105.35 in. The 96-in nominal bus body and added rub-rail details are unmeasured reference geometry. Mounting concept v3 uses internal captive-nut cartridges with flush bus-facing sleeve ends, replacing the external rear nut cages and avoiding the old bolt/window interference. These are illustrative connections, not fabrication-ready or load-rated. Panel geometry remains at revision 24 / 206 panels.
+The preserved v4 six-station study moves each side inward 6.2 mm, leaving a provisional 6 mm gap to modeled rub rails. The bare post width is 104.87 in; mirrored mounting pads reach 105.35 in. The 96-in nominal bus body and added rub-rail details are unmeasured reference geometry. Mounting concept v3 uses internal captive-nut cartridges with flush bus-facing sleeve ends, replacing the external rear nut cages and avoiding the old bolt/window interference. These are illustrative connections, not fabrication-ready or load-rated. Panel geometry remains at revision 24 / 206 panels.
+
+## Rectangular upright candidate — v5 frame / concept 04
+
+The current six-station model uses 2×6×⅛-inch rectangular uprights and removable caps, with 2 inches transverse and 6 inches fore-and-aft. Existing station X locations and a provisional 6 mm rub-rail gap remain. Wheel-arch clearances at B/D shrink from 100 mm to 61.9 mm. Twelve posts weigh approximately 681 lb versus 505 lb for 3×3; idealized fore-and-aft bending stiffness is 4.17× and side-to-side stiffness is 0.72×. These are nominal-wall, sharp-corner calculations, not load capacities. The entire steel/plywood study now weighs about 4,466 lb. The 102-inch road-width gate still fails.
+
+Mounting concept 04 uses matching rectangular posts and shorter internal sleeves. Its Stations only view removes roof framing, braces and projecting assemblies; stationary pads/inserts remain. The 206 exterior panels are unchanged. Earlier v4 frame and v3 mounting assets are preserved. Rebuild with `tools/build-subframe.py`, `tools/build-workshop-frame.py`, Blender `tools/build-panel-mounting.py`, and `tools/compare-uprights.py`; regenerate road status afterward.

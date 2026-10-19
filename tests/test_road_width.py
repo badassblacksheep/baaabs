@@ -21,11 +21,23 @@ class RoadWidth(unittest.TestCase):
         r=audit.report()
         self.assertFalse(r['road_width_accepted'])
         self.assertEqual(r['stations_only']['status'],'FAIL')
-        self.assertAlmostEqual(r['stations_only']['width_in'],104.874,places=3)
+        self.assertAlmostEqual(r['stations_only']['width_in'],102.874,places=3)
         self.assertGreater(r['bus_stations_and_mirrored_dock_estimate']['width_in'],r['stations_only']['width_in'])
         self.assertIn('Current study does not meet it',audit.banner(r))
         result=subprocess.run([sys.executable,str(ROOT/'tools/check-road-width.py'),'--require-pass'],capture_output=True,text=True)
         self.assertEqual(result.returncode,1)
+    def test_rectangular_posts_have_requested_orientation(self):
+        current=json.loads((ROOT/'site/assets/project-constraints.json').read_text())['current_road_study']
+        posts=[n for n in audit.bounds(ROOT/'site'/current['frame_model']) if n['name'].endswith('-UP')]
+        self.assertEqual(len(posts),12)
+        for n in posts:
+            self.assertAlmostEqual(n['max'][0]-n['min'][0],6*.0254,places=5)
+            self.assertAlmostEqual(n['max'][1]-n['min'][1],2*.0254,places=5)
+        local=[n for n in audit.bounds(ROOT/'site'/current['mounting_model']) if n['extras'].get('mount_group')=='station']
+        self.assertEqual(len(local),2)
+        for n in local:
+            self.assertAlmostEqual(n['max'][0]-n['min'][0],6*.0254,places=5)
+            self.assertAlmostEqual(n['max'][1]-n['min'][1],2*.0254,places=5)
     def test_active_models_match_audited_sources(self):
         current=json.loads((ROOT/'site/assets/project-constraints.json').read_text())['current_road_study']
         frame=(ROOT/'site/assets/subframe-study.mjs').read_text()

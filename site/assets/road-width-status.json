@@ -3,16 +3,16 @@
   "maximum_inches": 102,
   "stations_only": {
     "status": "FAIL",
-    "width_m": 2.6638,
-    "width_in": 104.874,
-    "excess_in": 2.874,
+    "width_m": 2.6129999,
+    "width_in": 102.874,
+    "excess_in": 0.874,
     "inventory_complete": true
   },
   "bus_stations_and_mirrored_dock_estimate": {
     "status": "FAIL",
-    "width_m": 2.6758,
-    "width_in": 105.3465,
-    "excess_in": 3.3465,
+    "width_m": 2.625,
+    "width_in": 103.3465,
+    "excess_in": 1.3465,
     "inventory_complete": false
   },
   "road_width_accepted": false,
@@ -23,7 +23,7 @@
     "Verify the real donor exterior and rub-rail envelope"
   ],
   "model_sha256": {
-    "stations": "2ba7ab032d913704453bad9a19dc1972e7154e86da29bb52ed953e89978fd39e",
-    "mounting": "0d2cfccb48b69e1bc02ec8e9763f7b7257255958fe1dd654f97b75b338d111ea"
+    "stations": "5e35a95919743a76096e931a232ddd543806825134c19b7e1da8c6f1564ea6f6",
+    "mounting": "ecfbb46f0e6755992d6c4e9838e3b4ae14bb17dc51a3827a6ca9586cc761417e"
   }
 }

@@ -23,8 +23,8 @@ async function scenario(search){
 }
 (async()=>{
  const {el,budget}=await scenario('');
- assert.equal(el('#frame-layout').value,'six');assert.match(el('#study').src,/v4.glb/);assert.equal(el('#stations').children.length,6);assert.equal(budget.at(-1)[0],4299);assert.match(el('#layout-description').textContent,/First contender/);
- const row=el('#frame-comparison').children[2];assert.equal(row.children[1].textContent,'4,299 lb');assert.equal(row.children[2].textContent,'4,023 lb');assert.equal(row.children[3].textContent,'-276 lb');assert.equal(row.children[1].classes.has('active-column'),true);
+ assert.equal(el('#frame-layout').value,'six');assert.match(el('#study').src,/v5.glb/);assert.equal(el('#stations').children.length,6);assert.equal(budget.at(-1)[0],4466);assert.match(el('#layout-description').textContent,/First contender/);
+ const row=el('#frame-comparison').children[2];assert.equal(row.children[1].textContent,'4,466 lb');assert.equal(row.children[2].textContent,'4,023 lb');assert.equal(row.children[3].textContent,'-443 lb');assert.equal(row.children[1].classes.has('active-column'),true);
  el('#frame-layout').value='five';await el('#frame-layout').events.change[0]();assert.match(el('#study').src,/v2.glb/);assert.equal(el('#stations').children.length,5);assert.equal(budget.at(-1)[0],4023);assert.match(el('#download-members').href,/v2.csv/);
  const five=await scenario('?layout=five');assert.equal(five.el('#frame-layout').value,'five');
  const invalid=await scenario('?layout=unknown');assert.equal(invalid.el('#frame-layout').value,'six');

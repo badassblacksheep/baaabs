@@ -1,0 +1,34 @@
+{
+  "basis": "Nominal 1/8-inch steel wall, sharp corners, 7850 kg/m3. Idealized elastic section properties only; actual HSS corner radii, design wall thickness, local buckling, connections and bracing require engineering. No allowable load or safety factor is calculated.",
+  "sections": [
+    {
+      "revision": "v4",
+      "transverse_in": 3.0000000000000004,
+      "fore_aft_in": 3.0000000000000004,
+      "wall_in": 0.125,
+      "post_count": 12,
+      "post_length_m": 2.6222374999999998,
+      "total_post_mass_lb": 505.04718660626105,
+      "side_to_side_I_in4": 1.9840494791666667,
+      "fore_aft_I_in4": 1.9840494791666667,
+      "station_width_in": 104.87401574803151
+    },
+    {
+      "revision": "v5",
+      "transverse_in": 2.0,
+      "fore_aft_in": 6.000000000000001,
+      "wall_in": 0.125,
+      "post_count": 12,
+      "post_length_m": 2.6222374999999998,
+      "total_post_mass_lb": 680.715773251918,
+      "side_to_side_I_in4": 1.431966145833334,
+      "fore_aft_I_in4": 8.275716145833334,
+      "station_width_in": 102.8740157480315
+    }
+  ],
+  "post_mass_change_lb": 175.66858664565694,
+  "post_mass_ratio": 1.3478260869565235,
+  "side_to_side_stiffness_ratio": 0.7217391304347829,
+  "fore_aft_stiffness_ratio": 4.171123872026251,
+  "reference": "https://steeltubeinstitute.org/resources/astm-a500/"
+}

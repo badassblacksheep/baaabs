@@ -2,8 +2,8 @@ from pathlib import Path
 import json,struct,math
 ROOT=Path(__file__).resolve().parents[1];SITE=ROOT/'site'
 from glb_bounds import bounds
-study=bounds(SITE/'assets/models/baaabs-subframe-study-v4.glb');mount=bounds(SITE/'assets/models/baaabs-panel-mounting-v3.glb')
-bus=[n for n in study if n['extras'].get('component')=='bus'];P=json.loads((SITE/'assets/subframe-parameters-v4.json').read_text());U=P['upright_y_m'];half=P['sections_m']['upright'][0]/2
+study=bounds(SITE/'assets/models/baaabs-subframe-study-v5.glb');mount=bounds(SITE/'assets/models/baaabs-panel-mounting-v4.glb')
+bus=[n for n in study if n['extras'].get('component')=='bus'];P=json.loads((SITE/'assets/subframe-parameters-v5.json').read_text());U=P['upright_y_m'];half=P['sections_m']['upright'][0]/2
 rows=[]
 for s in P['stations']:
  for side in [-1,1]:

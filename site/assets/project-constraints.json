@@ -24,8 +24,8 @@
     "acceptance": "Maximum outside width of the complete retained inventory must be at or below 102 inches, including installation and movement allowances. Field dimensions and structural suitability require separate verification."
   },
   "current_road_study": {
-    "frame_model": "assets/models/baaabs-subframe-study-v4.glb",
-    "mounting_model": "assets/models/baaabs-panel-mounting-v3.glb",
+    "frame_model": "assets/models/baaabs-subframe-study-v5.glb",
+    "mounting_model": "assets/models/baaabs-panel-mounting-v4.glb",
     "retained_inventory_complete": false
   }
 }

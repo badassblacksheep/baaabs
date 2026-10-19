@@ -1,7 +1,7 @@
 from pathlib import Path
 import json,struct,copy,math,csv,hashlib,shutil,zipfile
-ROOT=next(p for p in Path(__file__).resolve().parents if (p/'baaabs/site').is_dir());SITE=ROOT/'baaabs/site';OUT=ROOT/'assets/3d/baaabs-subframe-study-v4';OUT.mkdir(exist_ok=True)
-P=json.loads((SITE/'assets/subframe-parameters-v4.json').read_text());D=P['donor'];F=P['deck'];U=P['upright_y_m']
+ROOT=next(p for p in Path(__file__).resolve().parents if (p/'baaabs/site').is_dir());SITE=ROOT/'baaabs/site';OUT=ROOT/'assets/3d/baaabs-subframe-study-v5';OUT.mkdir(exist_ok=True)
+P=json.loads((SITE/'assets/subframe-parameters-v5.json').read_text());D=P['donor'];F=P['deck'];U=P['upright_y_m']
 src=SITE/'assets/models/baaabs-subframe-study-v1.glb';raw=src.read_bytes();n=struct.unpack_from('<I',raw,12)[0];doc=json.loads(raw[20:20+n]);binary=bytearray(raw[28+n:]);before=copy.deepcopy(doc)
 manifest=json.loads((SITE/'assets/subframe-study-v1.json').read_text());groups=manifest['materials'];members=[]
 def sub(a,b):return tuple(x-y for x,y in zip(a,b))
@@ -93,22 +93,22 @@ for i,node in enumerate(before['nodes']):
 assert max(b-a for a,b in zip(joistxs,joistxs[1:]))<=F['joist_max_spacing_m']
 assert len(stations)==6
 assert abs(U-S['upright'][0]/2-D['width_m']/2-P['side_fit']['modeled_rub_rail_projection_m']-P['side_fit']['provisional_clearance_m'])<1e-8
-assert abs(xs[1]-S['upright'][0]/2-(D['front_axle_x_m']+.60)-.10)<1e-6
-assert abs((D['rear_axle_x_m']-.60)-(xs[3]+S['upright'][0]/2)-.10)<1e-6
-assert xs[-1]+S['upright'][0]/2<F['length_m']/2
+assert abs(xs[1]-S['upright'][1]/2-(D['front_axle_x_m']+.60)-P['wheelwell_post_clearance_m'])<1e-6
+assert abs((D['rear_axle_x_m']-.60)-(xs[3]+S['upright'][1]/2)-P['wheelwell_post_clearance_m'])<1e-6
+assert xs[-1]+S['upright'][1]/2<F['length_m']/2
 assert min(xs)>-4.98 # behind approved door opening
 assert floorbottom-S['header'][1]>D['height_m']
 doc['buffers'][0]['byteLength']=len(binary);encoded=json.dumps(doc,separators=(',',':')).encode();encoded+=b' '*(-len(encoded)%4);binary.extend(b'\0'*(-len(binary)%4));result=struct.pack('<4sII',b'glTF',2,28+len(encoded)+len(binary))+struct.pack('<I4s',len(encoded),b'JSON')+encoded+struct.pack('<I4s',len(binary),b'BIN\0')+binary
-name='baaabs-subframe-study-v4.glb';(OUT/name).write_bytes(result);(SITE/'assets/models'/name).write_bytes(result)
+name='baaabs-subframe-study-v5.glb';(OUT/name).write_bytes(result);(SITE/'assets/models'/name).write_bytes(result)
 steel=sum(m['approx_kg'] for m in members);wood=F['length_m']*F['width_m']*F['plywood_thickness_m']*600
 used_material_names={doc['materials'][p['material']]['name'] for node in doc['nodes'] if 'mesh' in node for p in doc['meshes'][node['mesh']]['primitives']}
 groups={k:v for k,v in groups.items() if k in used_material_names}
-manifest.update(revision=P['revision'],geometry_unchanged=False,parameters=P,materials=groups,member_count=len(members),changed_reference_nodes=14,new_mesh_count=len(doc['nodes'])-len(before['nodes']),notes=P['status'],mass_budget={'tube_steel_kg':round(steel,1),'plywood_kg':round(wood,1),'subtotal_kg':round(steel+wood,1),'excludes':'Brackets, bolts, rails, panels, head, speakers, generator, fluids, people; plywood density and steel corners approximate'},checks={'unchanged_other_reference_nodes':len(before['nodes'])-14,'original_binary_preserved':True,'maximum_joist_spacing_m':max(b-a for a,b in zip(joistxs,joistxs[1:])),'minimum_header_roof_gap_m':floorbottom-S['header'][1]-D['height_m'],'door_rear_edge_to_A_post_m':xs[0]-S['upright'][0]/2-(-4.98),'underbody_clearance_verified':False,'strength_verified':False})
-(OUT/'study-manifest.json').write_text(json.dumps(manifest,indent=2));(SITE/'assets/subframe-study-v4.json').write_text(json.dumps(manifest,separators=(',',':')))
+manifest.update(revision=P['revision'],geometry_unchanged=False,parameters=P,materials=groups,member_count=len(members),changed_reference_nodes=14,new_mesh_count=len(doc['nodes'])-len(before['nodes']),notes=P['status'],mass_budget={'tube_steel_kg':round(steel,1),'plywood_kg':round(wood,1),'subtotal_kg':round(steel+wood,1),'excludes':'Brackets, bolts, rails, panels, head, speakers, generator, fluids, people; plywood density and steel corners approximate'},checks={'unchanged_other_reference_nodes':len(before['nodes'])-14,'original_binary_preserved':True,'maximum_joist_spacing_m':max(b-a for a,b in zip(joistxs,joistxs[1:])),'minimum_header_roof_gap_m':floorbottom-S['header'][1]-D['height_m'],'door_rear_edge_to_A_post_m':xs[0]-S['upright'][1]/2-(-4.98),'underbody_clearance_verified':False,'strength_verified':False})
+(OUT/'study-manifest.json').write_text(json.dumps(manifest,indent=2));(SITE/'assets/subframe-study-v5.json').write_text(json.dumps(manifest,separators=(',',':')))
 (OUT/'members.json').write_text(json.dumps(members,indent=2))
 with (OUT/'members.csv').open('w') as f:
  writer=csv.DictWriter(f,fieldnames=members[0].keys());writer.writeheader();writer.writerows(members)
 shutil.copy2(Path(__file__),OUT/'build.py')
 (OUT/'parameters.json').write_text(json.dumps(P,indent=2))
-shutil.copy2(OUT/'parameters.json',SITE/'assets/subframe-parameters-v4.json');shutil.copy2(OUT/'members.csv',SITE/'assets/subframe-members-v4.csv')
+shutil.copy2(OUT/'parameters.json',SITE/'assets/subframe-parameters-v5.json');shutil.copy2(OUT/'members.csv',SITE/'assets/subframe-members-v5.csv')
 print(json.dumps({k:manifest[k] for k in ['member_count','new_mesh_count','mass_budget','checks']},indent=2))

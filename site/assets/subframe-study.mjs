@@ -1,6 +1,6 @@
 import {budgetController} from './weight-budget.mjs';
 const viewer=document.querySelector('#study'),status=document.querySelector('#status'),layers=document.querySelector('#layers'),selector=document.querySelector('#frame-layout');
-const layouts={five:{revision:'v2',count:5,label:'five-station study v2'},six:{revision:'v4',count:6,label:'six-station first contender v4'}};
+const layouts={five:{revision:'v2',count:5,label:'five-station study v2'},six:{revision:'v5',count:6,label:'six-station 2×6 first contender v5'}};
 let manifest,ready=false,activeLayout='six';
 const pounds=kg=>Math.round(kg*2.20462),fmt=n=>n.toLocaleString('en-US');
 function applyLayers(){
@@ -43,8 +43,8 @@ async function selectLayout(key){
   document.querySelector('#download-members').href=`assets/subframe-members-${layout.revision}.csv`;
   document.querySelector('#download-parameters').href=`assets/subframe-parameters-${layout.revision}.json`;
   const mass=manifest.mass_budget;document.querySelector('#mass').textContent=`${layout.count}-station layout: tube steel ≈ ${fmt(mass.tube_steel_kg)} kg; plywood ≈ ${fmt(mass.plywood_kg)} kg. Subtotal ≈ ${fmt(mass.subtotal_kg)} kg (${fmt(pounds(mass.subtotal_kg))} lb).`;
-  document.querySelector('#layout-description').textContent=key==='six'?'First contender: six paired stations A–F. B moves forward to just behind the front wheelwell; D moves aft to just ahead of the rear wheelwell; F adds a rear pair. All six station pairs move inward 6.2 mm per side, with a provisional 6 mm gap to the modeled rub rails. Longitudinal locations are unchanged from v3.':'Comparison option: five paired stations A–E. Preserved for comparison with the six-station first contender.';
-  document.querySelector('#layout-fit').textContent=key==='six'?'Bare upright width is 104.9 in; docking pads add width. The gap is not a verified movement allowance. B/D posts have 100 mm (3.94 in) longitudinal clearance from the modeled arch edges. F sits 148 mm (5.83 in) ahead of the rear deck edge. Actual suspension, rear-engine service and mounting clearances remain unverified.':'The five-station alternative retains its original lateral spacing. Both alternatives use the same reference bus and unchanged equipment. Comparing mass does not establish equal strength or stiffness.';
+  document.querySelector('#layout-description').textContent=key==='six'?'First contender: six paired stations A–F with rectangular uprights, 2 inches across the bus and 6 inches fore-and-aft. Longitudinal locations stay fixed; the posts retain a provisional 6 mm gap to the modeled rub rails.':'Comparison option: five paired stations A–E with the previous 3×3 uprights. This changes both station count and upright section; it is not an equal-capacity comparison.';
+  document.querySelector('#layout-fit').textContent=key==='six'?'Bare upright width is 102.9 in; mirrored docking pads bring it to approximately 103.3 in. Both exceed the hard 102-inch limit. The wider fore-and-aft posts leave 61.9 mm (2.44 in) at the B/D wheel-arch edges and 110 mm (4.33 in) ahead of the rear deck edge. Field clearance and strength remain unverified.':'The five-station alternative retains its original sections and lateral spacing. Comparing weight does not establish equal strength or stiffness.';
   budgetController?.setFrameEstimate(pounds(mass.subtotal_kg),layout.label);
   drawComparison();ready=true;layers.disabled=false;applyLayers();
  }catch(error){console.error('Subframe viewer:',error);selector.value=activeLayout;status.textContent='This layout could not load. Choose a layout to retry.';status.classList.add('error')}
