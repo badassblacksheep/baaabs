@@ -1,0 +1,235 @@
+{
+  "revision": "lightweight-comparison-1",
+  "brief": {
+    "revision": "lightweight-brief-1",
+    "date": "2026-10-19",
+    "status": "Requirements fixed for concept comparison; neither concept is selected, load-rated or approved for fabrication",
+    "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
+    "requirements": {
+      "people": 20,
+      "person_allowance_lb": 225,
+      "total_people_allowance_lb": 4500,
+      "use": "Dancing while the bus moves at up to 5 mph",
+      "maximum_event_speed_mph": 5,
+      "deck_footprint_m": [
+        11.396,
+        2.6984
+      ],
+      "deck_surface_height_m": 3.4004,
+      "deck_geometry_basis": "Preserve current modeled footprint and height for both concepts; donor geometry remains unmeasured",
+      "exterior_panel_count": 206,
+      "road_width_maximum_in": 102,
+      "road_requirement_source": "project-constraints.json",
+      "road_retained": "Donor bus, all permanent supports and every retained fitting",
+      "road_removed": "Roof deck/removable frame, sheep panels, projecting support assemblies, speakers and event equipment",
+      "removable_connections": true
+    },
+    "variables": [
+      "Station count and positions, subject to actual attachment access",
+      "Member geometry, material specification and wall thickness",
+      "Floor joist arrangement and deck construction",
+      "Truss layout and available depth without changing the deck height",
+      "Transverse bracing, removable connections and module sizes",
+      "Panel subframes and dedicated equipment supports"
+    ],
+    "concepts": [
+      {
+        "id": "six",
+        "name": "Optimized six-station frame",
+        "station_ids": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "status": "Concept; existing v5 is a mass and geometry reference only"
+      },
+      {
+        "id": "four",
+        "name": "Four-station frame with longitudinal trusses",
+        "station_ids": [
+          "A",
+          "C",
+          "D",
+          "F"
+        ],
+        "status": "Concept; retained positions are a first comparison, not optimized or field-verified"
+      }
+    ],
+    "deferred_measurements": [
+      "Actual exterior and rub-rail width and clearances along uprights",
+      "Chassis rail dimensions, spacing, condition and accessible attachments",
+      "Scale weights, axle loads, GVWR and axle/tire ratings",
+      "Equipment weights and locations, including speakers and head"
+    ],
+    "unresolved_engineering": [
+      "Acceleration, braking, cornering, bumps, synchronized dancing, wind and fatigue loads",
+      "Floor vibration, crowd distribution and frame reactions",
+      "Transverse stability and removable joint stiffness/strength",
+      "Chassis attachment uplift, bearing, torsion and body/chassis movement",
+      "Whole-vehicle stability and complete road configuration"
+    ],
+    "not_adopted": [
+      "Rub-rail cutting or welding uprights to the bus body",
+      "Using the existing body as an assumed dance-floor support",
+      "Treating a 2x live-load sensitivity as a validated dancing factor",
+      "Any final member sizes, connection details or fabrication drawings"
+    ]
+  },
+  "reference": "subframe-study-v5",
+  "mass_basis": "Current schedule: nominal sharp-corner steel at 7850 kg/m\u00b3; plywood at 600 kg/m\u00b3. Rounded source member masses. No structural adequacy implied.",
+  "excluded_mass": [
+    "connections and fasteners",
+    "guardrails",
+    "panels and panel subframes",
+    "head",
+    "speakers and other equipment"
+  ],
+  "categories": [
+    {
+      "id": "stations",
+      "label": "Posts, lower beams, caps & headers",
+      "lb": 1572.380946355857
+    },
+    {
+      "id": "joists",
+      "label": "37 floor joists",
+      "lb": 1219.4870032763274
+    },
+    {
+      "id": "floor",
+      "label": "Plywood floor",
+      "lb": 774.8885766138333
+    },
+    {
+      "id": "longitudinals",
+      "label": "Longitudinal roof beams",
+      "lb": 556.711304469562
+    },
+    {
+      "id": "bracing",
+      "label": "Side & roof diagonals",
+      "lb": 342.2676620422125
+    }
+  ],
+  "baseline_lb": 4465.735492757793,
+  "concepts": [
+    {
+      "id": "six",
+      "name": "Optimized six-station frame",
+      "station_ids": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "status": "Concept; existing v5 is a mass and geometry reference only",
+      "station_x_m": [
+        -4.75,
+        -3.0719,
+        -0.85,
+        2.3861,
+        4.45,
+        5.55
+      ],
+      "spans_m": [
+        1.6781000000000001,
+        2.2218999999999998,
+        3.2361,
+        2.0639000000000003,
+        1.0999999999999996
+      ],
+      "maximum_span_m": 3.2361,
+      "removed_station_ids": [],
+      "gross_removed_station_mass_lb": 0.0
+    },
+    {
+      "id": "four",
+      "name": "Four-station frame with longitudinal trusses",
+      "station_ids": [
+        "A",
+        "C",
+        "D",
+        "F"
+      ],
+      "status": "Concept; retained positions are a first comparison, not optimized or field-verified",
+      "station_x_m": [
+        -4.75,
+        -0.85,
+        2.3861,
+        5.55
+      ],
+      "spans_m": [
+        3.9,
+        3.2361,
+        3.1639
+      ],
+      "maximum_span_m": 3.9,
+      "removed_station_ids": [
+        "B",
+        "E"
+      ],
+      "gross_removed_station_mass_lb": 524.126982118619
+    }
+  ],
+  "span_sensitivity": {
+    "moment_ratio": 1.4523970132564057,
+    "deflection_ratio": 2.1094570841161278,
+    "basis": "Simply supported beam, same uniform line load and unchanged section/EI. This is a span sensitivity, not a truss analysis or whole-frame response."
+  },
+  "diagram": {
+    "donor_length_m": 12.446,
+    "donor_height_m": 3.2004,
+    "deck_length_m": 11.396,
+    "deck_width_m": 2.6984,
+    "deck_height_m": 3.4004,
+    "station_base_m": 0.5277625,
+    "axles_x_m": [
+      -3.81,
+      3.1242
+    ],
+    "stations": [
+      {
+        "id": "A",
+        "x_m": -4.75,
+        "purpose": "Behind door / head-support interface",
+        "verify": "Stepwell, front suspension and head load transfer"
+      },
+      {
+        "id": "B",
+        "x_m": -3.0719,
+        "purpose": "Just behind front wheelwell",
+        "verify": "Actual arch, suspension, luggage bay and speaker brackets"
+      },
+      {
+        "id": "C",
+        "x_m": -0.85,
+        "purpose": "Ahead of generator envelope",
+        "verify": "Tank, driveshaft, generator service and body mounts"
+      },
+      {
+        "id": "D",
+        "x_m": 2.3861,
+        "purpose": "Just ahead of rear wheelwell",
+        "verify": "Actual arch, suspension and rear speaker brackets"
+      },
+      {
+        "id": "E",
+        "x_m": 4.45,
+        "purpose": "Rear deck / rump interface",
+        "verify": "Rear engine, cooling and service access"
+      },
+      {
+        "id": "F",
+        "x_m": 5.55,
+        "purpose": "Rear deck edge / rump interface",
+        "verify": "Rear engine, cooling, service hatch and stair interface"
+      }
+    ]
+  },
+  "budget_basis": "User-controlled mass targets only. Shared reductions apply equally to both concepts. Four-station extra steel/joints is a NET allowance relative to the retained v5 members, including all reinforcement, replacements and differential fittings. Unlisted common systems remain excluded. No resulting value is a sized design or total vehicle weight."
+}

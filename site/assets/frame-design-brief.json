@@ -1,0 +1,53 @@
+{
+  "revision": "lightweight-brief-1",
+  "date": "2026-10-19",
+  "status": "Requirements fixed for concept comparison; neither concept is selected, load-rated or approved for fabrication",
+  "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
+  "requirements": {
+    "people": 20,
+    "person_allowance_lb": 225,
+    "total_people_allowance_lb": 4500,
+    "use": "Dancing while the bus moves at up to 5 mph",
+    "maximum_event_speed_mph": 5,
+    "deck_footprint_m": [11.396, 2.6984],
+    "deck_surface_height_m": 3.4004,
+    "deck_geometry_basis": "Preserve current modeled footprint and height for both concepts; donor geometry remains unmeasured",
+    "exterior_panel_count": 206,
+    "road_width_maximum_in": 102,
+    "road_requirement_source": "project-constraints.json",
+    "road_retained": "Donor bus, all permanent supports and every retained fitting",
+    "road_removed": "Roof deck/removable frame, sheep panels, projecting support assemblies, speakers and event equipment",
+    "removable_connections": true
+  },
+  "variables": [
+    "Station count and positions, subject to actual attachment access",
+    "Member geometry, material specification and wall thickness",
+    "Floor joist arrangement and deck construction",
+    "Truss layout and available depth without changing the deck height",
+    "Transverse bracing, removable connections and module sizes",
+    "Panel subframes and dedicated equipment supports"
+  ],
+  "concepts": [
+    {"id": "six", "name": "Optimized six-station frame", "station_ids": ["A", "B", "C", "D", "E", "F"], "status": "Concept; existing v5 is a mass and geometry reference only"},
+    {"id": "four", "name": "Four-station frame with longitudinal trusses", "station_ids": ["A", "C", "D", "F"], "status": "Concept; retained positions are a first comparison, not optimized or field-verified"}
+  ],
+  "deferred_measurements": [
+    "Actual exterior and rub-rail width and clearances along uprights",
+    "Chassis rail dimensions, spacing, condition and accessible attachments",
+    "Scale weights, axle loads, GVWR and axle/tire ratings",
+    "Equipment weights and locations, including speakers and head"
+  ],
+  "unresolved_engineering": [
+    "Acceleration, braking, cornering, bumps, synchronized dancing, wind and fatigue loads",
+    "Floor vibration, crowd distribution and frame reactions",
+    "Transverse stability and removable joint stiffness/strength",
+    "Chassis attachment uplift, bearing, torsion and body/chassis movement",
+    "Whole-vehicle stability and complete road configuration"
+  ],
+  "not_adopted": [
+    "Rub-rail cutting or welding uprights to the bus body",
+    "Using the existing body as an assumed dance-floor support",
+    "Treating a 2x live-load sensitivity as a validated dancing factor",
+    "Any final member sizes, connection details or fabrication drawings"
+  ]
+}
