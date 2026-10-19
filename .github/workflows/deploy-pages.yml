@@ -23,6 +23,11 @@ jobs:
     steps:
       - name: Check out the site
         uses: actions/checkout@v4
+      - name: Check road-width invariant and study status
+        run: |
+          python3 -m unittest discover -s tests -p 'test_road_width.py'
+          python3 tools/check-road-width.py --write
+          git diff --exit-code -- site/assets/road-width-status.json site/panels.html site/subframe.html site/panel-mounting.html
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:

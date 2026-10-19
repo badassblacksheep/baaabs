@@ -7,6 +7,14 @@ BAAABS is a towering, fire-eyed black sheep, a rooftop dance floor, who suffers 
 The website is published with GitHub Pages at
 <https://badassblacksheep.github.io/baaabs/>.
 
+## Hard road-width requirement
+
+The bus must drive from Washington with **no more than 102 inches / 2.5908 m total outside width** in road configuration. This is a project invariant. The retained configuration is the donor bus plus six station pairs and all attached fittings; deck/frame, panels, projecting panel supports, speakers and event equipment come off. The requirement cannot be replaced with an oversize-permit assumption.
+
+The authoritative constraint is `site/assets/project-constraints.json`; contributor instructions are in `AGENTS.md`. The current v4 study **fails** at 104.87 inches across the stations alone, approximately 105.35 inches with mirrored docking pads. These are model dimensions; the 96-inch manufacturer exterior width and the model's added rub rails need reconciliation against field measurements.
+
+`python3 tools/check-road-width.py --require-pass` rejects an overwidth or incomplete road configuration. `--write` regenerates the visibly labeled study report on all three design pages. Publishing a failing study is allowed; describing it as road-compliant is not. CI tests boundary cases, retained hardware and incomplete inventories, and checks the published report against the model files. Meeting this width check alone does not establish strength, field clearance or compliance with other road rules.
+
 ## Contributions
 
 “Help Build BAAABS” offers one-time preset amounts and a custom amount at
@@ -78,7 +86,7 @@ Rebuild with Blender: `blender -b --python tools/build-panel-mounting.py`. The s
 
 The preserved second concept uses v2 assets. Lower arms, braces, seats and outer retainers form removable brackets; upper arms detach separately. Three prepared locations per station use front/back pads, internal sleeves and captive nut cages with illustrative through-bolts, avoiding a rear holding wrench. The upper arm root is 80 mm below its outer attachment to avoid placing its sleeve at the existing D-brace node. Assembled, exploded and Arms removed views expose the two removal stages. V1 models and `tools/build-panel-mounting-v1.py` remain preserved.
 
-That preserved stripped local model retains only station tubes, stationary pads/sleeves and existing frame references. It is not a whole-vehicle road configuration: the existing paired uprights are 105.36 inches wide before pads (105.83 with matching pads both sides), exceeding Washington's standard 102-inch width. Repositioning or demounting the uprights, or applicable route/permit provisions, still need resolution. No structural capacity or release access is established.
+That preserved stripped local model retains only station tubes, stationary pads/sleeves and existing frame references. It is not a whole-vehicle road configuration: the existing paired uprights are 105.36 inches wide before pads (105.83 with matching pads both sides), exceeding Washington's standard 102-inch width. The permanent station design must be revised to meet the hard 102-inch project requirement. No structural capacity or release access is established.
 
 ## Closer station fit — concept 03
 

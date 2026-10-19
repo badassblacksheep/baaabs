@@ -1,0 +1,29 @@
+{
+  "requirement": "ROAD-WIDTH-102",
+  "maximum_inches": 102,
+  "stations_only": {
+    "status": "FAIL",
+    "width_m": 2.6638,
+    "width_in": 104.874,
+    "excess_in": 2.874,
+    "inventory_complete": true
+  },
+  "bus_stations_and_mirrored_dock_estimate": {
+    "status": "FAIL",
+    "width_m": 2.6758,
+    "width_in": 105.3465,
+    "excess_in": 3.3465,
+    "inventory_complete": false
+  },
+  "road_width_accepted": false,
+  "basis": "Current digital study; donor rub-rail projection is approximate. Nominal 96-inch exterior specification may already include rub rails. Not a field measurement.",
+  "unresolved": [
+    "Current stations exceed the hard width limit",
+    "All retained fittings and installation/movement allowances must be inventoried",
+    "Verify the real donor exterior and rub-rail envelope"
+  ],
+  "model_sha256": {
+    "stations": "2ba7ab032d913704453bad9a19dc1972e7154e86da29bb52ed953e89978fd39e",
+    "mounting": "0d2cfccb48b69e1bc02ec8e9763f7b7257255958fe1dd654f97b75b338d111ea"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "road_width": {
+    "id": "ROAD-WIDTH-102",
+    "maximum_inches": 102,
+    "maximum_meters": 2.5908,
+    "required": true,
+    "origin": "User requirement: bus must drive from Washington; only stations remain in road configuration.",
+    "source": "https://app.leg.wa.gov/rcw/default.aspx?cite=46.44.010",
+    "retained": [
+      "donor bus",
+      "six paired stations",
+      "all attached station pads, brackets, fasteners and fittings"
+    ],
+    "removed": [
+      "roof deck and removable roof frame",
+      "sheep panels",
+      "projecting panel support assemblies",
+      "speakers and event equipment"
+    ],
+    "exclusions": [
+      "OEM rear-vision mirrors under the statutory exception; no assumed exemption for added structure"
+    ],
+    "permit_is_not_a_design_substitute": true,
+    "acceptance": "Maximum outside width of the complete retained inventory must be at or below 102 inches, including installation and movement allowances. Field dimensions and structural suitability require separate verification."
+  },
+  "current_road_study": {
+    "frame_model": "assets/models/baaabs-subframe-study-v4.glb",
+    "mounting_model": "assets/models/baaabs-panel-mounting-v3.glb",
+    "retained_inventory_complete": false
+  }
+}
