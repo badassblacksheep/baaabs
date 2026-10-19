@@ -2,11 +2,11 @@
 from pathlib import Path
 import bpy,math,json,re,bmesh
 from mathutils import Vector,Matrix
-ROOT=Path(__file__).resolve().parents[1];SITE=ROOT/'site';OUT=ROOT.parent/'outputs/panel-mounting-v1';OUT.mkdir(parents=True,exist_ok=True)
+ROOT=Path(__file__).resolve().parents[1];SITE=ROOT/'site';OUT=ROOT.parent/'outputs/panel-mounting-v2';OUT.mkdir(parents=True,exist_ok=True)
 DATA=json.loads(re.search(r'const DATA=(.*);\n',(SITE/'panels.html').read_text())[1]);panels=[p for p in DATA['panels'] if p['id'] in ['B-D-033','B-D-034']]
 P=json.loads((SITE/'assets/subframe-parameters-v3.json').read_text());xs=[s['x_m'] for s in P['stations'] if s['id'] in ['C','D']]
 bpy.ops.wm.read_factory_settings(use_empty=True);objects=[];members=[]
-COLORS={'station':(.10,.38,.60,1),'fixed':(.95,.48,.10,1),'cassette':(.06,.65,.57,1),'skin':(.42,.47,.53,1),'fastener':(.70,.75,.80,1),'isolation':(.85,.18,.48,1),'context':(.40,.32,.55,1)}
+COLORS={'station':(.10,.38,.60,1),'fixed':(.95,.48,.10,1),'cassette':(.06,.65,.57,1),'skin':(.42,.47,.53,1),'fastener':(.70,.75,.80,1),'isolation':(.85,.18,.48,1),'context':(.40,.32,.55,1),'dock':(.33,.47,.64,1),'stationbolt':(.82,.83,.87,1)}
 M={}
 for k,c in COLORS.items():
  m=bpy.data.materials.new('Mount_'+k);m.diffuse_color=c;m.use_nodes=True;bs=m.node_tree.nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=c;bs.inputs['Metallic'].default_value=.3;bs.inputs['Roughness'].default_value=.48;M[k]=m
@@ -34,9 +34,30 @@ def hole(o,center,r=.006):
  bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=r,depth=.12,location=center,rotation=(math.pi/2,0,0));cut=bpy.context.object
  bpy.context.view_layer.objects.active=o;mod=o.modifiers.new('Illustrative clearance hole','BOOLEAN');mod.operation='DIFFERENCE';mod.object=cut;bpy.ops.object.modifier_apply(modifier=mod.name);bpy.data.objects.remove(cut,do_unlink=True)
 
+def station_dock(label,x,z,key):
+ # Shop-prepared sleeves bridge the hollow upright. Field bolts release the arm.
+ front=box(label+' stationary front pad',(x,-1.3411,z),(.10,.006,.16),'dock',joint=key)
+ back=box(label+' stationary back pad',(x,-1.2589,z),(.0762,.006,.16),'dock',joint=key)
+ flange=box(label+' removable arm root flange',(x,-1.3481,z),(.10,.008,.16),'fixed',joint=key)
+ for dz in [-.04,.04]:
+  zz=z+dz
+  for plate in [front,back,flange]:hole(plate,(x,-1.3,zz),.007)
+  hole(uprights[key[0]],(x,-1.3,zz),.011)
+  sleeve=cylinder(label+' welded crush sleeve',(x,-1.3381,zz),(x,-1.2619,zz),.011,'dock',joint=key);hole(sleeve,(x,-1.3,zz),.007)
+  cylinder(label+' removable through bolt',(x,-1.356,zz),(x,-1.238,zz),.006,'stationbolt',joint=key)
+  cylinder(label+' outer washer',(x,-1.3551,zz),(x,-1.3521,zz),.013,'stationbolt',joint=key)
+  cylinder(label+' outer hex head',(x,-1.3651,zz),(x,-1.3551,zz),.0105,'stationbolt',joint=key,vertices=6)
+  nut=cylinder(label+' captive inner nut',(x,-1.2559,zz),(x,-1.2459,zz),.0105,'dock',joint=key,vertices=6)
+  cage=box(label+' captive nut cage',(x,-1.2509,zz),(.030,.010,.030),'dock',joint=key)
+  cutter=nut.copy();cutter.data=nut.data.copy();bpy.context.collection.objects.link(cutter);cutter.scale=(1.025,1.025,1.6)
+  bpy.context.view_layer.objects.active=cage;mod=cage.modifiers.new('Captive hex pocket','BOOLEAN');mod.object=cutter;mod.operation='DIFFERENCE';bpy.ops.object.modifier_apply(modifier=mod.name);bpy.data.objects.remove(cutter,do_unlink=True)
+  hole(nut,(x,-1.25,zz),.006)
+  cap=box(label+' nut cage cover',(x,-1.2449,zz),(.030,.002,.030),'dock',joint=key);hole(cap,(x,-1.24,zz),.007)
+
 # Exact station locations and 3-inch upright section from the six-station study.
+uprights={}
 for label,x in zip(['C','D'],xs):
- tube(label+' driver upright',(x,-1.3,.5277625),(x,-1.3,3.15),.0762,.003175,'station')
+ uprights[label]=tube(label+' driver upright',(x,-1.3,.5277625),(x,-1.3,3.15),.0762,.003175,'station')
  tube(label+' removable cap',(x,-1.3,3.15),(x,-1.3,3.33055),.0762,.003175,'context')
 tube('Existing C-D side brace',(xs[0],-1.3,1.2),(xs[1],-1.3,3.12),.0381,.003175,'context')
 # The current upper longitudinal is rectangular; preserve its actual envelope here.
@@ -45,8 +66,9 @@ LOW=2.703;HIGH=3.08;Y=-2.02
 for label,x in zip(['C','D'],xs):
  for level,z in [('lower',LOW),('upper',HIGH)]:
   key=label+'-'+level
-  box(key+' station doubler pad',(x,-1.3411,z),(.14,.006,.16),'fixed',joint=key)
-  tube(key+' outrigger',(x,-1.3441,z),(x,-1.98,z),.05,.003,'fixed',joint=key)
+  root_z=z-.08 if level=='upper' else z # Keep upper sleeve clear of the existing D brace node at z=3.12.
+  station_dock(key,x,root_z,key)
+  tube(key+' outrigger',(x,-1.3521,root_z),(x,-1.98,z),.05,.003,'fixed',joint=key)
   fixed=box(key+' fixed receiver plate',(x,-1.984,z),(.16,.008,.11),'fixed',joint=key)
   iso=box(key+' isolating pad',(x,-1.990,z),(.16,.004,.11),'isolation',joint=key)
   moving=box(key+' removable flange',(x,-1.996,z),(.16,.008,.11),'cassette',True,key)
@@ -58,8 +80,8 @@ for label,x in zip(['C','D'],xs):
    nut=cylinder(key+' nut',(x+dx,-1.976,z),(x+dx,-1.968,z),.009,'fastener',False,key,6);hole(nut,(x+dx,-1.97,z),.005)
  if label:
   key=label+'-lower'
-  tube(label+' lower outrigger brace',(x,-1.3441,2.13),(x,-1.955,LOW-.026),.0381,.003175,'fixed',joint=key)
-  box(label+' brace foot pad',(x,-1.3411,2.13),(.12,.006,.14),'fixed',joint=key)
+  tube(label+' lower outrigger brace',(x,-1.3521,2.13),(x,-1.955,LOW-.026),.0381,.003175,'fixed',joint=key)
+  station_dock(label+'-brace-foot',x,2.13,key)
   box(label+' gravity seat',(x,-2.02,2.675),(.17,.10,.010),'fixed',joint=key)
   box(label+' seat isolator',(x,-2.02,2.6815),(.12,.06,.003),'isolation',joint=key)
  tube(label+' cassette back upright',(x,Y,LOW),(x,Y,HIGH),.04,.002,'cassette',True)
@@ -91,29 +113,34 @@ for p in panels:
   cylinder(p['id']+' panel fastener '+str(i),point-n*.008,point+n*.025,.003,'fastener',True)
   cylinder(p['id']+' panel washer '+str(i),point-n*.011,point-n*.008,.009,'fastener',True)
 
-def export(name):
+def export(name,transport=False):
  bpy.ops.object.select_all(action='DESELECT')
- for o in objects:o.select_set(True)
+ for o in objects:
+  if not transport or o['mount_group'] in ['station','dock','context']:o.select_set(True)
  bpy.ops.export_scene.gltf(filepath=str(SITE/'assets/models'/name),export_format='GLB',use_selection=True,export_extras=True,export_animations=False)
-export('baaabs-panel-mounting-v1.glb')
+export('baaabs-panel-mounting-v2.glb')
+export('baaabs-panel-mounting-v2-transport.glb',transport=True)
 # Weight of the drawn concept only; perforation discount applies to original sheets.
-mass={};moving_kg=0;deps=bpy.context.evaluated_depsgraph_get()
+mass={};moving_kg=0;arm_mass={};deps=bpy.context.evaluated_depsgraph_get()
 for o in objects:
  g=o['mount_group']
  if g in ['station','context']:continue
  if g=='skin':kg=o['net_area_m2']*.0016002*2700*.67
  else:
-  ev=o.evaluated_get(deps);mesh=ev.to_mesh();bm=bmesh.new();bm.from_mesh(mesh);volume=abs(bm.calc_volume(signed=True));bm.free();ev.to_mesh_clear();kg=volume*({'cassette':2700,'fixed':7850,'fastener':7850,'isolation':1200}[g])
+  ev=o.evaluated_get(deps);mesh=ev.to_mesh();bm=bmesh.new();bm.from_mesh(mesh);volume=abs(bm.calc_volume(signed=True));bm.free();ev.to_mesh_clear();kg=volume*({'cassette':2700,'fixed':7850,'fastener':7850,'isolation':1200,'dock':7850,'stationbolt':7850}[g])
  mass[g]=mass.get(g,0)+kg
  if o['moves_with_region']:moving_kg+=kg
-report={'status':'Illustrative mounting concept, not load-rated or fabrication-ready','region':'Driver middle upper flank','panels':[p['id'] for p in panels],'stations':['C','D'],'station_span_m':xs[1]-xs[0],'outrigger_reach_m':.6359,'skin_outward_offset_from_uprights_m':[min(-v[1]-1.3 for p in panels for v in p['vertices_m']),max(-v[1]-1.3 for p in panels for v in p['vertices_m'])],'mass_kg':{k:round(v,2) for k,v in mass.items()},'moving_region_kg':round(moving_kg,2),'added_mounting_kg':round(sum(mass.values())-mass['skin'],2),'members':members,'limits':['No strength, fatigue, weld, bolt, panel pull-through or chassis torsion calculation','Access to inboard nuts and release clearance remain unresolved','Illustrative bolt diameter 10 mm, not selected hardware','No speaker loads assigned to this cassette','Thermal and chassis movement accommodation not designed','Panel fastener positions are illustrative; isolation sleeves and full edge support require detailing']}
-(SITE/'assets/panel-mounting-v1.json').write_text(json.dumps(report,indent=2));(OUT/'validation.json').write_text(json.dumps(report,indent=2))
+ elif g in ['fixed','isolation','fastener']:arm_mass[o['joint']]=arm_mass.get(o['joint'],0)+kg
+report={'status':'Illustrative mounting concept, not load-rated or fabrication-ready','region':'Driver middle upper flank','panels':[p['id'] for p in panels],'stations':['C','D'],'station_span_m':xs[1]-xs[0],'outrigger_reach_m':.6279,'removable_arm_assemblies_kg':{k:round(v,2) for k,v in arm_mass.items()},'transport':{'bare_station_width_in':(2*P['upright_y_m']+P['sections_m']['upright'][0])/.0254,'width_with_mirrored_docking_pads_in':2*1.3441/.0254,'standard_WA_width_in':102,'road_configuration_verified':False,'retained_groups':['station','dock','context'],'note':'Local bay only. All projecting mounts and their bolts removed. Existing frame references remain; whole-vehicle road clearance is not established.'},'skin_outward_offset_from_uprights_m':[min(-v[1]-1.3 for p in panels for v in p['vertices_m']),max(-v[1]-1.3 for p in panels for v in p['vertices_m'])],'mass_kg':{k:round(v,2) for k,v in mass.items()},'moving_region_kg':round(moving_kg,2),'added_mounting_kg':round(sum(mass.values())-mass['skin'],2),'members':members,'limits':['No strength, fatigue, weld, bolt, panel pull-through or chassis torsion calculation','Captive nut cages avoid a rear holding wrench; access and release clearance still need verification','Illustrative 10 mm cassette bolts and 12 mm station bolts, not selected hardware','Sleeve welds, upright holes, bolt bearing and local wall capacity unverified','Current station width exceeds the standard 102-inch WA width before mounting pads','No speaker loads assigned to this cassette','Thermal and chassis movement accommodation not designed','Panel fastener positions are illustrative; isolation sleeves and full edge support require detailing']}
+(SITE/'assets/panel-mounting-v2.json').write_text(json.dumps(report,indent=2));(OUT/'validation.json').write_text(json.dumps(report,indent=2))
 # Removable assembly lifted above its seats then pulled outward; bolts withdrawn separately.
 original={o.name:o.location.copy() for o in objects}
 for o in objects:
  if o['moves_with_region']:o.location+=Vector((0,-.90,.14))
- elif o['mount_group']=='fastener':o.location+=Vector((0,-.42,0))
-export('baaabs-panel-mounting-v1-exploded.glb')
+ elif o['mount_group'] in ['fixed','isolation']:o.location+=Vector((0,-.32,0))
+ elif o['mount_group']=='stationbolt':o.location+=Vector((0,-.16,0))
+ elif o['mount_group']=='fastener':o.location+=Vector((0,-.65,0))
+export('baaabs-panel-mounting-v2-exploded.glb')
 # Offline visual inspection in three useful views.
 s=bpy.context.scene;s.render.engine='BLENDER_WORKBENCH';s.render.resolution_x=1600;s.render.resolution_y=1100;s.render.resolution_percentage=100
 s.display.shading.light='STUDIO';s.display.shading.color_type='MATERIAL';s.display.shading.show_shadows=True;s.display.shading.show_cavity=True;s.display.shading.cavity_type='BOTH';s.display.shading.background_type='WORLD';s.world=bpy.data.worlds.new('World');s.world.color=(.09,.10,.12)
@@ -123,6 +150,10 @@ def render(name,pos,target,scale):
 render('exploded',(-5,-9,5.6),(.7,-2.0,2.6),5.5)
 for o in objects:o.location=original[o.name]
 render('assembled-back',(5,2,4.7),(.7,-1.9,2.5),4.7)
+for o in objects:o.hide_render=o['mount_group'] not in ['station','dock','context']
+render('arms-removed',(-4,-6,4),(.7,-1.3,2.1),4.7)
+for o in objects:o.hide_render=o['joint']!='C-lower' and o['mount_group']!='station'
+render('station-connection',(-1.6,-2.1,3.17),(-.85,-1.3,2.703),.50)
 for o in objects:o.hide_render=o['joint']!='C-lower' and o['mount_group'] not in ['cassette','station']
 render('lower-connection',(-1.6,-2.7,3.25),(-.85,-1.96,2.70),.65)
 print(json.dumps({k:v for k,v in report.items() if k!='members'},indent=2))
