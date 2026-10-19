@@ -48,7 +48,7 @@ if (modelButton && modelStage) {
         viewer.addEventListener('load', () => { clearTimeout(timer); resolve(); }, {once:true});
         viewer.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Model unavailable')); }, {once:true});
       });
-      viewer.setAttribute('src', 'assets/models/baaabs-panelized-v20.glb');
+      viewer.setAttribute('src', 'assets/models/baaabs-panelized-v21.glb');
       modelStage.append(viewer);
       await loaded;
       modelStage.classList.add('is-loaded');
