@@ -67,3 +67,9 @@ The panel workshop combines the v24 exterior (206 panels) with the existing six-
 `site/assets/models/baaabs-workshop-v24-six-station.glb` preserves v24 panel geometry and eye animation. It adds the study's 102 steel members and 12 mounting zones and replaces only 12 generic deck slabs and two generic chassis boxes with the study's plywood and C-channel references. The original v24 assembly download remains available. The framing retains its existing provisional sections and placement; this integration does not load-rate it.
 
 Rebuild with `python3 tools/build-workshop-frame.py`. Check interactions with `node tests/workshop.cjs`, study defaults/switching with `node tests/subframe.cjs`, and weight arithmetic with `node --test tests/weight-budget.test.mjs`.
+
+## Panel mounting concept 01
+
+`site/panel-mounting.html` shows an assembled/exploded local bay using existing panels B-D-033/B-D-034 and exact C/D station positions. Orange steel outriggers carry a teal aluminum cassette on two lower seats, with four bolted flanges and isolation pads. The detail is provisional: no section, weld, fastener, local tube-wall, vehicle-motion or access design is approved. Existing workshop geometry is unchanged; the concept is linked from the workshop and subframe study.
+
+Rebuild with Blender: `blender -b --python tools/build-panel-mounting.py`. The script exports both concept GLBs, modeled mass assumptions and local QA renders under the parent project's `outputs/panel-mounting-v1/`. Test concept controls with `node tests/panel-mounting.cjs`. The skin remains 206 panels; this example groups two sheets without merging or renumbering them.
