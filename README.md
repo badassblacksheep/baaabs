@@ -47,3 +47,5 @@ Hovering over the model or a panel row highlights that sheet pink and shows its 
 The Help Build section now links directly to the verified public BAAABS GoFundMe fundraiser. Donation amounts and payments are handled on GoFundMe; the former unconfigured Stripe controls are no longer displayed. See CONTRIBUTIONS.md.
 
 The separate subframe layout study at `site/subframe.html` starts with sheep panels, head, and tall poofer masts hidden. Layer controls expose the donor chassis, deck and equipment for station planning. Its GLB retains v16 geometry and changes visibility/materials only. No new structural members or rated connections are implied.
+
+Revision 20 uses exactly 206 panels: redundant crown returns removed, B-P-052 restored, entrance skirts reduced to triangles with one rectangular sill, and the three largest head panels subdivided. The local interactive model and panel workshop load v20, with the matching spreadsheet. Existing hero images and separate subframe studies retain their earlier versions.
