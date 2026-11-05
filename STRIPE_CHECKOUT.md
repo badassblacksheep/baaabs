@@ -1,30 +1,23 @@
 # Patch checkout
 
-Both storefronts use Stripe Payment Links under Mad Dragon Fire LLC. No server or API key is needed in either GitHub Pages site.
+Live payment link: https://buy.stripe.com/eVqbJ1bkE8Fm0Tt8NNcQU00
 
-The agreed offer is $20 USD per embroidered iron-on patch with US shipping included. Dispatch is within 3–5 business days; delivery time is additional. All sales are final. Order problems go to maddragonfire@gmail.com. Taxes, if applicable, are added by Stripe. Product sales support the privately owned BAAABS project.
+Both storefronts sell the BAAABS patch for $20 USD with US shipping included through Mad Dragon Fire LLC. Dispatch is within 3–5 business days; delivery time is additional. All sales are final. Order questions: maddragonfire@gmail.com.
 
-## Shared configuration
+## Integration
 
-`site/assets/patch-config.js` is the public source for both `baaabs.org/patch.html` and `maddragonfire.com/patch/`. The latter loads the configuration and renderer from baaabs.org. A configuration load failure leaves checkout closed. Photos are also shared from baaabs.org and retain their original aspect ratios.
+Stripe's native buy button is embedded on `baaabs.org/patch.html` and `maddragonfire.com/patch/`. The shared public configuration and renderer live in `site/assets/patch-config.js` and `site/assets/patch.js` in this repository. Both pages load Stripe's official `https://js.stripe.com/v3/buy-button.js` component.
 
-A checkout link includes `client_reference_id=baaabs_patch` or `mdf_patch` to identify its storefront. These are attribution labels, not order IDs or authorization tokens. Stripe owns payment confirmation. Neither page trusts URL parameters as proof of payment.
+The component uses buy-button ID `buy_btn_1UYFgkGwhPQmXQjfXd3yT7ws` and a **publishable** Stripe key, which is intentionally public. Secret/restricted keys must never be committed. The supplied payment link also appears as an ordinary HTML link so checkout remains available without JavaScript or when the embedded component is blocked. Update both static links if the payment link changes.
 
-## Complete Stripe setup
+Orders carry `client_reference_id=baaabs_patch` or `mdf_patch` to identify the storefront. These labels are not order IDs or proof of payment. Stripe manages payment confirmation and the hosted confirmation page; neither storefront marks an order paid.
 
-1. Complete the live account activation in the Stripe Dashboard, including business verification, payout details and any required agreements.
-2. Create a one-time BAAABS embroidered patch product at $20 USD. Use the real product photograph. Set the appropriate product tax code and exclusive tax behavior.
-3. Verify the business's applicable tax registrations in Stripe Tax and enable automatic tax on the link. Do not infer registrations from the business address or enable collection for unverified registrations.
-4. Create a Payment Link collecting email and a required US shipping address, with shipping included. Confirm the fulfillment/dispatch commitment and returns policy before enabling live checkout.
-5. Choose a quantity and inventory policy before launch. A Payment Link payment-count limit counts completed checkouts, not units; adjustable quantities need separate inventory accounting. Reuse the same link on both sites so limits are shared.
-6. Keep Stripe's hosted confirmation page. Configure customer receipts and seller successful-payment notifications in the Dashboard. Fulfill only confirmed successful payments, using the shipping address recorded in Stripe. Refunds are managed in Stripe.
-7. Create an equivalent sandbox link and save it in `testCheckoutUrl`. Open either patch page with `?checkout=test` for an explicitly labeled sandbox checkout; ordinary visitors never receive that link. Verify successful and declined test payments and US-only shipping; check tax using the configured test registrations.
-8. Save the verified live Payment Link in `checkoutUrl`, update the fulfillment text, and set `liveVerified`, `returnsApproved`, and `taxSetupVerified` to true only after those checks are complete. Deploy the BAAABS configuration once; both storefronts then use it.
+## Checkout settings and checks
 
-Current state: offer, fulfillment terms and storefront integration are prepared; activation, payment links, tax configuration and payment-flow testing remain unfinished. Do not interpret the unit tests as a completed Stripe payment test.
+The live link is active at $20, quantity one. Required shipping addresses are restricted to the United States; no extra shipping charge is added. Automatic tax is enabled in Stripe. This observation does not verify the business's tax registrations or filing status, which are managed in Stripe Tax.
 
-## Checks
+Run `node --test tests/patch-checkout.test.cjs` for link validation, source attribution and test/live separation. Browser verification covers the button and the hosted checkout. No real payment was charged as part of setup.
 
-Run `node --test tests/patch-checkout.test.cjs`. The tests verify correct storefront attribution, closed checkout with missing configuration, separation of live and test modes, and rejection of non-Stripe or malformed checkout URLs.
+For fulfillment, use successful paid transactions and their recorded shipping addresses in Stripe. Do not ship based only on a redirect or pending payment. Manage receipts, successful-payment notifications, refunds, stock limits and tax registrations in the Stripe Dashboard.
 
-References: https://docs.stripe.com/payment-links, https://docs.stripe.com/payment-links/customize, https://docs.stripe.com/payment-links/url-parameters, https://docs.stripe.com/payment-links/post-payment.
+References: https://docs.stripe.com/payment-links/buy-button, https://docs.stripe.com/payment-links/url-parameters, https://docs.stripe.com/payment-links/post-payment.

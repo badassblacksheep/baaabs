@@ -1,8 +1,10 @@
-// Public configuration shared by baaabs.org and maddragonfire.com. Never add API keys.
+// Public configuration shared by baaabs.org and maddragonfire.com. Only Stripe's publishable key is public. Never add secret or restricted keys.
 window.BAAABS_PATCH = Object.freeze({
-  provider: 'stripe', checkoutUrl: '', testCheckoutUrl: '', liveVerified: false,
+  provider: 'stripe', checkoutUrl: 'https://buy.stripe.com/eVqbJ1bkE8Fm0Tt8NNcQU00', testCheckoutUrl: '', liveVerified: true,
+  buyButtonId: 'buy_btn_1UYFgkGwhPQmXQjfXd3yT7ws',
+  publishableKey: 'pk_live_51UYF1hGwhPQmXQjfhFciZJDLYMLALOPP7FYULd9ak3pskEZp34ErFi0NcX2YBUAggajE0lbeagpy3tFe9AaHZRRG009oSEoJQi',
   legalSeller: 'Mad Dragon Fire LLC', priceUsd: 20,
   priceApproved: true, shippingApproved: true,
-  returnsApproved: true, taxSetupVerified: false,
+  returnsApproved: true, automaticTaxEnabled: true,
   fulfillmentSummary: 'US shipping included. Ships within 3–5 business days; delivery time is additional. All sales final. For an order problem, contact maddragonfire@gmail.com.',
 });

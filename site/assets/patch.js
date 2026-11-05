@@ -6,7 +6,7 @@
         config.priceUsd <= 0 || typeof config.legalSeller !== 'string' || !config.legalSeller.trim() ||
         typeof config.fulfillmentSummary !== 'string' || !config.fulfillmentSummary.trim()) return null;
     if (!testMode && (config.liveVerified !== true ||
-        config.returnsApproved !== true || config.taxSetupVerified !== true)) return null;
+        config.returnsApproved !== true || config.automaticTaxEnabled !== true)) return null;
     let url;
     try { url = new URL(testMode ? config.testCheckoutUrl : config.checkoutUrl); }
     catch { return null; }
@@ -47,7 +47,20 @@
     buy.href = link;
     buy.textContent = testMode ? 'Try test checkout ↗' : 'Buy the patch ↗';
     buy.referrerPolicy = 'strict-origin-when-cross-origin';
-    slot.replaceChildren(buy);
+    if (!testMode && /^buy_btn_[a-zA-Z0-9]+$/.test(config.buyButtonId) &&
+        /^pk_live_[a-zA-Z0-9]+$/.test(config.publishableKey)) {
+      const embedded = document.createElement('stripe-buy-button');
+      embedded.setAttribute('buy-button-id', config.buyButtonId);
+      embedded.setAttribute('publishable-key', config.publishableKey);
+      embedded.setAttribute('client-reference-id', document.body.dataset.storefront === 'maddragonfire' ? 'mdf_patch' : 'baaabs_patch');
+      // Keep a normal link available if Stripe's component is blocked or slow.
+      const fallback = document.createElement('p');
+      fallback.className = 'micro patch-small';
+      buy.className = '';
+      buy.textContent = 'Open secure checkout ↗';
+      fallback.append(buy);
+      slot.replaceChildren(embedded, fallback);
+    } else slot.replaceChildren(buy);
     if (!testMode && status) status.textContent = 'Secure payment through Stripe. Applicable tax calculated at checkout.';
   }
   document.querySelector('#share-patch')?.addEventListener('click', async () => {
