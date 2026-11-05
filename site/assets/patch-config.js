@@ -1,7 +1,8 @@
-// Public settings only. Stripe selected Nov 4, 2026. Never add API keys here.
-// Sales stay closed until real merchant, fulfillment and tax setup are verified.
+// Public configuration shared by baaabs.org and maddragonfire.com. Never add API keys.
 window.BAAABS_PATCH = Object.freeze({
-  provider: 'stripe', checkoutUrl: '', liveVerified: false, legalSeller: 'Mad Dragon Fire LLC',
-  priceUsd: 15, priceApproved: false, shippingApproved: false,
-  returnsApproved: false, taxSetupVerified: false, fulfillmentSummary: '',
+  provider: 'stripe', checkoutUrl: '', testCheckoutUrl: '', liveVerified: false,
+  legalSeller: 'Mad Dragon Fire LLC', priceUsd: 20,
+  priceApproved: true, shippingApproved: true,
+  returnsApproved: false, taxSetupVerified: false,
+  fulfillmentSummary: 'US shipping included. Dispatch and return details will be posted before checkout opens.',
 });
