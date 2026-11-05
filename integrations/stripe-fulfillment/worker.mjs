@@ -71,11 +71,11 @@ export default {
  async fetch(request,env) {
    if(request.method!=="POST"||new URL(request.url).pathname!=="/stripe/webhook")return json({error:"not found"},404);
    const raw=await request.text();
-   if(!await verify(raw,request.headers.get("stripe-signature"),env.STRIPE_WEBHOOK_SECRET))return json({error:"invalid signature"},400);
+   if(!await verify(raw,request.headers.get("stripe-signature"),this.env.STRIPE_WEBHOOK_SECRET))return json({error:"invalid signature"},400);
    const event=JSON.parse(raw);
    if(!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type))return json({ok:true,ignored:true});
    try {
-     const result=await sync(event.data.object,env);
+     const result=await this.state.blockConcurrencyWhile(async()=>{\n       const key="event:"+event.id;\n       if(await this.state.storage.get(key))return "duplicate";\n       const outcome=await sync(event.data.object,this.env);\n       await this.state.storage.put(key,{processedAt:Date.now(),outcome});\n       return outcome;\n     });
      return json({ok:true,result});
    } catch(e) {
      console.error("Order synchronization failed",String(e.message||e));
