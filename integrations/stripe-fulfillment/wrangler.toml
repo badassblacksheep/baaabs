@@ -1,0 +1,11 @@
+name = "baaabs-stripe-fulfillment"
+main = "worker.mjs"
+compatibility_date = "2026-11-05"
+
+[[durable_objects.bindings]]
+name = "ORDER_COORDINATOR"
+class_name = "OrderCoordinator"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OrderCoordinator"]
