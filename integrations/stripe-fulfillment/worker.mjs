@@ -68,18 +68,34 @@ async function sync(session,env) {
   return "created";
 }
 export default {
- async fetch(request,env) {
-   if(request.method!=="POST"||new URL(request.url).pathname!=="/stripe/webhook")return json({error:"not found"},404);
-   const raw=await request.text();
-   if(!await verify(raw,request.headers.get("stripe-signature"),this.env.STRIPE_WEBHOOK_SECRET))return json({error:"invalid signature"},400);
-   const event=JSON.parse(raw);
-   if(!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type))return json({ok:true,ignored:true});
-   try {
-     const result=await this.state.blockConcurrencyWhile(async()=>{\n       const key="event:"+event.id;\n       if(await this.state.storage.get(key))return "duplicate";\n       const outcome=await sync(event.data.object,this.env);\n       await this.state.storage.put(key,{processedAt:Date.now(),outcome});\n       return outcome;\n     });
-     return json({ok:true,result});
-   } catch(e) {
-     console.error("Order synchronization failed",String(e.message||e));
-     return json({error:"retry later"},503);
-   }
- }
+  async fetch(request, env) {
+    if (!env.ORDER_COORDINATOR) return json({error:"coordinator not configured"},503);
+    const id = env.ORDER_COORDINATOR.idFromName("baaabs-patch-orders");
+    return env.ORDER_COORDINATOR.get(id).fetch(request);
+  }
 };
+
+export class OrderCoordinator {
+  constructor(state, env) { this.state=state; this.env=env; }
+  async fetch(request) {
+    if (request.method!=="POST" || new URL(request.url).pathname!=="/stripe/webhook") return json({error:"not found"},404);
+    const raw=await request.text();
+    if (!await verify(raw,request.headers.get("stripe-signature"),this.env.STRIPE_WEBHOOK_SECRET)) return json({error:"invalid signature"},400);
+    let event;
+    try { event=JSON.parse(raw); } catch { return json({error:"invalid JSON"},400); }
+    if (!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type)) return json({ok:true,ignored:true});
+    try {
+      const result=await this.state.blockConcurrencyWhile(async()=>{
+        const key="event:"+event.id;
+        if(await this.state.storage.get(key)) return "duplicate";
+        const outcome=await sync(event.data.object,this.env);
+        await this.state.storage.put(key,{processedAt:Date.now(),outcome});
+        return outcome;
+      });
+      return json({ok:true,result});
+    } catch(e) {
+      console.error("Order synchronization failed",String(e.message||e));
+      return json({error:"retry later"},503);
+    }
+  }
+}
