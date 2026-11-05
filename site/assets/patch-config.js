@@ -3,6 +3,6 @@ window.BAAABS_PATCH = Object.freeze({
   provider: 'stripe', checkoutUrl: '', testCheckoutUrl: '', liveVerified: false,
   legalSeller: 'Mad Dragon Fire LLC', priceUsd: 20,
   priceApproved: true, shippingApproved: true,
-  returnsApproved: false, taxSetupVerified: false,
-  fulfillmentSummary: 'US shipping included. Dispatch and return details will be posted before checkout opens.',
+  returnsApproved: true, taxSetupVerified: false,
+  fulfillmentSummary: 'US shipping included. Ships within 3–5 business days; delivery time is additional. All sales final. For an order problem, contact maddragonfire@gmail.com.',
 });

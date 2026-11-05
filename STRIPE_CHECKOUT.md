@@ -2,7 +2,7 @@
 
 Both storefronts use Stripe Payment Links under Mad Dragon Fire LLC. No server or API key is needed in either GitHub Pages site.
 
-The agreed offer is $20 USD per embroidered iron-on patch with US shipping included. Taxes, if applicable, are added by Stripe. Product sales support the privately owned BAAABS project.
+The agreed offer is $20 USD per embroidered iron-on patch with US shipping included. Dispatch is within 3–5 business days; delivery time is additional. All sales are final. Order problems go to maddragonfire@gmail.com. Taxes, if applicable, are added by Stripe. Product sales support the privately owned BAAABS project.
 
 ## Shared configuration
 
@@ -21,7 +21,7 @@ A checkout link includes `client_reference_id=baaabs_patch` or `mdf_patch` to id
 7. Create an equivalent sandbox link and save it in `testCheckoutUrl`. Open either patch page with `?checkout=test` for an explicitly labeled sandbox checkout; ordinary visitors never receive that link. Verify successful and declined test payments and US-only shipping; check tax using the configured test registrations.
 8. Save the verified live Payment Link in `checkoutUrl`, update the fulfillment text, and set `liveVerified`, `returnsApproved`, and `taxSetupVerified` to true only after those checks are complete. Deploy the BAAABS configuration once; both storefronts then use it.
 
-Current state: offer and storefront integration are prepared; activation, payment links, tax configuration, fulfillment terms and payment-flow testing remain unfinished. Do not interpret the unit tests as a completed Stripe payment test.
+Current state: offer, fulfillment terms and storefront integration are prepared; activation, payment links, tax configuration and payment-flow testing remain unfinished. Do not interpret the unit tests as a completed Stripe payment test.
 
 ## Checks
 
