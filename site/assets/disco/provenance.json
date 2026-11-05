@@ -1,0 +1,15 @@
+{
+  "source": "outputs/assembly-v24/baaabs-assembly.obj",
+  "source_vertices": 14694,
+  "rendered_triangles": 21532,
+  "frames": 192,
+  "fps": 24,
+  "presentation_only": [
+    "orbit camera",
+    "five animated stylized dancers",
+    "disco lighting",
+    "two mast-tip flame effects"
+  ],
+  "geometry_modified": false,
+  "renderer": "CPU NumPy + Cairo; painter ordered mesh projection"
+}
