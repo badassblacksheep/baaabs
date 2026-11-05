@@ -1,6 +1,6 @@
 # BAAABS Stripe → Fulfillment Ledger integration
 
-Status: **planned / not deployed**. The live BAAABS ledger is:
+Worker deployed at `https://baaabs-stripe-fulfillment.maddragonfire.workers.dev/stripe/webhook`. Verify Stripe delivery and the ledger before retiring Gmail monitoring. The live BAAABS ledger is:
 https://docs.google.com/spreadsheets/d/1WTzo6wRm4YWE5p0yUoUo3GgoDcI8kljbQF684JBVIFA/edit
 
 ## Invariants
@@ -34,6 +34,25 @@ Deploy a Cloudflare Worker (or equivalent server-side endpoint) under a dedicate
 - Restricted Stripe API key scoped to Checkout Sessions / line items (and relevant payment/refund reads for reconciliation).
 - A Google service account with edit access to the ledger, or a securely authorized Google OAuth connection.
 - Store all secrets in the runtime's secret manager, not in this repository, commits, or chat.
+
+## Worker configuration
+
+Deploy from this directory using Wrangler. Set the encrypted Worker secrets
+`GOOGLE_SERVICE_ACCOUNT_JSON`, `STRIPE_RESTRICTED_KEY` (Checkout Sessions Read),
+and `STRIPE_WEBHOOK_SECRET`. The Worker rejects deliveries until all are configured.
+
+The Worker checks the headers and existing Checkout Session IDs, then adds a unique
+named range for the session and appends its row in one atomic Sheets request. Keep
+the `baaabs_` named ranges. Further events leave owner-edited rows intact. Missing
+addresses are flagged in Notes. Only quantities for the configured patch price count.
+
+For sandbox verification use a separate Worker, sandbox payment link and price,
+signing secret, restricted test key, and a test ledger with matching headers.
+Set `STRIPE_MODE=test`, `LEDGER_ID`, `ORDERS_SHEET_ID`, `PATCH_LINK_ID`, and
+`PATCH_PRICE_ID` for that deployment. Test mode rejects the production ledger.
+Run `node --test tests/stripe-fulfillment.test.mjs` from the repository root.
+Gmail handles notifications. Scheduled reconciliation and refund review are
+separate cutover tasks.
 
 ## Ledger schema
 
