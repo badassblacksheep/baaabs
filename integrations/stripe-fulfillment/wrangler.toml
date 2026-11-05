@@ -9,3 +9,10 @@ class_name = "OrderCoordinator"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["OrderCoordinator"]
+
+[vars]
+STRIPE_MODE = "live"
+LEDGER_ID = "1WTzo6wRm4YWE5p0yUoUo3GgoDcI8kljbQF684JBVIFA"
+ORDERS_SHEET_ID = "685135190"
+PATCH_LINK_ID = "plink_1UYJaFGwhPQmXQjfbMx7S4C3"
+PATCH_PRICE_ID = "price_1UYJVBGwhPQmXQjfpV9WTF9O"

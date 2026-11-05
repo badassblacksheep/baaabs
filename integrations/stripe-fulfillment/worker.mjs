@@ -3,7 +3,9 @@
 // Never expose credentials in GitHub Pages.
 const LEDGER = "1WTzo6wRm4YWE5p0yUoUo3GgoDcI8kljbQF684JBVIFA";
 const TAB = "Orders & Fulfillment";
-const PATCH_LINK = "plink_1UYJaFGwhPQmXQjfbMx7S4C3";
+const HEADERS = ["Order ID", "Customer", "Quantity", "Amount USD", "Payment Status",
+  "Fulfillment Status", "Date Mailed", "Carrier", "Tracking", "Shipping Address",
+  "Stripe Payment ID", "Source", "Notes"];
 const encoder = new TextEncoder();
 const b64url = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/=/g,"").replace(/\+/g,"-").replace(/\//g,"_");
 const json = (data,status=200) => new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json"}});
@@ -39,63 +41,116 @@ async function googleToken(env) {
   if(!r.ok)throw new Error("Google token failed: "+r.status);
   return (await r.json()).access_token;
 }
-async function sheets(method,range,token,values) {
-  const url="https://sheets.googleapis.com/v4/spreadsheets/"+LEDGER+"/values/"+encodeURIComponent("'"+TAB+"'!"+range)+(method==="PUT"?"?valueInputOption=RAW":"");
-  const r=await fetch(url,{method,headers:{authorization:"Bearer "+token,...(values?{"content-type":"application/json"}:{})},body:values?JSON.stringify({values}):undefined});
-  if(!r.ok)throw new Error("Google Sheets "+method+" failed: "+r.status);
-  return r.json();
+async function googleReadOrWrite(url, token, body) {
+  const response = await fetch(url, {
+    method: body ? "POST" : "GET",
+    headers: {authorization: "Bearer " + token, "content-type": "application/json"},
+    body: body && JSON.stringify(body)
+  });
+  if (!response.ok) throw new Error("Sheets request failed: " + response.status);
+  return response.json();
 }
-async function sync(session,env) {
-  if(session.payment_link!==PATCH_LINK||session.payment_status!=="paid")return "ignored";
-  const items=await stripe("checkout/sessions/"+encodeURIComponent(session.id)+"/line_items?limit=100",env.STRIPE_RESTRICTED_KEY);
-  if(items.has_more)throw new Error("More than 100 line items: manual reconciliation required");
-  const quantity=items.data.reduce((n,item)=>n+(item.quantity||0),0);
-  if(!quantity)throw new Error("Paid session has no line items");
-  const token=await googleToken(env);
-  const sheet=await sheets("GET","A1:M1000",token);
-  const rows=sheet.values||[];
-  const index=rows.findIndex((row,i)=>i>0&&row[0]===session.id);
-  const address=session.collected_information?.shipping_details?.address||session.shipping_details?.address||null;
-  const name=session.customer_details?.name||session.collected_information?.shipping_details?.name||"";
-  const formatted=address?[address.line1,address.line2,address.city,address.state,address.postal_code,address.country].filter(Boolean).join(", "):"";
-  const previous=index>=0?rows[index]:[];
-  const row=[session.id,name,quantity,(session.amount_total/100).toFixed(2),"Paid",previous[5]||"Awaiting fulfillment",previous[6]||"",previous[7]||"",previous[8]||"",formatted,session.payment_intent||"", "Stripe API",previous[12]||""];
-  // Preserve owner-controlled fulfillment columns. Writes remain idempotent for serial deliveries.
-  if(index>=0){await sheets("PUT","A"+(index+1)+":M"+(index+1),token,[row]);return "updated";}
-  // Sheets append is intentionally not used: rows are indexed by Checkout Session ID.
-  // Production must serialize this read-modify-write (e.g. Cloudflare Durable Object) to prevent duplicate rows.
-  await sheets("PUT","A"+(rows.length+1)+":M"+(rows.length+1),token,[row]);
+
+async function sync(session, env) {
+  const path = "checkout/sessions/" + encodeURIComponent(session.id) + "/line_items?limit=100";
+  const items = await stripe(path, env.STRIPE_RESTRICTED_KEY);
+  if (items.has_more) throw new Error("Line items require review");
+  const patches = items.data.filter(item => item.price?.id === env.PATCH_PRICE_ID);
+  if (!patches.length || patches.some(item => !Number.isSafeInteger(item.quantity) || item.quantity < 1)) {
+    throw new Error("Patch quantity requires review");
+  }
+  const quantity = patches.reduce((total, item) => total + item.quantity, 0);
+  if (session.currency !== "usd" || !Number.isSafeInteger(session.amount_total) || session.amount_total < 0) {
+    throw new Error("Amount requires review");
+  }
+  const shipping = session.collected_information?.shipping_details ?? session.shipping_details;
+  const address = shipping?.address;
+  const formatted = address ? [address.line1, address.line2, address.city, address.state,
+    address.postal_code, address.country].filter(Boolean).join(", ") : "";
+  const row = [session.id, shipping?.name || session.customer_details?.name || "", quantity,
+    session.amount_total / 100, "Paid", "Awaiting fulfillment", "", "", "", formatted,
+    session.payment_intent || "", "Stripe API", formatted ? "" : "Shipping address missing; review before mailing."];
+
+  const token = await googleToken(env);
+  const base = "https://sheets.googleapis.com/v4/spreadsheets/" + env.LEDGER_ID;
+  const prefix = "'" + TAB + "'!";
+  const query = new URLSearchParams();
+  for (const range of ["A1:M1", "A2:A"]) query.append("ranges", prefix + range);
+  const lookup = await googleReadOrWrite(base + "/values:batchGet?" + query, token);
+  const [header, orders] = lookup.valueRanges;
+  if (JSON.stringify(header.values?.[0]) !== JSON.stringify(HEADERS)) throw new Error("Ledger schema mismatch");
+  if (orders.values?.some(([id]) => id === session.id)) return "already recorded";
+
+  // Commit a unique session marker and append together. Even an ambiguous timeout
+  // followed by a retry cannot commit a second append. The marker covers the header
+  // so sorting orders or inserting rows does not affect its identity.
+  const sheetId = Number(env.ORDERS_SHEET_ID);
+  const marker = "baaabs_" + Array.from(new Uint8Array(await crypto.subtle.digest(
+    "SHA-256", encoder.encode(session.id))), b => b.toString(16).padStart(2, "0")).join("");
+  const values = row.map(value => ({userEnteredValue: typeof value === "number"
+    ? {numberValue: value} : {stringValue: value}}));
+  await googleReadOrWrite(base + ":batchUpdate", token, {requests: [
+    {addNamedRange: {namedRange: {name: marker, namedRangeId: marker,
+      range: {sheetId, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: 1}}}},
+    {appendCells: {sheetId, rows: [{values}], fields: "userEnteredValue"}}
+  ]});
   return "created";
 }
+
+function configured(env) {
+  const live = env.STRIPE_MODE === "live";
+  return (live || env.STRIPE_MODE === "test") &&
+    (live ? env.LEDGER_ID === LEDGER : env.LEDGER_ID && env.LEDGER_ID !== LEDGER) &&
+    env.PATCH_LINK_ID && env.PATCH_PRICE_ID && /^\d+$/.test(env.ORDERS_SHEET_ID) &&
+    env.STRIPE_WEBHOOK_SECRET?.startsWith("whsec_") && env.GOOGLE_SERVICE_ACCOUNT_JSON &&
+    env.STRIPE_RESTRICTED_KEY?.startsWith(live ? "rk_live_" : "rk_test_") && env.ORDER_COORDINATOR;
+}
+
 export default {
   async fetch(request, env) {
-    if (!env.ORDER_COORDINATOR) return json({error:"coordinator not configured"},503);
+    if (request.method !== "POST" || new URL(request.url).pathname !== "/stripe/webhook") {
+      return json({error: "not found"}, 404);
+    }
+    if (!configured(env)) return json({error: "not configured"}, 503);
+    const signature = request.headers.get("stripe-signature");
+    if (!signature) return json({error: "invalid signature"}, 400);
+    const raw = await request.text();
+    if (!await verify(raw, signature, env.STRIPE_WEBHOOK_SECRET)) return json({error: "invalid signature"}, 400);
+    let event;
+    try { event = JSON.parse(raw); } catch { return json({error: "invalid JSON"}, 400); }
+    if (!["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(event?.type)) {
+      return json({ok: true, ignored: true});
+    }
+    const session = event.data?.object;
+    if (!event.id || !session?.id || session.object !== "checkout.session") return json({error: "invalid event"}, 400);
+    if (event.livemode !== (env.STRIPE_MODE === "live") || session.livemode !== event.livemode ||
+        session.payment_status !== "paid" || session.payment_link !== env.PATCH_LINK_ID) return json({ok: true, ignored: true});
     const id = env.ORDER_COORDINATOR.idFromName("baaabs-patch-orders");
-    return env.ORDER_COORDINATOR.get(id).fetch(request);
+    return env.ORDER_COORDINATOR.get(id).fetch("https://internal/order", {
+      method: "POST", body: JSON.stringify({id: event.id, session})
+    });
   }
 };
 
 export class OrderCoordinator {
-  constructor(state, env) { this.state=state; this.env=env; }
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
   async fetch(request) {
-    if (request.method!=="POST" || new URL(request.url).pathname!=="/stripe/webhook") return json({error:"not found"},404);
-    const raw=await request.text();
-    if (!await verify(raw,request.headers.get("stripe-signature"),this.env.STRIPE_WEBHOOK_SECRET)) return json({error:"invalid signature"},400);
-    let event;
-    try { event=JSON.parse(raw); } catch { return json({error:"invalid JSON"},400); }
-    if (!["checkout.session.completed","checkout.session.async_payment_succeeded"].includes(event.type)) return json({ok:true,ignored:true});
+    const {id, session} = await request.json();
     try {
-      const result=await this.state.blockConcurrencyWhile(async()=>{
-        const key="event:"+event.id;
-        if(await this.state.storage.get(key)) return "duplicate";
-        const outcome=await sync(event.data.object,this.env);
-        await this.state.storage.put(key,{processedAt:Date.now(),outcome});
+      const result = await this.state.blockConcurrencyWhile(async () => {
+        const key = "event:" + id;
+        if (await this.state.storage.get(key)) return "duplicate";
+        const outcome = await sync(session, this.env);
+        await this.state.storage.put(key, {processedAt: Date.now(), outcome});
         return outcome;
       });
-      return json({ok:true,result});
-    } catch(e) {
-      console.error("Order synchronization failed",String(e.message||e));
-      return json({error:"retry later"},503);
+      return json({ok: true, result});
+    } catch {
+      // Upstream error bodies, credentials and customer data must stay out of logs.
+      return json({error: "retry later"}, 503);
     }
   }
 }
