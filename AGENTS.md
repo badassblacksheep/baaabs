@@ -10,3 +10,7 @@
 - The supplementary interior study is `site/assets/interior-support-study.json`: compare three and four individual cabin posts, not paired portals. BAAAHS post locations and capacity are unknown. Preserve the shared brief; candidate drawings are schematic, with no final sections, mass, capacity or verified road envelope.
 
 - Prefer mirrored, equal-area cuts when dividing large panels. Allocate splits to matching driver and passenger panels together.
+
+## Site typography
+
+Reserve Smooth Circulars exclusively for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and every visible occurrence of the project name `baaabs`, regardless of capitalization. Treat the name as a proper noun with its own typeface. When it appears in a sentence, heading, button, or navigation label, apply Smooth Circulars to the name alone. All surrounding text, including the hero tagline, uses the site's regular typography.
