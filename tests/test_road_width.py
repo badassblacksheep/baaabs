@@ -50,7 +50,8 @@ class RoadWidth(unittest.TestCase):
         c=json.loads((ROOT/'site/assets/project-constraints.json').read_text())['road_width']
         self.assertEqual(c['maximum_inches'],102);self.assertEqual(c['maximum_meters'],2.5908);self.assertTrue(c['required'])
         r=audit.report();self.assertEqual(json.loads((ROOT/'site/assets/road-width-status.json').read_text()),r)
-        for page in ['panels.html','subframe.html','panel-mounting.html']:
+        self.assertIn(audit.earl_banner(), (ROOT/'site/panels.html').read_text())
+        for page in ['subframe.html','panel-mounting.html']:
             self.assertIn(audit.banner(r),(ROOT/'site'/page).read_text())
 
 if __name__=='__main__':unittest.main()

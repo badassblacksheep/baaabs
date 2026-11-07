@@ -44,10 +44,12 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Stage public pages without retired donor studies
+        run: rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: pages-dist
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4

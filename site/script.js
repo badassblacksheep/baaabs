@@ -34,7 +34,7 @@ if (modelButton && modelStage) {
       await import('./assets/vendor/model-viewer-4.1.0.min.js');
       await customElements.whenDefined('model-viewer');
       viewer = document.createElement('model-viewer');
-      viewer.setAttribute('alt', 'Interactive BAAABS golden design model. Rotate to inspect the sheep head, faceted body, rooftop dance floor, stairs and twin poofer masts.');
+      viewer.setAttribute('alt', 'Earl, the Morton Thomas HDX in BAAABS bodywork. Rotate to inspect the sheep head, faceted body, rooftop dance floor, stairs and twin poofer masts.');
       viewer.setAttribute('camera-controls', '');
       viewer.setAttribute('touch-action', 'pan-y');
       viewer.setAttribute('camera-orbit', '-36deg 68deg 85%');

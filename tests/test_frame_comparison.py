@@ -27,7 +27,8 @@ class ComparisonChecks(unittest.TestCase):
             if ref.startswith('#'):self.assertIn(ref[1:],p.ids)
             else:self.assertTrue((ROOT/'site'/ref.split('#')[0].split('?')[0]).exists(),ref)
     def test_discovery_links(self):
-        for page in ['index.html','subframe.html','panels.html']:
-            self.assertIn('href="frame-comparison.html"',(ROOT/'site'/page).read_text())
+        for page in ['index.html','panels.html','pitch.html']:
+            self.assertNotIn('href="frame-comparison.html"',(ROOT/'site'/page).read_text())
+        self.assertIn('href="frame-comparison.html"',(ROOT/'site/subframe.html').read_text())
 
 if __name__=='__main__':unittest.main()

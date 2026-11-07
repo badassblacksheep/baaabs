@@ -46,13 +46,19 @@ def banner(r):
 <section id="road-width-requirement" style="margin:16px 0;padding:16px;border:1px solid #e8bf91;border-radius:10px" aria-label="Road width requirement"><strong>Road width: 102 in maximum · {label}</strong><p>Road mode retains the bus, six station pairs and every fitting left attached. The deck/frame, sheep panels, projecting arms, speakers and event equipment come off. Current stations alone: <strong>{r['stations_only']['width_in']:.1f} in</strong>; with mirrored docking pads: approximately <strong>{r['bus_stations_and_mirrored_dock_estimate']['width_in']:.1f} in</strong>. This is a model result; donor measurements and the complete retained hardware inventory remain unresolved.</p><p>The 102-in limit is a hard project requirement. {action} <a href="assets/road-width-status.json">Width check</a> · <a href="assets/project-constraints.json">Project requirement</a> · <a href="https://app.leg.wa.gov/rcw/default.aspx?cite=46.44.010">Washington rule</a></p></section>
 <!-- ROAD-WIDTH-STATUS:END -->'''
 
+def earl_banner():
+    return """<!-- ROAD-WIDTH-STATUS:START -->
+<section id="road-width-requirement" style="margin:16px 0;padding:16px;border:1px solid #e8bf91;border-radius:10px" aria-label="Road width requirement"><strong>Earl’s road configuration · 102 in maximum</strong><p>The limit includes every bracket and fitting retained for travel. Earl’s road width awaits donor measurements and a verified mounting design.</p></section>
+<!-- ROAD-WIDTH-STATUS:END -->"""
+
 def write(r):
     (SITE/'assets/road-width-status.json').write_text(json.dumps(r,indent=2)+'\n')
     for name in ['panels.html','subframe.html','panel-mounting.html']:
         path=SITE/name;s=path.read_text();start='<!-- ROAD-WIDTH-STATUS:START -->';end='<!-- ROAD-WIDTH-STATUS:END -->'
+        content=earl_banner() if name=='panels.html' else banner(r)
         if start in s:
-            a=s.index(start);b=s.index(end,a)+len(end);s=s[:a]+banner(r)+s[b:]
-        else:s=s.replace('</header>',banner(r)+'</header>',1)
+            a=s.index(start);b=s.index(end,a)+len(end);s=s[:a]+content+s[b:]
+        else:s=s.replace('</header>',content+'</header>',1)
         path.write_text(s)
 
 if __name__=='__main__':
