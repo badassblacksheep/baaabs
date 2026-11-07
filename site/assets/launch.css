@@ -3,4 +3,4 @@
 @media(max-width:540px){.nav{flex-wrap:wrap;justify-content:center}.nav nav{width:100%;justify-content:center;flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 
-.model-stage model-viewer:not(:defined){background:#100d1a url("disco/earl-geodesic/poster.png") center/contain no-repeat}.model-controls{background:#100d1ae8;padding:4px 8px;border-radius:24px}
+.model-stage model-viewer:not(:defined){background:#100d1a url("earl-skirt-fit.jpg") center/contain no-repeat}.model-controls{background:#100d1ae8;padding:4px 8px;border-radius:24px}
