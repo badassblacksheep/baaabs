@@ -22,35 +22,29 @@
     <button id="rotation-toggle" class="quiet" type="button" hidden>Pause rotation</button>
   </div>
 </div>
-<section class="acronym-play" aria-label="What does BAAABS stand for?">
+<section class="acronym-play" aria-label="BAAABS word art">
 <style>
 .acronym-play{max-width:760px;margin:0 auto;padding:1.5rem 1rem 3rem;color:#f5eaf8;text-align:center}
-.acronym-play .ac-caption{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin:0 0 1.25rem}
-.acronym-play .ac-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;max-width:690px;margin:auto}
+.acronym-play .ac-grid{display:grid;grid-template-columns:repeat(6,1.6em);justify-content:center;font:400 clamp(.62rem,1.8vw,1rem)/1 "Smooth Circulars",monospace;font-variant-ligatures:none}
 .acronym-play .ac-cell{min-width:0;display:flex;align-items:center;flex-direction:column}
-.acronym-play .ac-initial,.acronym-play .ac-tail{font-family:"Smooth Circulars",sans-serif;font-weight:400;font-variant-ligatures:none;font-feature-settings:"tnum" 1;letter-spacing:0}
-.acronym-play .ac-initial{font-size:clamp(2.4rem,9vw,5.5rem);line-height:1.1;color:#fff;text-shadow:0 0 18px #b85be688}
-.acronym-play .ac-tail{display:block;writing-mode:vertical-rl;text-orientation:upright;font-size:clamp(.62rem,1.8vw,1rem);line-height:1;letter-spacing:.04em;white-space:nowrap;margin-top:0;min-height:12em;opacity:1;transition:opacity .65s ease,transform .65s ease;transform:translateY(0)}
+.acronym-play .ac-initial{height:1em;color:#fff;text-shadow:0 0 18px #b85be688}
+.acronym-play .ac-tail{display:block;writing-mode:vertical-rl;text-orientation:upright;text-transform:lowercase;white-space:nowrap;margin-top:0;min-height:12em;opacity:1;transition:opacity .65s ease,transform .65s ease;transform:translateY(0)}
 .acronym-play .ac-tail.is-fading{opacity:0;transform:translateY(8px)}
-.acronym-play .ac-note{font-size:.8rem;opacity:.6;margin:0}
 @media(prefers-reduced-motion:reduce){.acronym-play .ac-tail{transition:none}}
 </style>
-<p class="ac-caption">What does BAAABS stand for?</p>
-<div class="ac-grid" id="acronym-grid" aria-hidden="true">
-<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-tail">ig</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">ss</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">mazingly</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">wesome</span></div>
-<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-tail">lack</span></div>
-<div class="ac-cell"><span class="ac-initial">S</span><span class="ac-tail">heep</span></div>
+<div class="ac-grid" id="acronym-grid" role="img" aria-label="Big Ass Amazingly Awesome Black Sheep">
+<div class="ac-cell"><span class="ac-initial">b</span><span class="ac-tail">ig</span></div>
+<div class="ac-cell"><span class="ac-initial">a</span><span class="ac-tail">ss</span></div>
+<div class="ac-cell"><span class="ac-initial">a</span><span class="ac-tail">mazingly</span></div>
+<div class="ac-cell"><span class="ac-initial">a</span><span class="ac-tail">wesome</span></div>
+<div class="ac-cell"><span class="ac-initial">b</span><span class="ac-tail">lack</span></div>
+<div class="ac-cell"><span class="ac-initial">s</span><span class="ac-tail">heep</span></div>
 </div>
-<p class="ac-note" id="acronym-description" aria-live="off">Big Ass Amazingly Awesome Black Sheep</p>
 <script>
 (()=>{
 const grid=document.getElementById('acronym-grid');
 if(!grid)return;
 const tails=[...grid.querySelectorAll('.ac-tail')];
-const label=document.getElementById('acronym-description');
 const phrases=[
  [
   "Big",
@@ -116,7 +110,7 @@ tails.forEach(w=>w.classList.add('is-fading'));
 setTimeout(()=>{
 index=(index+1)%phrases.length;
 tails.forEach((w,i)=>{w.textContent=phrases[index][i].slice(1).toLowerCase();w.classList.remove('is-fading')});
-label.textContent=phrases[index].join(' ');
+grid.setAttribute('aria-label',phrases[index].join(' '));
 setTimeout(advance,index===phrases.length-1?5200:3100);
 },700);
 }
