@@ -6,7 +6,7 @@
  const ref=()=>panelById.get(state.reference),enabled=()=>q('#inspect-vertices').checked;
  // Nearby boundaries include imperfect seams; audited crossings remain available for repair.
  const neighborTolerance=.0254,neighborCache=new Map();
- const auditNeighbors=[...window.PANEL_ALIGNMENT_AUDIT.corrected,...window.PANEL_ALIGNMENT_AUDIT.reviewPairs];
+ const auditNeighbors=DATA.revision==='v24'?[...window.PANEL_ALIGNMENT_AUDIT.corrected,...window.PANEL_ALIGNMENT_AUDIT.reviewPairs]:[];
  function pointSegmentDistance(p,a,b){
   const v=sub(b,a),w=sub(p,a),vv=dot(v,v),t=vv?Math.max(0,Math.min(1,dot(w,v)/vv)):0;
   return length(w.map((x,i)=>x-t*v[i]));

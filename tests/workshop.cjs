@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const path=require('node:path'),site=path.resolve(__dirname,'../site');
-const html=fs.readFileSync(path.join(site,'panels.html'),'utf8');
+const html=fs.readFileSync(path.join(site,'panels-bluebird-v24.html'),'utf8');
 const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
 class Element {
  constructor(tag='div'){this.tagName=tag.toUpperCase();this.children=[];this.events={};this.style={};this.dataset={};this.value='';this.hidden=false;this._text='';this.checked=false;this.parentNode=null;this.classList={toggle(){}};}
@@ -122,3 +122,26 @@ check('layer changes and table selection tolerate unloaded model materials',()=>
  assert.doesNotThrow(()=>el('#show-framing').emit('click'));row('B-P-061').emit('click');assert.equal(current(),'B-P-061');assert.ok(comparisonIds().includes('B-P-067'));assert.doesNotThrow(()=>el('#restore-layers').emit('click'));
 });
 console.log(checks+' total workshop checks passed');
+
+// The current workshop must pick the individual Earl plates it actually serves.
+const currentHtml = fs.readFileSync(path.join(site, 'panels.html'), 'utf8');
+const currentScript = currentHtml.match(/<script>\s*([\s\S]*?)<\/script>/)[1];
+const earl = vm.createContext({ ...context, location: { hash: '#K-D-003' } });
+vm.runInContext(currentScript, earl);
+const modelPath = currentHtml.match(/<model-viewer id="model" src="([^"]+)"/)[1];
+const bytes = fs.readFileSync(path.join(site, modelPath));
+const catalog = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)));
+check('Earl workshop opens the linked plate and picks all six plates independently', () => {
+ assert.equal(vm.runInContext('selected.id', earl), 'K-D-003');
+ for (const node of catalog.nodes.filter(n => n.extras?.hoof_assembly_id)) {
+  const materialIndex = catalog.meshes[node.mesh].primitives[0].material;
+  model.materialFromPoint = () => catalog.materials[materialIndex];
+  const record = vm.runInContext('panelAt(0, 0)', earl);
+  const assembly = node.extras.hoof_assembly_id;
+  const expected = node.extras.sheet_role === 'aft outer' ? assembly.slice(0, 4) + '003' : assembly;
+  assert.equal(record.id, expected);
+  assert.equal(record.vertices_m.length, assembly.endsWith('002') ? 5 : 4);
+ }
+ assert.equal(vm.runInContext("DATA.panels.filter(p=>p.region==='Hoof').length", earl), 6);
+ assert.equal(vm.runInContext('panelById.size', earl), 208);
+});
