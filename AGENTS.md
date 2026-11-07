@@ -13,4 +13,4 @@
 
 ## Site typography
 
-Reserve Smooth Circulars exclusively for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and every visible occurrence of the project name `baaabs`, regardless of capitalization. Treat the name as a proper noun with its own typeface. When it appears in a sentence, heading, button, or navigation label, apply Smooth Circulars to the name alone. All surrounding text, including the hero tagline, uses the site's regular typography.
+Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and the standalone names `BAAABS` and `BAAAHS`. Both names have first-class status in site typography. Match either name as a whole word regardless of capitalization, including next to punctuation, and preserve its written case. In sentences, headings, captions, buttons, and navigation labels, style only the name itself. Use the site’s regular typography for the surrounding text and the hero tagline.
