@@ -1,0 +1,18 @@
+.itch{max-width:1400px;margin:auto;padding:clamp(20px,5vw,72px);color:#f6f1e8}
+.itch figure{margin:0}.itch img{width:100%;height:auto;display:block}.itch figcaption,.itch .signature{font:500 .88rem/1.5 Arial,sans-serif;color:#c9bdce}
+.itch figcaption{margin-top:.65rem}.itch .name{font:400 1em "Smooth Circulars",sans-serif}
+.itch .opening,.itch .chapter,.itch .reflection{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(24px,6vw,90px)}
+.itch .opening{background:#1e141f}.itch .opening-copy{padding:clamp(24px,4vw,65px)}.itch .opening img{max-height:76vh;object-fit:cover;object-position:50% 39%}
+.itch h1{font-size:clamp(4.5rem,9vw,9rem);line-height:.93}.itch .signature span{color:#f39372;padding:0 .35em}
+.itch .lead,.itch .pull,.itch .closing{font-family:Georgia,serif;letter-spacing:-.025em;line-height:1.16}
+.itch .lead{font-size:clamp(1.55rem,2.65vw,2.8rem);margin:1.5em 0 0}
+.itch .chapter,.itch .reflection,.itch .fire-story{margin-top:clamp(3rem,8vw,8rem)}
+.itch h2{font-size:clamp(2.3rem,4.6vw,5rem);line-height:1.02;letter-spacing:-.055em;margin:0 0 .48em}
+.itch .prose p{font-size:clamp(1rem,1.3vw,1.22rem);line-height:1.58;max-width:60ch;margin:.9em 0}
+.itch .archive>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}.itch .archive img:first-child{grid-column:1/-1}.itch .archive img:nth-child(n+2){aspect-ratio:4/3;object-fit:cover}
+.itch .reflection{padding-block:clamp(1.5rem,4vw,4rem);border-block:1px solid #544150}
+.itch .pull,.itch .closing{font-size:clamp(1.9rem,3.8vw,4rem);margin:0;color:#f4caaa}
+.itch .sheep-story{grid-template-columns:.8fr 1.4fr}.itch .sheep-pair{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:10px}
+.itch .fire-story .prose{max-width:62ch;margin-inline:auto}.itch .fire-photos{display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;gap:clamp(5px,1vw,16px);margin:2.5rem 0}
+.itch .closing{max-width:25ch;margin:clamp(2rem,6vw,6rem) auto 0}.itch .fire-story>.signature{text-align:center}
+@media(max-width:740px){.itch .opening,.itch .chapter,.itch .reflection{grid-template-columns:1fr;gap:1.4rem}.itch .opening img{max-height:58vh}.itch .opening-copy{padding-bottom:0}.itch .lead{margin-top:.8em}.itch .fire-photos{grid-template-columns:1fr 1fr}.itch .fire-photos img:nth-child(2){grid-column:1/-1;grid-row:1}.itch .fire-photos img{align-self:start}}
