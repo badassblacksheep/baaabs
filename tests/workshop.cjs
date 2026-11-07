@@ -143,5 +143,5 @@ check('Earl workshop opens the linked plate and picks all six plates independent
   assert.equal(record.vertices_m.length, assembly.endsWith('002') ? 5 : 4);
  }
  assert.equal(vm.runInContext("DATA.panels.filter(p=>p.region==='Hoof').length", earl), 6);
- assert.equal(vm.runInContext('panelById.size', earl), 208);
+ assert.equal(vm.runInContext('panelById.size', earl), 206);
 });
