@@ -22,6 +22,57 @@
     <button id="rotation-toggle" class="quiet" type="button" hidden>Pause rotation</button>
   </div>
 </div>
+<section class="acronym-play" aria-label="What does BAAABS stand for?">
+<style>
+.acronym-play{--ac-color:#f5eaf8;max-width:780px;margin:0 auto;padding:2rem 1rem 3.5rem;text-align:center;color:var(--ac-color)}
+.acronym-play .ac-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(3px,1.5vw,16px);max-width:680px;margin:0 auto;align-items:start}
+.acronym-play .ac-cell{min-width:0;display:flex;align-items:center;flex-direction:column}
+.acronym-play .ac-initial{font-family:"Smooth Circulars","SmoothCirculars",system-ui,sans-serif;font-size:clamp(2.8rem,10vw,6.4rem);font-weight:800;line-height:1.1;color:#fff;text-shadow:0 0 18px #b85be688}
+.acronym-play .ac-word{display:block;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.13em;font-size:clamp(.72rem,2vw,1.1rem);font-weight:650;line-height:1.2;margin-top:.65rem;min-height:12.5em;opacity:1;transition:opacity .65s ease,transform .65s ease;transform:translateY(0);white-space:nowrap}
+.acronym-play .ac-word.is-fading{opacity:0;transform:translateY(9px)}
+.acronym-play .ac-caption{margin:0 0 1rem;font-size:.75rem;letter-spacing:.22em;text-transform:uppercase;opacity:.7}
+.acronym-play .ac-note{font-size:.8rem;opacity:.55;margin-top:0}
+@media(prefers-reduced-motion:reduce){.acronym-play .ac-word{transition:none}}
+</style>
+<p class="ac-caption">What does BAAABS stand for?</p>
+<div class="ac-grid" id="acronym-grid" aria-hidden="true">
+<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-word">Bad</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Ass</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Amazingly</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Awesome</span></div>
+<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-word">Black</span></div>
+<div class="ac-cell"><span class="ac-initial">S</span><span class="ac-word">Sheep</span></div>
+</div>
+<p class="ac-note" id="acronym-description" aria-live="off">Bad Ass Amazingly Awesome Black Sheep</p>
+<script>
+(()=>{
+const grid=document.getElementById('acronym-grid');
+if(!grid)return;
+const words=[...grid.querySelectorAll('.ac-word')];
+const label=document.getElementById('acronym-description');
+const phrases=[
+['Bad','Ass','Amazingly','Awesome','Black','Sheep'],
+['Big','Ambitious','Absurd','Art','Bus','Shenanigans'],
+['Burners','Are','Absolutely','Against','Boring','Stuff'],
+['Beautiful','Audacious','And','Adorably','Bizarre','Sheep'],
+['Boys','Are','All','About','Butt','Sex']
+];
+let index=0;
+const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(reduced)return;
+function advance(){
+words.forEach(w=>w.classList.add('is-fading'));
+setTimeout(()=>{
+index=(index+1)%phrases.length;
+words.forEach((w,i)=>{w.textContent=phrases[index][i];w.classList.remove('is-fading')});
+label.textContent=phrases[index].join(' ');
+setTimeout(advance,index===phrases.length-1?5200:3100);
+},700);
+}
+setTimeout(advance,3400);
+})();
+</script>
+</section>
 <div class="hero-bottom"><h1 id="hero-title">Where even<br><span>black sheep</span> belong.</h1><a class="button" href="patch.html">Wear the dream ↗</a></div></section>
 <section class="patch-teaser" aria-labelledby="patch-title"><a class="patch-art" href="patch.html" aria-label="See the BAAABS embroidered patch"><img src="assets/baaabs-patch-photo.jpg" alt="The actual BAAABS embroidered patch on a wooden surface, with rainbow lettering and a white stitched border" width="2048" height="913" loading="lazy"></a><div class="patch-copy"><p class="eyebrow">Little sheep. Big dream.</p><h2 id="patch-title">Put a sheep<br>on it.</h2><p>Embroidered. Iron-on. Unapologetically baaabs.</p><a class="button" href="patch.html">See the patch ↗</a><p class="micro">Patch sales help fund the build.</p></div></section>
 <nav class="explore" aria-label="Explore the design"><a class="text-link" href="panels.html">Inside the build ↗</a></nav></main>
