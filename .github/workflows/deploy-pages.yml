@@ -45,7 +45,9 @@ jobs:
         with:
           enablement: true
       - name: Stage public pages without retired donor studies
-        run: rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
+        run: |
+          rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
+          rsync -a fonts/ pages-dist/fonts/
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:

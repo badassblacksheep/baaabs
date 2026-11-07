@@ -4,3 +4,30 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 
 .model-stage model-viewer:not(:defined){background:#100d1a url("earl-symmetric.jpg") center/contain no-repeat}.model-controls{background:#100d1ae8;padding:4px 8px;border-radius:24px}
+
+@font-face {
+  font-family: "Smooth Circulars";
+  src: url("../fonts/smooth_circulars/Smooth%20Circulars.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Smooth Circulars";
+  src: url("../fonts/smooth_circulars/Smooth%20Circulars%20Italic.otf") format("opentype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.hero-bottom h1, .product-details h1 {
+  font-family: "Smooth Circulars", Arial, sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: 1.08;
+}
+
+.hero-bottom h1 span, .product-details h1 span {
+  font-style: italic;
+}
