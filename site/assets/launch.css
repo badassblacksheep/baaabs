@@ -20,14 +20,3 @@
   font-weight: 400;
   font-display: swap;
 }
-
-.hero-bottom h1, .product-details h1 {
-  font-family: "Smooth Circulars", Arial, sans-serif;
-  font-weight: 400;
-  letter-spacing: normal;
-  line-height: 1.08;
-}
-
-.hero-bottom h1 span, .product-details h1 span {
-  font-style: italic;
-}
