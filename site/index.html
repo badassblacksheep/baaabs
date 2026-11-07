@@ -24,31 +24,34 @@
 </div>
 <section class="acronym-play" aria-label="What does BAAABS stand for?">
 <style>
-.acronym-play{--ac-color:#f5eaf8;max-width:780px;margin:0 auto;padding:2rem 1rem 3.5rem;text-align:center;color:var(--ac-color)}
-.acronym-play .ac-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(3px,1.5vw,16px);max-width:680px;margin:0 auto;align-items:start}
+/* The Smooth Circulars OTF must be placed at assets/fonts/smooth-circulars.otf. */
+@font-face{font-family:"BAAABS Smooth Circulars";src:url("assets/fonts/smooth-circulars.otf") format("opentype");font-display:block}
+.acronym-play{max-width:760px;margin:0 auto;padding:1.5rem 1rem 3rem;color:#f5eaf8;text-align:center}
+.acronym-play .ac-caption{font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin:0 0 1.25rem}
+.acronym-play .ac-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;max-width:690px;margin:auto}
 .acronym-play .ac-cell{min-width:0;display:flex;align-items:center;flex-direction:column}
-.acronym-play .ac-initial{font-family:"Smooth Circulars","SmoothCirculars",system-ui,sans-serif;font-size:clamp(2.8rem,10vw,6.4rem);font-weight:800;line-height:1.1;color:#fff;text-shadow:0 0 18px #b85be688}
-.acronym-play .ac-word{display:block;writing-mode:vertical-rl;text-orientation:upright;letter-spacing:.13em;font-size:clamp(.72rem,2vw,1.1rem);font-weight:650;line-height:1.2;margin-top:.65rem;min-height:12.5em;opacity:1;transition:opacity .65s ease,transform .65s ease;transform:translateY(0);white-space:nowrap}
-.acronym-play .ac-word.is-fading{opacity:0;transform:translateY(9px)}
-.acronym-play .ac-caption{margin:0 0 1rem;font-size:.75rem;letter-spacing:.22em;text-transform:uppercase;opacity:.7}
-.acronym-play .ac-note{font-size:.8rem;opacity:.55;margin-top:0}
-@media(prefers-reduced-motion:reduce){.acronym-play .ac-word{transition:none}}
+.acronym-play .ac-initial,.acronym-play .ac-tail{font-family:"BAAABS Smooth Circulars";font-weight:400;font-variant-ligatures:none;font-feature-settings:"tnum" 1;letter-spacing:0}
+.acronym-play .ac-initial{font-size:clamp(2.4rem,9vw,5.5rem);line-height:1.1;color:#fff;text-shadow:0 0 18px #b85be688}
+.acronym-play .ac-tail{display:block;writing-mode:vertical-rl;text-orientation:upright;font-size:clamp(.62rem,1.8vw,1rem);line-height:1;letter-spacing:.04em;white-space:nowrap;margin-top:0;min-height:12em;opacity:1;transition:opacity .65s ease,transform .65s ease;transform:translateY(0)}
+.acronym-play .ac-tail.is-fading{opacity:0;transform:translateY(8px)}
+.acronym-play .ac-note{font-size:.8rem;opacity:.6;margin:0}
+@media(prefers-reduced-motion:reduce){.acronym-play .ac-tail{transition:none}}
 </style>
 <p class="ac-caption">What does BAAABS stand for?</p>
 <div class="ac-grid" id="acronym-grid" aria-hidden="true">
-<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-word">Bad</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Ass</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Amazingly</span></div>
-<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-word">Awesome</span></div>
-<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-word">Black</span></div>
-<div class="ac-cell"><span class="ac-initial">S</span><span class="ac-word">Sheep</span></div>
+<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-tail">ad</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">ss</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">mazingly</span></div>
+<div class="ac-cell"><span class="ac-initial">A</span><span class="ac-tail">wesome</span></div>
+<div class="ac-cell"><span class="ac-initial">B</span><span class="ac-tail">lack</span></div>
+<div class="ac-cell"><span class="ac-initial">S</span><span class="ac-tail">heep</span></div>
 </div>
 <p class="ac-note" id="acronym-description" aria-live="off">Bad Ass Amazingly Awesome Black Sheep</p>
 <script>
 (()=>{
 const grid=document.getElementById('acronym-grid');
 if(!grid)return;
-const words=[...grid.querySelectorAll('.ac-word')];
+const tails=[...grid.querySelectorAll('.ac-tail')];
 const label=document.getElementById('acronym-description');
 const phrases=[
 ['Bad','Ass','Amazingly','Awesome','Black','Sheep'],
@@ -58,13 +61,12 @@ const phrases=[
 ['Boys','Are','All','About','Butt','Sex']
 ];
 let index=0;
-const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(reduced)return;
+if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 function advance(){
-words.forEach(w=>w.classList.add('is-fading'));
+tails.forEach(w=>w.classList.add('is-fading'));
 setTimeout(()=>{
 index=(index+1)%phrases.length;
-words.forEach((w,i)=>{w.textContent=phrases[index][i];w.classList.remove('is-fading')});
+tails.forEach((w,i)=>{w.textContent=phrases[index][i].slice(1).toLowerCase();w.classList.remove('is-fading')});
 label.textContent=phrases[index].join(' ');
 setTimeout(advance,index===phrases.length-1?5200:3100);
 },700);
