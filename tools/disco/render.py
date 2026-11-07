@@ -1,4 +1,4 @@
-"""CPU-only turntable of the actual v24 OBJ. No Blender process or GPU needed.
+"""CPU-only turntable of the Earl assembly OBJ. No Blender process or GPU needed.
 
 Uses NumPy and pycairo. Run from the repository: python3 tools/disco/render.py.
 The master model is read-only. Dancers/lights/flames are presentation effects.
@@ -9,8 +9,8 @@ import numpy as np
 import cairo
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT.parent / 'outputs/assembly-v24/baaabs-assembly.obj'
-OUT = ROOT / 'site/assets/disco'
+SOURCE = ROOT.parent / 'outputs/earl-geodesic/baaabs-earl-geodesic.obj'
+OUT = ROOT / 'site/assets/disco/earl-geodesic'
 OUT.mkdir(parents=True, exist_ok=True)
 parser = argparse.ArgumentParser()
 parser.add_argument('--frames', type=int, default=192)
@@ -35,7 +35,9 @@ N = np.cross(T[:,1]-T[:,0], T[:,2]-T[:,0])
 N /= np.maximum(np.linalg.norm(N,axis=1)[:,None], 1e-10)
 base = np.tile([.12,.125,.15], (len(F),1))
 for i,m in enumerate(materials):
-    if m.startswith('Panel_'): base[i] = [.19,.195,.23]
+    if m.startswith('Panel_'): base[i] = [.14,.145,.17]
+    if 'Hooves' in m: base[i] = [.15,.155,.18]
+    if 'Earl' in m: base[i] = [.72,.39,.025]
     if any(s in m.lower() for s in ['rails','metal','tank']): base[i] = [.40,.43,.49]
     if any(s in m.lower() for s in ['rubber','speaker']): base[i] = [.045,.045,.055]
     if 'glass' in m: base[i] = [.07,.1,.16]
@@ -48,7 +50,7 @@ def frame(k):
     phase=k/args.frames*2*math.pi
     theta=-2.22 + phase
     camera=np.array([30*math.cos(theta),18,30*math.sin(theta)])
-    target=np.array([.7,4.6,0]); backward=unit(camera-target)
+    target=np.array([-.1,4.5,0]); backward=unit(camera-target)
     right=unit(np.cross([0,1,0],backward)); up=np.cross(backward,right)
     matrix=np.array([right,up,backward]).T
     scale=W/28
@@ -82,11 +84,11 @@ def frame(k):
     # Presentation rig is depth-sorted with the model to keep dancers behind rails.
     drawlist=[(depth[i],'face',i) for i in range(len(F))]
     dancers=[]
-    for j,(x,z) in enumerate([(-4,-.55),(-2,.6),(-.2,-.45),(1.8,.6),(3.8,-.55)]):
+    for j,(x,z) in enumerate([(-4.1,-.55),(-2.5,.6),(-.9,-.45),(.7,.6),(2.3,-.55)]):
         p=phase*4+j*1.3; bounce=.065*(1+math.sin(p*2))
-        hip=np.array([x+.13*math.sin(p),4.20+bounce,z]);neck=hip+[.10*math.sin(p),.62,0]
+        hip=np.array([x+.13*math.sin(p),4.133325+bounce,z]);neck=hip+[.10*math.sin(p),.62,0]
         head=neck+[0,.27,0]
-        joints=[([x-.24,3.43,z],hip+[-.15,-.35,.03],hip),([x+.23,3.43,z],hip+[.2,-.38,-.04],hip),(hip,neck),(neck,neck+[-.35,.15+.23*math.sin(p),.05],neck+[-.53,.55+.25*math.sin(p),.08]),(neck,neck+[.32,.12-.2*math.sin(p),-.05],neck+[.5,.5-.25*math.sin(p),-.06])]
+        joints=[([x-.24,3.363325,z],hip+[-.15,-.35,.03],hip),([x+.23,3.363325,z],hip+[.2,-.38,-.04],hip),(hip,neck),(neck,neck+[-.35,.15+.23*math.sin(p),.05],neck+[-.53,.55+.25*math.sin(p),.08]),(neck,neck+[.32,.12-.2*math.sin(p),-.05],neck+[.5,.5-.25*math.sin(p),-.06])]
         dancers.append((j,joints,head))
         drawlist.append((float((hip-target)@backward),'dancer',len(dancers)-1))
     for _,kind,i in sorted(drawlist,key=lambda x:x[0]):
@@ -110,7 +112,7 @@ def frame(k):
     # Twin animated gas flame shapes originate at the actual modeled mast tips.
     pulse=max(0,math.sin(phase*3-.2))**1.4
     for j,z in enumerate([-1.25,1.25]):
-        tip=np.array([8.58,8.38,z]);power=pulse*(.9+.1*math.sin(k*.7+j))
+        tip=np.array([7.31254,8.313325,z]);power=pulse*(.9+.1*math.sin(k*.7+j))
         if power<.025:continue
         tip2=tip+np.array([.63*power,2.7*power,0])
         q=project(tip);q2=project(tip2)

@@ -30,7 +30,7 @@
     script.onerror = () => { document.querySelector('#model-slot').textContent = 'Interactive model unavailable. Use The build link below.'; };
     document.head.append(script);
     const model = document.createElement('model-viewer');
-    model.src = 'assets/models/baaabs-panelized-v24.glb'; model.alt = 'Interactive BAAABS v24 design model';
+    model.src = 'assets/models/baaabs-earl-geodesic.glb'; model.alt = 'Interactive BAAABS on Earl with faceted cloven hooves';
     model.setAttribute('camera-controls', '');model.setAttribute('touch-action','pan-y');
     model.setAttribute('shadow-intensity','.7');model.setAttribute('exposure','1.2');
     document.querySelector('#model-slot').replaceChildren(model);
