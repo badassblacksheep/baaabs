@@ -10,7 +10,8 @@
 .itch h2{font-size:clamp(2.3rem,4.6vw,5rem);line-height:1.02;letter-spacing:-.055em;margin:0 0 .48em}
 .itch .prose p{font-size:clamp(1rem,1.3vw,1.22rem);line-height:1.58;max-width:60ch;margin:.9em 0}
 .itch .archive>div{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}.itch .archive img:first-child{grid-column:1/-1}.itch .archive img:nth-child(n+2){aspect-ratio:4/3;object-fit:cover}
-.itch .reflection .prose{max-width:62ch;margin-inline:auto}
+.itch .reflection{display:block;width:100%;max-width:52rem;margin-inline:auto}
+.itch .reflection p{max-width:none}
 .itch .reflection{padding-block:clamp(1.5rem,4vw,4rem);border-block:1px solid #544150}
 .itch .sheep-story{grid-template-columns:.8fr 1.4fr}.itch .sheep-pair{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:10px}
 .itch .fire-story .prose{max-width:62ch;margin-inline:auto}.itch .fire-photos{display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;gap:clamp(5px,1vw,16px);margin:2.5rem 0}
