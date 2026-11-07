@@ -21,8 +21,17 @@
 <section class="acronym-play" aria-label="BAAABS word art">
 <style>
 .model-stage #hero-title{position:absolute;inset-inline:0;bottom:clamp(8px,2vw,28px);margin:0;text-align:center;white-space:nowrap;font-size:clamp(12px,5.6vw,78px);line-height:1.1;text-shadow:0 2px 12px #080710;pointer-events:none}
-.disco-hero .hero-bottom{display:grid;justify-items:center;gap:6px;text-align:center}
-.hero-bottom .patch-small{margin:0}
+.disco-hero{padding-bottom:0}
+.patch-checkout{display:grid;justify-items:center;gap:6px;text-align:center}
+.patch-checkout .patch-small{margin:0}
+@media(min-width:761px) and (max-width:1149px){
+  .patch-teaser{row-gap:12px}
+  .patch-art{grid-row:span 2}
+  .patch-checkout{grid-column:2;justify-self:start}
+}
+@media(min-width:1150px){
+  .patch-teaser{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr) auto;gap:3vw}
+}
 .model-stage .model-controls{top:8px;bottom:auto;right:2vw}
 @media(max-width:600px){.model-stage .model-controls{top:auto;bottom:calc(5.6vw + 22px)}.model-stage .model-controls .micro{display:none}}
 .acronym-play{position:absolute;top:clamp(8px,1.5vw,20px);left:clamp(12px,5vw,80px);pointer-events:none;color:#f5eaf8;text-align:left}
@@ -143,7 +152,7 @@ setTimeout(advance,3400);
   </div>
   <h1 id="hero-title">Where even <span>black sheep</span> belong.</h1>
 </div>
-<div class="hero-bottom" id="checkout-slot" aria-label="Buy the embroidered patch"><a class="button" href="https://buy.stripe.com/aFacN560kcVC9pZd43cQU01?client_reference_id=baaabs_patch">Buy the patch · $10 shipped</a></div></section>
-<section class="patch-teaser" aria-labelledby="patch-title"><a class="patch-art" href="patch.html" aria-label="See the BAAABS embroidered patch"><img src="assets/baaabs-patch-photo.jpg" alt="The actual BAAABS embroidered patch on a wooden surface, with rainbow lettering and a white stitched border" width="2048" height="913" loading="lazy"></a><div class="patch-copy"><p class="eyebrow">Little sheep. Big dream.</p><h2 id="patch-title">Put a sheep<br>on it.</h2><p>Embroidered. Iron-on. Unapologetically baaabs.</p><a class="button" href="patch.html">See the patch ↗</a><p class="micro">Patch sales help fund the build.</p></div></section>
+</section>
+<section class="patch-teaser" aria-labelledby="patch-title"><a class="patch-art" href="patch.html" aria-label="See the BAAABS embroidered patch"><img src="assets/baaabs-patch-photo.jpg" alt="The actual BAAABS embroidered patch on a wooden surface, with rainbow lettering and a white stitched border" width="2048" height="913" loading="lazy"></a><div class="patch-copy"><p class="eyebrow">Little sheep. Big dream.</p><h2 id="patch-title">Put a sheep<br>on it.</h2><p>Embroidered. Iron-on. Unapologetically baaabs.</p><p class="micro">Patch sales help fund the build.</p></div><div class="patch-checkout" id="checkout-slot" aria-label="Buy the embroidered patch"><a class="button" href="https://buy.stripe.com/aFacN560kcVC9pZd43cQU01?client_reference_id=baaabs_patch">Buy the patch · $10 shipped</a></div></section>
 <nav class="explore" aria-label="Explore the design"><a class="text-link" href="panels.html">Inside the build ↗</a></nav></main>
 <footer><span>Bad Ass Amazingly Awesome Black Sheep</span><nav aria-label="Footer"><a href="patch.html">The Patch</a><a href="pitch.html">The Pitch</a><a href="panels.html">The build</a><a href="safety/">Safety &amp; licensing</a><a href="https://www.instagram.com/b_a_a_a_b_s/" target="_blank" rel="noopener">Instagram ↗</a><a href="https://www.gofundme.com/f/help-build-baaabs-a-black-sheep-bound-for-burning-man" target="_blank" rel="noopener">Donate ↗</a></nav><small>Privately owned. Community supported.</small></footer></body></html>
