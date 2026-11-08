@@ -48,6 +48,9 @@ jobs:
         run: |
           rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
           rsync -a fonts/ pages-dist/fonts/
+      - name: Build the X-braced panel workshop model
+        run: |
+          python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb pages-dist/assets/models/baaabs-earl-x-braced-workshop.glb
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:
