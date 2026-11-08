@@ -26,7 +26,7 @@ The former project-specific **hard 102-inch road-width invariant** and its stati
 
 ## Exterior panels and model
 
-The panel workshop at <https://baaabs.org/panels.html> tracks **206 exterior panels**. Preserve the sheep's overall appearance, panel count, and symmetry where practical while updating the deck and structural model.
+The panel workshop at <https://baaabs.org/the_build.html> tracks **206 exterior panels**. Preserve the sheep's overall appearance, panel count, and symmetry where practical while updating the deck and structural model.
 
 The repository contains historical model revisions, mounting concepts, and subframe studies. Older documentation and geometry depicting stations, six-station frames, or 102-inch project gates are archival, not authoritative descriptions of the current proposal.
 
@@ -37,6 +37,10 @@ The repository contains historical model revisions, mounting concepts, and subfr
 Use this as the **working estimate for all 206 nonstructural exterior panels**, not for the roof, chassis supports, guardrails, or load-bearing components. Approximate bare sheet weight: 0.88 lb/ft² of gross sheet area at 40% open area; excludes edging, frames, mounts, coating, and offcuts. Actual weight depends on mill thickness and perforation pattern. Confirm final area and nesting before budgeting or ordering.
 
 **Required next steps:** request 20-gauge sample and quote; test a representative large panel with its real perimeter support and mounting method for oil-canning, vibration, fatigue, fastener tear-out, sharp edges, corrosion protection, highway wind and thermal exposure near poofers. Do not treat this tentative choice as a verified specification or purchase order.
+
+## Exterior skin mass study
+
+The 206 modeled panels sum to **193.7196 m² (2,085.18 ft²)** net surface area. At 40% open area, the previous 0.063-in perforated aluminum skin is approximately **1,107 lb**, while the proposed McNICHOLS 20-ga perforated steel is **1,833 lb** (~726 lb heavier). Historical 3-mm and 4-mm perforated steel comparisons are ~6,029 and ~8,039 lb. All values exclude frames, hardware, coatings and nesting waste. Track material decisions at <https://baaabs.org/panels.html>; use <https://baaabs.org/the_build.html> for the interactive panel workshop.
 
 ## Contributions
 
