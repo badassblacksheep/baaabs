@@ -10,7 +10,18 @@
   }
 
   setRotation(!motion.matches);
-  model.addEventListener('load', () => { toggle.hidden = false; });
+  function showEarl() {
+    for (const material of model.model.materials) {
+      if (!material.name.startsWith('Panel_') || material.isLoaded === false) continue;
+      const pbr = material.pbrMetallicRoughness;
+      pbr.setBaseColorFactor([0.006, 0.006, 0.006, pbr.baseColorFactor[3]]);
+      pbr.setMetallicFactor(0);
+      pbr.setRoughnessFactor(1);
+    }
+    toggle.hidden = false;
+  }
+  model.addEventListener('load', showEarl);
+  if (model.loaded) showEarl();
   model.addEventListener('error', () => {
     hint.textContent = '3D view unavailable';
     toggle.hidden = true;
