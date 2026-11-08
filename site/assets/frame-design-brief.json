@@ -1,5 +1,5 @@
 {
-  "revision": "lightweight-brief-3-deck-target",
+  "revision": "lightweight-brief-4-deck-target",
   "date": "2026-10-19",
   "status": "Target geometry updated; binary models, panels, fabrication schedules and audits pending rebuild; not approved for fabrication",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -10,11 +10,11 @@
     "use": "Dancing while the bus moves at up to 5 mph",
     "maximum_event_speed_mph": 5,
     "deck_footprint_m": [
-      11.5824,
-      2.7432
+      10.9728,
+      2.4384
     ],
     "deck_surface_height_m": 3.4004,
-    "deck_geometry_basis": "New target: 38 ft × 9 ft (11.5824 × 2.7432 m). Existing GLB meshes, panel coordinates and historical reports are not yet regenerated; do not treat them as updated.",
+    "deck_geometry_basis": "New target: 36 ft × 8 ft (10.9728 × 2.4384 m). Existing GLB meshes, panel coordinates and historical reports not yet regenerated; do not treat as updated.",
     "exterior_panel_count": 206,
     "road_width_maximum_in": 102,
     "road_requirement_source": "project-constraints.json",
