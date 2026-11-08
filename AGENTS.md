@@ -26,3 +26,7 @@ Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the
 Use this as the **working estimate for all 206 nonstructural exterior panels**, not for the roof, chassis supports, guardrails, or load-bearing components. Approximate bare sheet weight: 0.88 lb/ft² of gross sheet area at 40% open area; excludes edging, frames, mounts, coating, and offcuts. Actual weight depends on mill thickness and perforation pattern. Confirm final area and nesting before budgeting or ordering.
 
 **Required next steps:** request 20-gauge sample and quote; test a representative large panel with its real perimeter support and mounting method for oil-canning, vibration, fatigue, fastener tear-out, sharp edges, corrosion protection, highway wind and thermal exposure near poofers. Do not treat this tentative choice as a verified specification or purchase order.
+
+## Panel pages and mass baseline
+
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The 206-panel register has 193.719615 m² net area. At 40% open, estimated bare skins: 0.063-in aluminum ~1,107 lb; 20-ga steel ~1,833 lb. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
