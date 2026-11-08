@@ -1,7 +1,7 @@
 {
   "revision": "lightweight-brief-4-deck-target",
   "date": "2026-10-19",
-  "status": "Target geometry updated; binary models, panels, fabrication schedules and audits pending rebuild; not approved for fabrication",
+  "status": "Target geometry updated; binary models, panels, fabrication schedules and audits pending rebuild. Neither concept is load-rated or approved for fabrication",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
   "requirements": {
     "people": 20,
