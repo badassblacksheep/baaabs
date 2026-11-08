@@ -52,7 +52,10 @@
     document.querySelector('#track-screen').replaceChildren(frame);
     function connect() {
       player = new YT.Player(frame, {events: {
-        onReady() { ready = true; },
+        onReady(event) {
+          ready = true;
+          setPlaying(event.target.getPlayerState() === YT.PlayerState.PLAYING);
+        },
         onStateChange(event) {
           if (event.data === YT.PlayerState.PLAYING) setPlaying(true);
           if ([YT.PlayerState.PAUSED, YT.PlayerState.ENDED].includes(event.data)) setPlaying(false);
@@ -72,7 +75,7 @@
 
   button.addEventListener('click', () => {
     if (!frame) openPlayer();
-    else if (ready && playing) player.pauseVideo();
+    else if (ready && (playing || player.getPlayerState() === YT.PlayerState.PLAYING)) player.pauseVideo();
     else if (ready) player.playVideo();
     else frame.focus();
   });
