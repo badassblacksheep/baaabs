@@ -24,7 +24,19 @@
    apply();
  });
  const groupOf=m=>m.name.startsWith('Panel_')?'panels':m.name.match(/^Workshop_([^_]+)_/)?.[1];
- window.workshopMaterialVisible=m=>inputs[groupOf(m)]?.checked!==false;
+ const eyeMaterials=new Set();
+ function identifyEyes(){
+  eyeMaterials.clear();
+  const gltf=model.originalGltfJson;
+  for(const node of gltf?.nodes??[]){
+   if(node.extras?.component!=='eye_effect')continue;
+   for(const primitive of gltf.meshes[node.mesh]?.primitives??[]){
+    eyeMaterials.add(gltf.materials[primitive.material]?.name);
+   }
+  }
+ }
+ window.workshopMaterialVisible=m=>inputs[groupOf(m)]?.checked!==false &&
+  (!eyeMaterials.has(m.name) || inputs.panels.checked);
  window.workshopPanelsVisible=()=>inputs.panels.checked;
  function apply(){
   if(!model.model)return;
@@ -37,7 +49,7 @@
     color:[...pbr.baseColorFactor],emissive:[...material.emissiveFactor],alpha:material.getAlphaMode(),
     metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
    });
-   const base=originals.get(material),visible=inputs[group].checked;
+   const base=originals.get(material),visible=window.workshopMaterialVisible(material);
    const paintedPanel=group==='panels' && paintBlack?.checked;
    const color=paintedPanel?[0.006,0.006,0.006,base.color[3]]:base.color;
    if(group==='panels'){
@@ -60,6 +72,6 @@
    apply();model.cameraTarget='-0.6m 2m 0m';model.cameraOrbit='-125deg 70deg 18m';
  });
  document.querySelector('#restore-layers').addEventListener('click',()=>{for(const input of Object.values(inputs))input.checked=true;apply()});
- model.addEventListener('load',()=>{apply();document.querySelector('#workshop-layers').disabled=false});
- if(model.model){apply();document.querySelector('#workshop-layers').disabled=false}
+ model.addEventListener('load',()=>{identifyEyes();apply();document.querySelector('#workshop-layers').disabled=false});
+ if(model.model){identifyEyes();apply();document.querySelector('#workshop-layers').disabled=false}
 })();
