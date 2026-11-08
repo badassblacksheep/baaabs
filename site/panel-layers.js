@@ -3,6 +3,25 @@
  const groups=['subframe','deckframe','panels','bus','deck','equipment'].filter(g=>document.querySelector('#layer-'+g));
  const inputs=Object.fromEntries(groups.map(g=>[g,document.querySelector('#layer-'+g)]));
  const originals=new Map();
+ // Road configuration is a conservative visibility study, not a certified road model.
+ const roadLabel=document.createElement('label');
+ roadLabel.style.cssText='display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:650';
+ const roadInput=document.createElement('input');
+ roadInput.type='checkbox';roadInput.id='road-configuration';roadInput.style.cssText='min-width:0;flex:none';
+ roadLabel.append(roadInput,document.createTextNode('Road configuration · retained modifications only'));
+ const roadNote=document.createElement('p');
+ roadNote.className='note';
+ roadNote.textContent='Conservative preview: shows the donor bus only. Permanent post foundations and other retained modifications are not yet separated in this model; hidden does not mean removable or road-compliant.';
+ document.querySelector('#workshop-layers .layer-options')?.before(roadLabel,roadNote);
+ const roadSaved=new Map();
+ roadInput.addEventListener('change',()=>{
+   if(roadInput.checked){
+     for(const [g,input] of Object.entries(inputs)){roadSaved.set(g,input.checked);input.checked=g==='bus';input.disabled=true;}
+   }else{
+     for(const [g,input] of Object.entries(inputs)){input.disabled=false;input.checked=roadSaved.get(g)??true;}
+   }
+   apply();
+ });
  const groupOf=m=>m.name.startsWith('Panel_')?'panels':m.name.match(/^Workshop_([^_]+)_/)?.[1];
  window.workshopMaterialVisible=m=>inputs[groupOf(m)]?.checked!==false;
  window.workshopPanelsVisible=()=>inputs.panels.checked;
