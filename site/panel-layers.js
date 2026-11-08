@@ -2,7 +2,8 @@
 (()=>{
  const groups=['subframe','deckframe','mounts','panels','bus','deck','equipment'].filter(g=>document.querySelector('#layer-'+g));
  const inputs=Object.fromEntries(groups.map(g=>[g,document.querySelector('#layer-'+g)]));
- const originals=new Map();
+ const originals=new WeakMap();
+ const paintBlack=document.querySelector('#paint-black');
  // Road configuration is a conservative visibility study, not a certified road model.
  const roadLabel=document.createElement('label');
  roadLabel.style.cssText='display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:650';
@@ -31,16 +32,27 @@
   for(const material of model.model.materials){
    if(material.isLoaded===false)continue;
    const group=groupOf(material);if(!inputs[group])continue;
-   if(!originals.has(material))originals.set(material,{color:[...material.pbrMetallicRoughness.baseColorFactor],emissive:[...material.emissiveFactor],alpha:material.getAlphaMode()});
+   const pbr=material.pbrMetallicRoughness;
+   if(!originals.has(material))originals.set(material,{
+    color:[...pbr.baseColorFactor],emissive:[...material.emissiveFactor],alpha:material.getAlphaMode(),
+    metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
+   });
    const base=originals.get(material),visible=inputs[group].checked;
+   const paintedPanel=group==='panels' && paintBlack?.checked;
+   const color=paintedPanel?[0.006,0.006,0.006,base.color[3]]:base.color;
+   if(group==='panels'){
+    pbr.setMetallicFactor(paintedPanel?0:base.metallic);
+    pbr.setRoughnessFactor(paintedPanel?1:base.roughness);
+   }
    material.setAlphaMode(visible?base.alpha:'BLEND');
-   material.pbrMetallicRoughness.setBaseColorFactor(visible?base.color:[...base.color.slice(0,3),0]);
+   pbr.setBaseColorFactor(visible?color:[...color.slice(0,3),0]);
    material.setEmissiveFactor(visible?base.emissive:[0,0,0]);
   }
   document.querySelector('.model-stage').classList.toggle('panels-hidden',!inputs.panels.checked);
   paintHighlights();
  }
  window.revealWorkshopPanels=()=>{if(!inputs.panels.checked){inputs.panels.checked=true;apply()}};
+ paintBlack?.addEventListener('change',apply);
  for(const input of Object.values(inputs))input.addEventListener('change',apply);
  document.querySelector('#show-framing').addEventListener('click',()=>{
    if(roadInput.checked){roadInput.checked=false;roadInput.dispatchEvent(new Event('change'))}
@@ -48,6 +60,6 @@
    apply();model.cameraTarget='-0.6m 2m 0m';model.cameraOrbit='-125deg 70deg 18m';
  });
  document.querySelector('#restore-layers').addEventListener('click',()=>{for(const input of Object.values(inputs))input.checked=true;apply()});
- model.addEventListener('load',()=>{originals.clear();apply();document.querySelector('#workshop-layers').disabled=false});
+ model.addEventListener('load',()=>{apply();document.querySelector('#workshop-layers').disabled=false});
  if(model.model){apply();document.querySelector('#workshop-layers').disabled=false}
 })();
