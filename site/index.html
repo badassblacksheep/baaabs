@@ -4,7 +4,7 @@
 <title>BAAABS — Where even black sheep belong</title>
 <meta name="description" content="A black sheep. A rooftop dance floor. A very big dream. Buy a patch and help build BAAABS.">
 <link rel="canonical" href="https://baaabs.org/"><meta property="og:title" content="BAAABS — Where even black sheep belong"><meta property="og:description" content="Wear a little sheep. Help build a big one."><meta property="og:image" content="https://baaabs.org/assets/earl-party-hero.jpg"><meta property="og:url" content="https://baaabs.org/"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="assets/launch.css?v=word-art"><script src="assets/launch.js?v=matte-earl" defer></script>
+<link rel="stylesheet" href="assets/launch.css?v=word-art"><script src="assets/launch.js?v=push-it" defer></script>
 <script type="module" src="assets/vendor/model-viewer-4.1.0.min.js"></script><script src="assets/patch-config.js?v=patch-10-us" defer></script><script src="assets/patch.js?v=stripe-live-20261104" defer></script><script async src="https://js.stripe.com/v3/buy-button.js"></script>
 <link rel="stylesheet" href="assets/flock-nav.css">
 </head>
@@ -22,6 +22,7 @@
     loading="eager" poster="assets/earl-party-hero.jpg"></model-viewer>
 <section class="acronym-play" aria-label="BAAABS word art">
 <style>
+#earl-soundtrack{position:absolute;right:2vw;top:58px;z-index:2;width:min(320px,92%);padding:5px;background:#100d1a;border-radius:8px}#earl-soundtrack[hidden]{display:none}#earl-soundtrack iframe{display:block;width:100%;height:200px;border:0}#earl-soundtrack a{display:block;padding:4px 8px;font-size:12px}#push-it{white-space:nowrap}@media(max-width:600px){#earl-soundtrack{position:static;margin:8px auto}.model-stage:has(#earl-soundtrack:not([hidden])) #hero-title{position:static}.model-stage:has(#earl-soundtrack:not([hidden])) .model-controls{top:6px;bottom:auto}}
 #earl:not(:defined){background-image:url("assets/earl-party-hero.jpg")}
 .model-stage #hero-title{position:absolute;inset-inline:0;bottom:clamp(8px,2vw,28px);margin:0;text-align:center;white-space:nowrap;font-size:clamp(12px,5.6vw,78px);line-height:1.1;text-shadow:0 2px 12px #080710;pointer-events:none}
 .disco-hero{padding-bottom:0}
@@ -151,8 +152,10 @@ setTimeout(advance,3400);
 </section>
   <div class="model-controls">
     <span id="model-hint" class="micro">Drag to orbit Earl</span>
+    <button id="push-it" class="quiet" type="button" aria-controls="earl-soundtrack" aria-label="Play Push It">▶ Push It</button>
     <button id="rotation-toggle" class="quiet" type="button" hidden>Pause rotation</button>
   </div>
+  <div id="earl-soundtrack" hidden><div id="track-screen"></div><a href="https://www.youtube.com/watch?v=xzxx3iW8DiQ" target="_blank" rel="noopener">Push It · Watch on YouTube ↗</a></div>
   <h1 id="hero-title">Where even <span>black sheep</span> belong.</h1>
 </div>
 </section>
