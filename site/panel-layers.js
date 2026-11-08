@@ -1,6 +1,6 @@
 // Framing visibility shares the highlight lifecycle, so hidden panels stay hidden.
 (()=>{
- const groups=['subframe','deckframe','panels','bus','deck','equipment'].filter(g=>document.querySelector('#layer-'+g));
+ const groups=['subframe','deckframe','mounts','panels','bus','deck','equipment'].filter(g=>document.querySelector('#layer-'+g));
  const inputs=Object.fromEntries(groups.map(g=>[g,document.querySelector('#layer-'+g)]));
  const originals=new Map();
  // Road configuration is a conservative visibility study, not a certified road model.
@@ -42,7 +42,11 @@
  }
  window.revealWorkshopPanels=()=>{if(!inputs.panels.checked){inputs.panels.checked=true;apply()}};
  for(const input of Object.values(inputs))input.addEventListener('change',apply);
- document.querySelector('#show-framing')?.addEventListener('click',()=>{for(const g of groups)inputs[g].checked=['subframe','deckframe'].includes(g);apply();model.cameraTarget='0m 2m 0m';model.cameraOrbit='-35deg 68deg 24m'});
+ document.querySelector('#show-framing').addEventListener('click',()=>{
+   if(roadInput.checked){roadInput.checked=false;roadInput.dispatchEvent(new Event('change'))}
+   for(const g of groups)inputs[g].checked=['bus','deckframe','mounts'].includes(g);
+   apply();model.cameraTarget='-0.6m 2m 0m';model.cameraOrbit='-125deg 70deg 18m';
+ });
  document.querySelector('#restore-layers').addEventListener('click',()=>{for(const input of Object.values(inputs))input.checked=true;apply()});
  model.addEventListener('load',()=>{originals.clear();apply();document.querySelector('#workshop-layers').disabled=false});
  if(model.model){apply();document.querySelector('#workshop-layers').disabled=false}
