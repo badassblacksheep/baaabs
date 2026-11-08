@@ -18,3 +18,11 @@ Start structural work by reading [Earl’s structural tracker](https://baaabs.or
 ## Site typography
 
 Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and the standalone names `BAAABS` and `BAAAHS`. Both names have first-class status in site typography. Match either name as a whole word regardless of capitalization, including next to punctuation, and preserve its written case. In sentences, headings, captions, buttons, and navigation labels, style only the name itself. Use the site’s regular typography for the surrounding text and the hero tagline.
+
+## Provisional exterior skin material (2026-11-08)
+
+**Penciled in, not purchased or fabrication-approved:** McNICHOLS 20-gauge perforated carbon/mild-steel sheet, nominal 0.0359 in (0.91 mm) thick, with 1/8 in round holes on 3/16 in staggered centers (approximately 40% open area). Supplier: McNICHOLS, Fife, Washington. Reference pattern: https://www.mcnichols.com/perforated-metal/round-hole/carbon-steel-cs-16183122 (verify the exact 20-gauge SKU and availability before ordering; linked listing may be a different gauge).
+
+Use this as the **working estimate for all 206 nonstructural exterior panels**, not for the roof, chassis supports, guardrails, or load-bearing components. Approximate bare sheet weight: 0.88 lb/ft² of gross sheet area at 40% open area; excludes edging, frames, mounts, coating, and offcuts. Actual weight depends on mill thickness and perforation pattern. Confirm final area and nesting before budgeting or ordering.
+
+**Required next steps:** request 20-gauge sample and quote; test a representative large panel with its real perimeter support and mounting method for oil-canning, vibration, fatigue, fastener tear-out, sharp edges, corrosion protection, highway wind and thermal exposure near poofers. Do not treat this tentative choice as a verified specification or purchase order.
