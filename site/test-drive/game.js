@@ -1,5 +1,5 @@
-import {createRenderer,zoneRadius} from './renderer.js?v=caravansary';
-import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=caravansary';
+import {createRenderer,zoneRadius} from './renderer.js?v=playa-models';
+import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=playa-models';
 import {createSoundCar} from './sound-car.js?v=1';
 const $=id=>document.getElementById(id);
 const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0};

@@ -1,28 +1,8 @@
-import {buildLandmarks,art,targets,otherSculptures} from './landmarks.js?v=caravansary';
-// A single interleaved triangle batch per object keeps the workshop model inexpensive to draw.
-const sub=(a,b)=>a.map((v,i)=>v-b[i]);
-const add=(a,b)=>a.map((v,i)=>v+b[i]);
-const mul=(a,s)=>a.map(v=>v*s);
-const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
-const unit=a=>mul(a,1/(Math.hypot(...a)||1));
-const rgb=h=>[h>>16,(h>>8)&255,h&255].map(x=>x/255);
-class Geometry {
-  vertices=[];
-  tri(a,b,c,color,lit=true){
-    const n=unit(cross(sub(b,a),sub(c,a)));
-    const light=lit?.55+.28*Math.abs(n[1])+.17*Math.abs(n[0]*.8+n[2]*.6):1;
-    for(const p of [a,b,c]) this.vertices.push(...p,...mul(color,light));
-  }
-  beam(a,b,r,color,sides=6){
-    const axis=unit(sub(b,a)), u=unit(cross(axis,Math.abs(axis[1])>.9?[1,0,0]:[0,1,0])), v=cross(axis,u);
-    const rim=i=>add(mul(u,r*Math.cos(i*2*Math.PI/sides)),mul(v,r*Math.sin(i*2*Math.PI/sides)));
-    for(let i=0;i<sides;i++){
-      const p=rim(i),q=rim(i+1);
-      this.tri(add(a,p),add(a,q),add(b,q),color);this.tri(add(a,p),add(b,q),add(b,p),color);
-      this.tri(b,add(b,p),add(b,q),color);
-    }
-  }
-}
+import {art,targets} from './landmarks.js?v=playa-models';
+import {Geometry,rgb,sub,add,mul,cross,unit} from '../assets/models/playa/geometry.js';
+import {buildMan} from '../assets/models/playa/man-2014.js';
+import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
+import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js';
 function transform(p,n){
   const s=n.scale||[1,1,1], t=n.translation||[0,0,0], q=n.rotation||[0,0,0,1];
   const v=p.map((x,i)=>x*s[i]), r=cross(q,v);
@@ -76,68 +56,21 @@ function passengers(cheering){
 
 export const zoneRadius=6;
 const palette=[0xffc977,0xff629a,0x80fbea,0xc9a2ff].map(rgb);
-// Original low-poly interpretation of Ben Bartlett's Event Horizon (2025).
-const horizonCenter=[art[0].x,6.15,art[0].z];
-function eventHorizon(){
-  const frame=new Geometry(),rings=[],steel=rgb(0x453d57);
-  const [x,y,z]=horizonCenter;
-  const base=(angle,r,h)=>[x+r*Math.cos(angle),h,z+r*Math.sin(angle)];
-  // Leave a wide entry into the faceted light enclosure under the gimbal.
-  for(let i=0;i<6;i++){
-    const a=(i+1)*Math.PI/4,b=a+Math.PI/4;
-    const foot=base(a,3.55,0),top=base(a,2.95,3.18),end=base(b,2.95,3.18);
-    frame.beam(foot,top,.09,steel);frame.beam(top,end,.1,steel);
-    for(let j=0;j<8;j++){
-      const t=a+(b-a)*j/8;
-      frame.beam(base(t,3.5,.2),base(t,2.96,3.05),.037,palette[(i+j)%4],4);
-    }
-  }
-  for(const side of [-1,1]){
-    const joint=[x+3.16*side,y,z];
-    frame.beam([x+side*3.4,0,z-1.5],joint,.11,steel);
-    frame.beam([x+side*3.4,0,z+1.5],joint,.11,steel);
-  }
-  // Fixed faceted sphere; a violet equator evokes the infinity mirror.
-  const sphere=(a,b)=>[x+.69*Math.cos(b)*Math.cos(a),y+.69*Math.sin(b),z+.69*Math.cos(b)*Math.sin(a)];
-  for(let i=0;i<32;i++){
-    const a=i*Math.PI/16,b=(i+1)*Math.PI/16;
-    for(let j=-6;j<6;j++){
-      const lo=j*Math.PI/12,hi=lo+Math.PI/12,ink=rgb(j===3?0x342c50:0x171527);
-      frame.tri(sphere(a,lo),sphere(b,lo),sphere(a,hi),ink);
-      frame.tri(sphere(b,lo),sphere(b,hi),sphere(a,hi),ink);
-    }
-    frame.beam(sphere(a,0),sphere(b,0),.029,palette[3],4);
-  }
-  for(let k=0;k<5;k++){
-    const ring=new Geometry(),r=3.05-k*.44;
-    const point=i=>[r*Math.cos(i*Math.PI/32),r*Math.sin(i*Math.PI/32),0];
-    for(let i=0;i<64;i++)ring.beam(point(i),point(i+1),.066,palette[(k+Math.floor(i/8))%4],6);
-    rings.push(ring);
-  }
-  return {frame,rings};
-}
 function scenery(){
   const g=new Geometry(); let seed=83;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
-  // A sequence of luminous kinetic-sculpture silhouettes leads from the spawn into deep playa.
-  for(const [x,z,r] of otherSculptures){
-    for(let ring=0;ring<3;ring++){
-      const turn=ring*Math.PI/3+.35;
-      const at=a=>[x+r*Math.cos(a)*Math.cos(turn),r+.3+r*Math.sin(a),z+r*Math.cos(a)*Math.sin(turn)];
-      for(let i=0;i<48;i++)g.beam(at(i*Math.PI/24),at((i+1)*Math.PI/24),.09,palette[(ring+1)%4],4);
-    }
-  }
   for(let i=0;i<180;i++){
     const a=rand()*6.28,r=220+rand()*100,x=r*Math.sin(a),z=r*Math.cos(a),w=1+rand()*4,h=1+rand()*4;
     g.tri([x-w,0,z],[x+w,0,z],[x,h,z],rgb(0x66516b));
     g.beam([x,h,z],[x+.5,h+.2,z],.18,palette[i%4],3);
   }
-  buildLandmarks(g);
+  buildMan(g,art[2]);
+  buildHeadMaze(g,art[1]);
   return g;
 }
 const vertex=`
 attribute vec3 pos,col; varying vec3 tint; uniform vec3 eye,side,up,look,origin;
-uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform float tilt;
-void main(){float c=cos(angle),s=sin(angle);vec3 p=pos*scale;float ct=cos(tilt),st=sin(tilt);p=vec3(p.x,ct*p.y-st*p.z,st*p.y+ct*p.z);
+uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;
+void main(){float c=cos(angle),s=sin(angle);vec3 p=pose*(pos*scale);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
 tint=mix(col,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
@@ -200,7 +133,7 @@ export async function createRenderer(canvas){
   const jet=buffer(flame), shadowGeo=new Geometry();
   for(let i=0;i<32;i++){const pt=j=>[7.8*Math.cos(j*Math.PI/16),.01,2*Math.sin(j*Math.PI/16)];shadowGeo.tri([0,.01,0],pt(i),pt(i+1),rgb(0x55424c),false);}
   const shadow=buffer(shadowGeo), locations=new Map();
-  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','tilt'].map(k=>[k,gl.getUniformLocation(p,k)])));
+  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','pose'].map(k=>[k,gl.getUniformLocation(p,k)])));
   function drawMesh(p,mesh){
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);for(const [name,offset] of [['pos',0],['col',12]]){
       const a=gl.getAttribLocation(p,name);if(a<0)continue;gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,24,offset);
@@ -224,14 +157,15 @@ export async function createRenderer(canvas){
     gl.disable(gl.DEPTH_TEST);camera(ground);drawMesh(ground,skyBuf);
     gl.clear(gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);camera(solid);
     const l=locations.get(solid);
-    function object(mesh,origin,rotation=0,scale=[1,1,1],tilt=0){
-      gl.uniform1f(l.tilt,tilt);gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
+    function object(mesh,origin,rotation=0,scale=[1,1,1],pose=identity){
+      gl.uniformMatrix3fv(l.pose,false,pose);gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
     }
-    object(world,[0,0,0]);object(pavilion,[0,0,0]);
-    hoops.forEach((mesh,i)=>{
-      const spin=time*(.22+i*.055)+i*.78;
-      object(mesh,horizonCenter,spin,[1,1,1],.8*Math.sin(spin*.83+i));
-    });
+    object(world,[0,0,0]);
+    object(pavilion,[art[0].x,0,art[0].z]);
+    const poses=gimbalPose(time);
+    for(let i=0;i<hoops.length;i++){
+      object(hoops[i],[art[0].x,pivotHeight,art[0].z],0,[1,1,1],poses[i]);
+    }
     const rot=Math.PI/2+state.yaw,base=[state.x,0,state.z];
     if(state.drop<=0){
       const zone=targets[state.route], radius=zoneRadius*(1+.022*Math.sin(time*4));
