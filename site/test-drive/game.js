@@ -1,4 +1,4 @@
-import {createRenderer} from './renderer.js';
+import {createRenderer} from './renderer.js?v=event-horizon';
 const $=id=>document.getElementById(id);
 const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0};
 const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space']);
