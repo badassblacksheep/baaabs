@@ -57,17 +57,23 @@ async function loadEarl(){
     for(const child of n.children||[])visit(child,chain);
   }
   for(const id of doc.scenes[doc.scene].nodes)visit(id,[]);
+  return {model,outlets};
+}
+function passengers(cheering){
+  const people=new Geometry();
   // Three passengers with colored goggles on the raised deck.
   for(const [x,z,coat] of [[-2,.55,0xcd729d],[.5,-.65,0x64d9d2],[2,.45,0xffae65]]){
     const y=3.95;
-    for(const side of [-1,1])model.beam([x,y,z+side*.13],[x,y+.73,z+side*.09],.095,rgb(0x444052));
-    model.beam([x,y+.7,z],[x,y+1.25,z],.23,rgb(coat));
-    model.beam([x,y+1.28,z],[x,y+1.6,z],.15,rgb(0xc99377));
-    model.beam([x-.13,y+1.48,z-.1],[x-.13,y+1.48,z+.1],.055,rgb(0x93f0dd));
-    for(const side of [-1,1])model.beam([x,y+1.2,z+side*.18],[x-.16,y+1.02,z+side*.37],.075,rgb(coat));
+    for(const side of [-1,1])people.beam([x,y,z+side*.13],[x,y+.73,z+side*.09],.095,rgb(0x444052));
+    people.beam([x,y+.7,z],[x,y+1.25,z],.23,rgb(coat));
+    people.beam([x,y+1.28,z],[x,y+1.6,z],.15,rgb(0xc99377));
+    people.beam([x-.13,y+1.48,z-.1],[x-.13,y+1.48,z+.1],.055,rgb(0x93f0dd));
+    for(const side of [-1,1])people.beam([x,y+1.2,z+side*.18],[x-.16,y+(cheering?1.77:1.02),z+side*.37],.075,rgb(coat));
   }
-  return {model,outlets};
+  return people;
 }
+export const targetZones=[{x:0,z:-11},{x:-5,z:-30},{x:2,z:-50}];
+export const zoneRadius=6;
 const palette=[0xffc977,0xff629a,0x80fbea,0xc9a2ff].map(rgb);
 // Original low-poly interpretation of Ben Bartlett's Event Horizon (2025).
 const horizonCenter=[3,6.15,-24];
@@ -180,6 +186,15 @@ export async function createRenderer(canvas){
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
   const installation=eventHorizon(), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
+  const riders=buffer(passengers(false)), dancers=buffer(passengers(true));
+  const circle=new Geometry();
+  for(let i=0;i<72;i++){
+    const point=(j,r)=>[r*Math.cos(j*Math.PI/36),.09,r*Math.sin(j*Math.PI/36)];
+    const color=i%6===0?rgb(0xfff6bc):rgb(0xff54ad);
+    circle.tri(point(i,1),point(i+1,1),point(i,.93),color,false);
+    circle.tri(point(i+1,1),point(i+1,.93),point(i,.93),color,false);
+  }
+  const marker=buffer(circle);
   const flame=new Geometry();
   for(let i=0;i<9;i++){
     const ring=j=>[Math.cos(j*2*Math.PI/9)*.46,.65,Math.sin(j*2*Math.PI/9)*.46];
@@ -222,7 +237,18 @@ export async function createRenderer(canvas){
       object(mesh,horizonCenter,spin,[1,1,1],.8*Math.sin(spin*.83+i));
     });
     const rot=Math.PI/2+state.yaw,base=[state.x,0,state.z];
+    for(const [i,zone] of targetZones.entries()){
+      if(state.hits.has(i))continue;
+      const pulse=1+.025*Math.sin(time*4);
+      object(marker,[zone.x,0,zone.z],0,[zoneRadius*pulse,1,zoneRadius*pulse]);
+    }
     object(shadow,base,rot);object(bus,base,rot);
+    const jumping=state.cheer>0;
+    object(jumping?dancers:riders,[state.x,jumping?.70*Math.abs(Math.sin(10*state.cheer)):0,state.z],rot);
+    if(state.drop>0){
+      const radius=2+(2.4-state.drop)*9;
+      object(marker,base,0,[radius,1,radius]);
+    }
     if(state.fire>0){for(const p of outlets){
       const tip=[base[0]+p[0]*Math.cos(rot)-p[2]*Math.sin(rot),p[1],base[2]+p[0]*Math.sin(rot)+p[2]*Math.cos(rot)];
       const pulse=Math.min(1,state.fire*5)*(.88+.12*Math.sin(time*61));object(jet,tip,rot,[pulse,pulse*1.5,pulse]);
