@@ -69,10 +69,50 @@ async function loadEarl(){
   return {model,outlets};
 }
 const palette=[0xffc977,0xff629a,0x80fbea,0xc9a2ff].map(rgb);
+// Original low-poly interpretation of Ben Bartlett's Event Horizon (2025).
+const horizonCenter=[3,6.15,-24];
+function eventHorizon(){
+  const frame=new Geometry(),rings=[],steel=rgb(0x453d57);
+  const [x,y,z]=horizonCenter;
+  const base=(angle,r,h)=>[x+r*Math.cos(angle),h,z+r*Math.sin(angle)];
+  // Leave a wide entry into the faceted light enclosure under the gimbal.
+  for(let i=0;i<6;i++){
+    const a=(i+1)*Math.PI/4,b=a+Math.PI/4;
+    const foot=base(a,3.55,0),top=base(a,2.95,3.18),end=base(b,2.95,3.18);
+    frame.beam(foot,top,.09,steel);frame.beam(top,end,.1,steel);
+    for(let j=0;j<8;j++){
+      const t=a+(b-a)*j/8;
+      frame.beam(base(t,3.5,.2),base(t,2.96,3.05),.037,palette[(i+j)%4],4);
+    }
+  }
+  for(const side of [-1,1]){
+    const joint=[x+3.16*side,y,z];
+    frame.beam([x+side*3.4,0,z-1.5],joint,.11,steel);
+    frame.beam([x+side*3.4,0,z+1.5],joint,.11,steel);
+  }
+  // Fixed faceted sphere; a violet equator evokes the infinity mirror.
+  const sphere=(a,b)=>[x+.69*Math.cos(b)*Math.cos(a),y+.69*Math.sin(b),z+.69*Math.cos(b)*Math.sin(a)];
+  for(let i=0;i<32;i++){
+    const a=i*Math.PI/16,b=(i+1)*Math.PI/16;
+    for(let j=-6;j<6;j++){
+      const lo=j*Math.PI/12,hi=lo+Math.PI/12,ink=rgb(j===3?0x342c50:0x171527);
+      frame.tri(sphere(a,lo),sphere(b,lo),sphere(a,hi),ink);
+      frame.tri(sphere(b,lo),sphere(b,hi),sphere(a,hi),ink);
+    }
+    frame.beam(sphere(a,0),sphere(b,0),.029,palette[3],4);
+  }
+  for(let k=0;k<5;k++){
+    const ring=new Geometry(),r=3.05-k*.44;
+    const point=i=>[r*Math.cos(i*Math.PI/32),r*Math.sin(i*Math.PI/32),0];
+    for(let i=0;i<64;i++)ring.beam(point(i),point(i+1),.066,palette[(k+Math.floor(i/8))%4],6);
+    rings.push(ring);
+  }
+  return {frame,rings};
+}
 function scenery(){
   const g=new Geometry(); let seed=83;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
   // A sequence of luminous kinetic-sculpture silhouettes leads from the spawn into deep playa.
-  for(const [x,z,r] of [[-6,-30,4],[21,-58,6],[-54,-74,9],[60,16,5],[-32,45,7]]){
+  for(const [x,z,r] of [[21,-58,6],[-54,-74,9],[60,16,5],[-32,45,7]]){
     for(let ring=0;ring<3;ring++){
       const turn=ring*Math.PI/3+.35;
       const at=a=>[x+r*Math.cos(a)*Math.cos(turn),r+.3+r*Math.sin(a),z+r*Math.cos(a)*Math.sin(turn)];
@@ -97,8 +137,8 @@ function scenery(){
 }
 const vertex=`
 attribute vec3 pos,col; varying vec3 tint; uniform vec3 eye,side,up,look,origin;
-uniform float angle, focal, aspect, shift;uniform vec3 scale;
-void main(){float c=cos(angle),s=sin(angle);vec3 p=pos*scale;
+uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform float tilt;
+void main(){float c=cos(angle),s=sin(angle);vec3 p=pos*scale;float ct=cos(tilt),st=sin(tilt);p=vec3(p.x,ct*p.y-st*p.z,st*p.y+ct*p.z);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
 tint=mix(col,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
@@ -139,6 +179,7 @@ export async function createRenderer(canvas){
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
+  const installation=eventHorizon(), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
   const flame=new Geometry();
   for(let i=0;i<9;i++){
     const ring=j=>[Math.cos(j*2*Math.PI/9)*.46,.65,Math.sin(j*2*Math.PI/9)*.46];
@@ -148,7 +189,7 @@ export async function createRenderer(canvas){
   const jet=buffer(flame), shadowGeo=new Geometry();
   for(let i=0;i<32;i++){const pt=j=>[7.8*Math.cos(j*Math.PI/16),.01,2*Math.sin(j*Math.PI/16)];shadowGeo.tri([0,.01,0],pt(i),pt(i+1),rgb(0x55424c),false);}
   const shadow=buffer(shadowGeo), locations=new Map();
-  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale'].map(k=>[k,gl.getUniformLocation(p,k)])));
+  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','tilt'].map(k=>[k,gl.getUniformLocation(p,k)])));
   function drawMesh(p,mesh){
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);for(const [name,offset] of [['pos',0],['col',12]]){
       const a=gl.getAttribLocation(p,name);if(a<0)continue;gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,24,offset);
@@ -161,8 +202,8 @@ export async function createRenderer(canvas){
     const intro=state.mode==='intro', portrait=w/h<.9;
     const orbit=intro?1.95+.09*Math.sin(time*.18):.55+state.steer*.14;
     const distance=intro?(portrait?37:25):(portrait?27:21);
-    const angle=orbit-state.yaw;
-    const eye=[state.x+distance*Math.sin(angle),intro?8:9,state.z+distance*Math.cos(angle)];
+    const angle=orbit-state.yaw+state.cameraYaw;
+    const eye=[state.x+distance*Math.sin(angle),(intro?8:9)+state.cameraLift,state.z+distance*Math.cos(angle)];
     const target=[state.x,intro?(portrait?8:3.6):3.8,state.z];
     const look=unit(sub(target,eye)),side=unit(cross(look,[0,1,0])),up=cross(side,look);
     function camera(p){
@@ -172,10 +213,15 @@ export async function createRenderer(canvas){
     gl.disable(gl.DEPTH_TEST);camera(ground);drawMesh(ground,skyBuf);
     gl.clear(gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);camera(solid);
     const l=locations.get(solid);
-    function object(mesh,origin,rotation=0,scale=[1,1,1]){
-      gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
+    function object(mesh,origin,rotation=0,scale=[1,1,1],tilt=0){
+      gl.uniform1f(l.tilt,tilt);gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
     }
-    object(world,[0,0,0]);const rot=Math.PI/2+state.yaw,base=[state.x,0,state.z];
+    object(world,[0,0,0]);object(pavilion,[0,0,0]);
+    hoops.forEach((mesh,i)=>{
+      const spin=time*(.22+i*.055)+i*.78;
+      object(mesh,horizonCenter,spin,[1,1,1],.8*Math.sin(spin*.83+i));
+    });
+    const rot=Math.PI/2+state.yaw,base=[state.x,0,state.z];
     object(shadow,base,rot);object(bus,base,rot);
     if(state.fire>0){for(const p of outlets){
       const tip=[base[0]+p[0]*Math.cos(rot)-p[2]*Math.sin(rot),p[1],base[2]+p[0]*Math.sin(rot)+p[2]*Math.cos(rot)];

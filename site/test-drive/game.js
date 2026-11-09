@@ -4,7 +4,33 @@ const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0};
 const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space']);
 let lastBrake=-Infinity, fireCooldown=0, elapsed=0, heckled=false, radioTime=0;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
-function setMode(mode){state.mode=mode;document.body.dataset.mode=mode;}
+const canvas=$('playa');
+state.cameraYaw=0;
+state.cameraLift=0;
+let drag=null;
+function releaseCamera(){
+  if(!drag)return;
+  const id=drag.id;
+  drag=null;
+  canvas.classList.remove('dragging');
+  if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
+}
+canvas.addEventListener('pointerdown',e=>{
+  if(drag||e.button!==0||!['intro','drive'].includes(state.mode))return;
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+  canvas.setPointerCapture(e.pointerId);
+  canvas.classList.add('dragging');
+});
+canvas.addEventListener('pointermove',e=>{
+  if(e.pointerId!==drag?.id)return;
+  state.cameraYaw-=(e.clientX-drag.x)*.007;
+  state.cameraLift=Math.max(-6,Math.min(20,state.cameraLift+(e.clientY-drag.y)*.048));
+  drag.x=e.clientX;drag.y=e.clientY;
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture']){
+  canvas.addEventListener(event,e=>{if(e.pointerId===drag?.id)releaseCamera();});
+}
+function setMode(mode){releaseCamera();state.mode=mode;document.body.dataset.mode=mode;}
 function radio(message,seconds=2.7){$('radio').textContent=message;radioTime=seconds;}
 function initAudio(){
   try{
@@ -27,10 +53,10 @@ function whoosh(){
 function restart(){
   if(!ready)return;
   if(state.mode!=='paused'){
-    Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0});
+    Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0,cameraYaw:0,cameraLift:0});
     lastBrake=-Infinity;fireCooldown=elapsed=0;heckled=false;
   }
-  keys.clear();setMode('drive');radio('ROOF CREW  /  Take us to the lights.');initAudio();
+  keys.clear();setMode('drive');radio('ROOF CREW  /  Take us to Event Horizon!');initAudio();
   window.speechSynthesis?.cancel();$('start').blur();previous=performance.now();
 }
 function end(){
@@ -44,6 +70,7 @@ function end(){
   }
 }
 function pause(){
+  releaseCamera();
   keys.clear();hush();if(state.mode!=='drive')return;
   setMode('paused');radio('');$('eyebrow').textContent='DEEP PLAYA';$('title').textContent='Paused.';
   $('copy').textContent='Earl and the crew are right where you left them.';$('start').textContent='Resume drive →';
