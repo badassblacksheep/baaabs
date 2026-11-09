@@ -77,11 +77,41 @@
       return {x0:-5.4864,x1:5.4864,z0:-1.2192,z1:1.2192,y:4.4,measured:false};
     return {x0,x1,z0,z1,y,measured:true};
   }
+  // Use Earl's visible donor body, not the deck end, as the rear portal datum.
+  // This is a placement aid only; a measured rear chassis interface is still required.
+  function rearBodyFace(doc, entries, envelope) {
+    const candidates = [];
+    for (const e of entries.values()) {
+      const node = e.node;
+      if (node.mesh == null) continue;
+      const name = (node.name || '').toLowerCase();
+      const component = String(node.extras?.component || '').toLowerCase();
+      const meshName = (doc.meshes[node.mesh]?.name || '').toLowerCase();
+      const materialNames = (doc.meshes[node.mesh]?.primitives || [])
+        .map(p => (doc.materials[p.material]?.name || '').toLowerCase()).join(' ');
+      const busPart = component === 'bus' ||
+        /^bus[_ .-]/.test(name) ||
+        /^bus[_ .-]/.test(meshName) ||
+        /workshop_bus_/.test(materialNames);
+      if (!busPart || /chassis|frame.?rail|axle|wheel|mirror|hitch|tow|exhaust|engine/.test(name + ' ' + meshName))
+        continue;
+      const b = meshBounds(doc,node,e.world);
+      if (!b || b.hi[1] < 1.9 || b.hi[0] < envelope.x1-2.5) continue;
+      candidates.push(b.hi[0]);
+    }
+    // If no donor-body mesh is identifiable, place the frame conservatively
+    // inside the last deck bay instead of assuming the deck edge is the bus end.
+    const fallback = envelope.x1 - 0.75;
+    return {
+      x: candidates.length ? Math.max(...candidates) : fallback,
+      basis: candidates.length ? 'visible donor body mesh' : 'provisional deck-inset datum'
+    };
+  }
   function sourceComponent(doc, node) {
     const names = (doc.meshes[node.mesh]?.primitives || []).map(p=>doc.materials[p.material]?.name || '');
     return names.join(' ');
   }
-  function duplicateFront(doc, entries, envelope) {
+  function duplicateFront(doc, entries, envelope, rearFace) {
     const {x0,x1} = envelope, length = x1 - x0;
     const front = [];
     for (const e of entries.values()) {
@@ -101,6 +131,11 @@
     }
     if (front.length < 3 || front.length > 50) return 0;
     const reflect = identity(); reflect[0] = -1; reflect[12] = x0 + x1;
+    // The mirrored assembly's aftmost face must touch the bus rear body face,
+    // leaving any remaining deck behind it as an explicitly visible overhang.
+    const mirroredRearEdge = Math.max(...front.map(e =>
+      x0 + x1 - meshBounds(doc,e.node,e.world).lo[0]));
+    reflect[12] += rearFace.x - mirroredRearEdge;
     for (const e of front) {
       const copy = {...e.node, name:'Rear study · mirror of '+(e.node.name || 'front member')};
       delete copy.translation; delete copy.rotation; delete copy.scale; delete copy.children;
@@ -111,7 +146,7 @@
     }
     return front.length;
   }
-  function appendSchematic(doc, bytes, binStart, binLength, env) {
+  function appendSchematic(doc, bytes, binStart, binLength, env, rearFace) {
     const positions = [], normals = [];
     for (let axis = 0; axis < 3; axis++) for (const sign of [-1, 1])
       for (const [u, v] of [[-1,-1],[1,-1],[1,1],[-1,-1],[1,1],[-1,1]]) {
@@ -137,8 +172,8 @@
       doubleSided:true})-1;
     const mesh = doc.meshes.push({name:'Rear portal conceptual tube',
       primitives:[{attributes:{POSITION:position,NORMAL:normal},material}]})-1;
-    const {x1,z0,z1,y} = env;
-    const upperX=x1-0.25, lowerX=x1-1.00;
+    const {z0,z1,y} = env;
+    const lowerX=rearFace.x-0.08, upperX=rearFace.x-0.32;
     const upperY=y-0.09, lowerY=Math.max(1.25,y-3.15);
     const left=z0+0.13, right=z1-0.13, tube=0.075;
     const L=[lowerX,lowerY,left],R=[lowerX,lowerY,right];
@@ -191,14 +226,18 @@
       throw new Error('Expected JSON and BIN chunks');
     const doc = JSON.parse(new TextDecoder().decode(array.subarray(20,20+jsonLength)));
     const entries=sceneNodes(doc), env=floorEnvelope(doc,entries);
-    const copies=duplicateFront(doc,entries,env);
+    const rearFace=rearBodyFace(doc,entries,env);
+    const copies=duplicateFront(doc,entries,env,rearFace);
     let binary=array.slice(binOffset,binOffset+binLength);
     let method='mirrored '+copies+' existing front members';
     if (!copies) {
-      binary=appendSchematic(doc,array,binOffset,binLength,env);
+      binary=appendSchematic(doc,array,binOffset,binLength,env,rearFace);
       method='schematic rear portal (front member identifiers unavailable)';
     }
-    doc.asset.extras={...(doc.asset.extras||{}),rear_roof_frame_status:'CONCEPT ONLY - rear chassis feet and engine clearances unverified',
+    doc.asset.extras={...(doc.asset.extras||{}),
+      rear_body_face_datum_m:rearFace.x,rear_body_face_datum_basis:rearFace.basis,
+      deck_rear_overhang_from_support_m:env.x1-rearFace.x,
+      rear_roof_frame_status:'CONCEPT ONLY - rear chassis feet and engine clearances unverified',
       rear_roof_frame_method:method, deck_preserved:true};
     return {blob:packageGlb(doc,binary),method};
   }
