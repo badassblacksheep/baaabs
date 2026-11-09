@@ -1,5 +1,6 @@
+import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js';
 import {createClockMap} from './city-clock.js';
-import {createRenderer,zoneRadius} from './renderer.js?v=lord-snort';
+import {createRenderer,zoneRadius} from './renderer.js?v=robot-heart';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
 import {createSoundCar} from './sound-car.js?v=1';
 const $=id=>document.getElementById(id);
@@ -10,6 +11,7 @@ let music,impactTimer=0,shownArt=-1;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
 const canvas=$('playa');
 const drawClock=createClockMap($('city-clock'));
+state.robot=spawnRobot();
 state.route=0;
 state.charge=0;
 state.cheer=0;
@@ -64,6 +66,7 @@ function restart(){
   if(!ready)return;
   if(state.mode!=='paused'){
     Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0,cameraYaw:0,cameraLift:0});
+    state.robot=spawnRobot();
     state.route=state.charge=0;impactTimer=0;state.drop=state.cheer=0;
     lastBrake=-Infinity;fireCooldown=elapsed=0;heckled=false;
   }
@@ -182,10 +185,12 @@ function advance(dt){
     const next=clearance(x,z,yaw,piece);
     return next<=0&&next<clearance(state.x,state.z,state.yaw,piece);
   });
-  if(obstacle){
+  const traffic=meters&&approachesPlayer(state.robot,state,state.robot,{x,z});
+  if(obstacle||traffic){
     state.speed=0;state.cruise=false;
-    if(impactTimer===0){radio('ROOF CREW  /  This is a drive-by art tour. The “by” is important.',4);impactTimer=4;}
+    if(impactTimer===0){radio(traffic?'ROOF CREW  /  Give Robot Heart a little room.':'ROOF CREW  /  This is a drive-by art tour. The “by” is important.',4);impactTimer=4;}
   }else{state.x=x;state.z=z;state.yaw=yaw;}
+  state.robot=advanceRobot(state.robot,state,dt);
   const info=targetInfo();
   $('bass').value=state.charge;
   if(shownArt!==info.index){

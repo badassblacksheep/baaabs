@@ -1,3 +1,4 @@
+import {robotHeart} from '../assets/models/playa/robot-heart.js';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
 import {art,targets} from './landmarks.js?v=lord-snort';
@@ -115,6 +116,7 @@ export async function createRenderer(canvas){
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
+  const robotBus=buffer(robotHeart());
   const snort=lordSnort(), shaft=buffer(snort.base), boar=buffer(snort.boar);
   const installation=eventHorizon({separateLights:true}), lights=buffer(installation.lights), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
   const riders=buffer(passengers(false)), dancers=buffer(passengers(true));
@@ -167,6 +169,7 @@ export async function createRenderer(canvas){
     }
     gl.uniform1f(l.lightPhase,-1);
     object(world,[0,0,0]);
+    object(robotBus,[state.robot.x,0,state.robot.z],state.robot.yaw);
     const snortOrigin=[art[3].x,0,art[3].z];
     object(shaft,snortOrigin);
     object(boar,snortOrigin,(time%24)*Math.PI/12);

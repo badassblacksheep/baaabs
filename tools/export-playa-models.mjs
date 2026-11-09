@@ -1,3 +1,4 @@
+import {robotHeart} from '../site/assets/models/playa/robot-heart.js';
 import {lordSnort} from '../site/assets/models/playa/lord-snort.js';
 // Run with Node 22+ from any working directory. Emits Blender-ready GLBs beside their sources.
 import {writeFileSync} from 'node:fs';
@@ -58,3 +59,5 @@ save('event-horizon',[['Light court',frame],...rings.map((g,i)=>['Band '+(i+1),g
 const snort=lordSnort();
 save('lord-snort',[['Shaft',snort.base],['Revolving boar',snort.boar]],
   [{name:'Fixed shaft',mesh:0},{name:'Boar — vertical pivot',mesh:1}],[0,1]);
+
+save('robot-heart',[['Robot Heart bus',robotHeart()]],[{name:'Robot Heart bus',mesh:0}],[0]);
