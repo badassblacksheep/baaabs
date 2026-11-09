@@ -1,4 +1,4 @@
-import {createRenderer,zoneRadius} from './renderer.js?v=playa-models';
+import {createRenderer,zoneRadius} from './renderer.js?v=rainbow';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=playa-models';
 import {createSoundCar} from './sound-car.js?v=1';
 const $=id=>document.getElementById(id);

@@ -2,7 +2,7 @@ import {art,targets} from './landmarks.js?v=playa-models';
 import {Geometry,rgb,sub,add,mul,cross,unit} from '../assets/models/playa/geometry.js';
 import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
-import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js';
+import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js?v=rainbow';
 function transform(p,n){
   const s=n.scale||[1,1,1], t=n.translation||[0,0,0], q=n.rotation||[0,0,0,1];
   const v=p.map((x,i)=>x*s[i]), r=cross(q,v);
@@ -69,11 +69,18 @@ function scenery(){
 }
 const vertex=`
 attribute vec3 pos,col; varying vec3 tint; uniform vec3 eye,side,up,look,origin;
-uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;
+uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;uniform float lightPhase;
 void main(){float c=cos(angle),s=sin(angle);vec3 p=pose*(pos*scale);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
-tint=mix(col,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
+vec3 paint=col;
+if(lightPhase>=0.){
+  float phase=atan(pos.z,pos.x)+.32*pos.y-lightPhase;
+  vec3 rainbow=.55+.45*cos(phase+vec3(0.,-2.0944,2.0944));
+  float brightness=.76+.24*cos(2.*phase-.20*pos.y);
+  paint=brightness*rainbow;
+}
+tint=mix(paint,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
 const frag='precision mediump float; varying vec3 tint; void main(){gl_FragColor=vec4(tint,1.);}';
 const skyVert='attribute vec3 pos;varying vec2 uv;void main(){uv=pos.xy;gl_Position=vec4(pos.xy,0.,1.);}';
 const skyFrag=`precision highp float;varying vec2 uv;uniform vec3 eye,side,up,look;uniform float focal,aspect,shift;
@@ -111,7 +118,7 @@ export async function createRenderer(canvas){
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
-  const installation=eventHorizon(), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
+  const installation=eventHorizon({separateLights:true}), lights=buffer(installation.lights), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
   const riders=buffer(passengers(false)), dancers=buffer(passengers(true));
   const circle=new Geometry();
   for(let i=0;i<72;i++){
@@ -133,7 +140,7 @@ export async function createRenderer(canvas){
   const jet=buffer(flame), shadowGeo=new Geometry();
   for(let i=0;i<32;i++){const pt=j=>[7.8*Math.cos(j*Math.PI/16),.01,2*Math.sin(j*Math.PI/16)];shadowGeo.tri([0,.01,0],pt(i),pt(i+1),rgb(0x55424c),false);}
   const shadow=buffer(shadowGeo), locations=new Map();
-  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','pose'].map(k=>[k,gl.getUniformLocation(p,k)])));
+  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','pose','lightPhase'].map(k=>[k,gl.getUniformLocation(p,k)])));
   function drawMesh(p,mesh){
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);for(const [name,offset] of [['pos',0],['col',12]]){
       const a=gl.getAttribLocation(p,name);if(a<0)continue;gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,24,offset);
@@ -160,8 +167,12 @@ export async function createRenderer(canvas){
     function object(mesh,origin,rotation=0,scale=[1,1,1],pose=identity){
       gl.uniformMatrix3fv(l.pose,false,pose);gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
     }
+    gl.uniform1f(l.lightPhase,-1);
     object(world,[0,0,0]);
     object(pavilion,[art[0].x,0,art[0].z]);
+    gl.uniform1f(l.lightPhase,(time%8)*Math.PI/4);
+    object(lights,[art[0].x,0,art[0].z]);
+    gl.uniform1f(l.lightPhase,-1);
     const poses=gimbalPose(time);
     for(let i=0;i<hoops.length;i++){
       object(hoops[i],[art[0].x,pivotHeight,art[0].z],0,[1,1,1],poses[i]);

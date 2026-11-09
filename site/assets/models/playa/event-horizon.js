@@ -27,8 +27,10 @@ function band(radius,k){
   }
   return g;
 }
-export function eventHorizon(){
+export function eventHorizon({separateLights=false}={}){
   const frame=new Geometry(),r=3.42;
+  // A separate draw batch lets the game animate the LEDs. Static exports share the frame.
+  const lights=separateLights?new Geometry():frame;
   const point=(a,r,y)=>[r*Math.cos(a),y,r*Math.sin(a)];
   for(let i=0;i<96;i++){
     const a=tau*i/96,b=tau*(i+1)/96;
@@ -37,7 +39,7 @@ export function eventHorizon(){
   }
   for(const s of [-1,1]){
     const x=s*3.30;
-    frame.beam([x,.10,0],[x,pivotHeight+.12,0],.083,rim,8);
+    lights.beam([x,.10,0],[x,pivotHeight+.12,0],.083,rim,8);
     frame.beam([s*3.03,pivotHeight,0],[x,pivotHeight,0],.12,steel,8);
     // Mirrored banks of upright light pipes leave both entries open.
     for(let j=-19;j<=19;j++){
@@ -45,7 +47,7 @@ export function eventHorizon(){
       const h=.58+3.85*(1-Math.abs(t))**2.15;
       const p=y=>point(angle,r-.08,y);
       frame.beam(p(.08),p(h),.036,steel,5);
-      frame.beam(p(.19),p(h-.035),.044,rgb(Math.abs(t)>.58?0xffdb76:Math.abs(t)>.29?0xff908e:0xec73c6),6);
+      lights.beam(p(.19),p(h-.035),.044,rgb(Math.abs(t)>.58?0xffdb76:Math.abs(t)>.29?0xff908e:0xec73c6),6);
     }
   }
   // A subdued mirrored core leaves the open spaces between the bands legible.
@@ -54,7 +56,7 @@ export function eventHorizon(){
     const a=tau*i/20,b=(j/10-.5)*Math.PI;
     quad(frame,sph(a,b),sph(a+tau/20,b),sph(a+tau/20,b+Math.PI/10),sph(a,b+Math.PI/10),rgb(j===7?0x8987aa:0x272738));
   }
-  return {frame,rings:Array.from({length:5},(_,i)=>band(3.048-i*.32,i))};
+  return {frame,lights,rings:Array.from({length:5},(_,i)=>band(3.048-i*.32,i))};
 }
 // Column-major orientation matrices; every child inherits its parent's rotation.
 export function gimbalPose(time){
