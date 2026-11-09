@@ -2,7 +2,7 @@ import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js';
 import {createClockMap} from './city-clock.js';
 import {createRenderer,zoneRadius} from './renderer.js?v=robot-heart';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
-import {createSoundCar} from './sound-car.js?v=1';
+import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);
 const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0};
 const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space','Digit5','Numpad5']);
