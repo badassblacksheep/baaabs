@@ -1,5 +1,6 @@
+import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
-import {art,targets} from './landmarks.js?v=playa-models';
+import {art,targets} from './landmarks.js?v=lord-snort';
 import {Geometry,rgb,sub,add,mul,cross,unit} from '../assets/models/playa/geometry.js';
 import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
@@ -114,6 +115,7 @@ export async function createRenderer(canvas){
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
+  const snort=lordSnort(), shaft=buffer(snort.base), boar=buffer(snort.boar);
   const installation=eventHorizon({separateLights:true}), lights=buffer(installation.lights), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
   const riders=buffer(passengers(false)), dancers=buffer(passengers(true));
   const circle=new Geometry();
@@ -165,6 +167,9 @@ export async function createRenderer(canvas){
     }
     gl.uniform1f(l.lightPhase,-1);
     object(world,[0,0,0]);
+    const snortOrigin=[art[3].x,0,art[3].z];
+    object(shaft,snortOrigin);
+    object(boar,snortOrigin,(time%24)*Math.PI/12);
     object(pavilion,[art[0].x,0,art[0].z]);
     gl.uniform1f(l.lightPhase,(time%8)*Math.PI/4);
     object(lights,[art[0].x,0,art[0].z]);

@@ -1,3 +1,4 @@
+import {lordSnort} from '../site/assets/models/playa/lord-snort.js';
 // Run with Node 22+ from any working directory. Emits Blender-ready GLBs beside their sources.
 import {writeFileSync} from 'node:fs';
 import {Geometry} from '../site/assets/models/playa/geometry.js';
@@ -53,3 +54,7 @@ for(let i=0;i<5;i++){
   if(i<4)node.children=[i+3];nodes.push(node);
 }
 save('event-horizon',[['Light court',frame],...rings.map((g,i)=>['Band '+(i+1),g])],nodes,[0,1]);
+
+const snort=lordSnort();
+save('lord-snort',[['Shaft',snort.base],['Revolving boar',snort.boar]],
+  [{name:'Fixed shaft',mesh:0},{name:'Boar — vertical pivot',mesh:1}],[0,1]);

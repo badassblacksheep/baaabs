@@ -4,7 +4,8 @@
 export const art=[
   {name:'Event Horizon',credit:'Ben Bartlett · 2025',url:'https://www.eventhorizon.art/',x:3,z:-24,footprint:3.8,orbit:14},
   {name:'Head Maze',credit:'Matt Schultz & The Pier Group · 2019',url:'https://www.mattschultzart.com/artwork/headmaze',x:-18,z:-59,footprint:6.4,orbit:17},
-  {name:'The Man',credit:'Caravansary · 2014 · 105 ft',url:'https://annualreport2014.burningman.org/the-burning-man-event-in-black-rock-city/',x:20,z:-94,footprint:7.5,orbit:21}
+  {name:'The Man',credit:'Caravansary · 2014 · 105 ft',url:'https://annualreport2014.burningman.org/the-burning-man-event-in-black-rock-city/',x:20,z:-94,footprint:7.5,orbit:21},
+  {name:'Lord Snort',credit:'Bryan Tedrick · 2016',url:'https://www.bryantedrick.com/copy-of-sculpture',x:-27,z:-22,footprint:6.05,orbit:17}
 ];
 export const targets=art.flatMap((piece,i)=>[.95,.05,-.85].map(angle=>({
   x:piece.x+piece.orbit*Math.cos(angle),z:piece.z+piece.orbit*Math.sin(angle),angle,art:i
