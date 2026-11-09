@@ -6,6 +6,66 @@
 
 .model-stage{position:relative}.model-stage #edge-overlay{position:absolute;inset:0;width:100%;height:100%;margin:0;background:transparent;pointer-events:none;border-radius:0;overflow:hidden}.vertex-marker{border:2px solid #fff;border-radius:50%;padding:0;width:30px;height:30px;background:#ffbc64;color:#231200;font-size:11px;font-weight:800;box-shadow:0 1px 6px #000}.vertex-marker.reference{background:#67dcf4;color:#002e39}.vertex-marker.active{outline:3px solid #fff;outline-offset:2px}.inspection{margin-top:16px;padding-top:16px;border-top:1px solid #54445e}.inspection label{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.inspection input[type=checkbox]{min-width:0;flex:none}.inspection select{max-width:100%;min-width:0}.inspection .controls{margin:10px 0}.inspection .wide{width:100%}.inspection .tablewrap{max-height:260px}.inspection th{position:static}.inspection td{white-space:nowrap}.inspection tbody tr{cursor:default}.inspection svg{height:230px}.inspection summary{cursor:pointer;margin:12px 0;color:#dbb7ff}.edge-comparison{background:#17131d;padding:12px;border-radius:8px;line-height:1.6}.a-key{color:#ffbc64}.b-key{color:#67dcf4}.orientation{font-size:12px;font-variant-numeric:tabular-nums}.view-buttons button{padding:7px 10px}
 .workshop-layers{border:1px solid #655372;border-radius:10px;margin:14px 0;padding:12px}.workshop-layers .layer-options{display:flex;flex-wrap:wrap;gap:4px 18px}.workshop-layers label{display:flex;gap:8px;align-items:center;min-height:44px}.workshop-layers input{min-width:0;flex:none;accent-color:#dbb7ff}.workshop-layers .controls{margin:8px 0}.model-stage.panels-hidden .pin,.model-stage.panels-hidden .vertex-marker,.model-stage.panels-hidden #edge-overlay{display:none}.frame-key{color:#60bedb}.deck-key{color:#f5aa6c}
+
+/* Workstation layout: the 3D vehicle is the primary canvas, not a table thumbnail.
+   Keep the model above the selected-panel inspector and panel catalog. */
+@media (min-width: 1100px) {
+  body > header:not(.flock-header) { padding: 14px clamp(16px, 2vw, 36px); }
+  body > header:not(.flock-header) h1 { font-size: 23px; margin-bottom: 4px; }
+  body > header:not(.flock-header) p { margin: 2px 0 5px; }
+  body > header:not(.flock-header) nav { gap: 14px; }
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 12px clamp(12px, 1.5vw, 30px) 28px;
+  }
+  main > .sticky {
+    position: static;
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+  }
+  main > .sticky .model-stage { width: 100%; }
+  main > .sticky .model-stage model-viewer {
+    display: block;
+    width: 100%;
+    height: clamp(600px, calc(100dvh - 155px), 1250px);
+    aspect-ratio: auto;
+    border-radius: 12px;
+  }
+  main > .sticky > .controls {
+    margin: 10px 0 12px !important;
+  }
+  main > .sticky > .controls button { padding: 8px 13px; }
+  .workshop-layers {
+    margin: 10px 0;
+    border-color: #403748;
+    background: #1a1720;
+  }
+  .workshop-layers .layer-options label { min-height: 30px; }
+  main > .sticky > .detail {
+    max-width: 1240px;
+    margin-top: 18px;
+  }
+  main > section:not(.sticky) {
+    width: 100%;
+    max-width: 1240px;
+    padding: 16px;
+    border: 1px solid #39303f;
+    border-radius: 14px;
+    background: #17141b;
+  }
+  main > section:not(.sticky) .tablewrap { max-height: 48vh; }
+  main > section:not(.sticky) .current-panel .tablewrap { max-height: none; }
+}
+/* Compact laptops should never get the previous narrow 50/50 viewer. */
+@media (min-width: 851px) and (max-width: 1099px) {
+  main { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  main > .sticky { position: static; }
+  main > .sticky model-viewer { height: clamp(500px, 72dvh, 900px); }
+  main > section:not(.sticky) .tablewrap { max-height: 48vh; }
+}
 </style>
 <link rel="stylesheet" href="assets/flock-nav.css">
 <header class="flock-header"><a class="flock-home" href="./" aria-label="BAAABS home"><img src="assets/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>
@@ -143,5 +203,5 @@ function list(){stopPicking();const q=$('#search').value.toLowerCase(),region=$(
 function focus(){window.revealWorkshopPanels?.();const p=selected,c=p.vertex_average_m;model.cameraTarget=`${c[0]}m ${c[2]}m ${-c[1]}m`;const angle=p.region==='Face'?-75:p.side==='Passenger'?180:0;model.cameraOrbit=`${angle}deg 72deg ${Math.max(2.5,p.length_m*2.4)}m`;flashPanel(p)}
 function select(p,highlight=true){window.revealWorkshopPanels?.();stopPicking();selected=p;renderCurrent();if(highlight)flashPanel(p);$('#title').textContent=`${p.id} · ${p.name}`;const fields=[['Region / side',`${p.region} / ${p.side}`],['Flat blank',`${fmt(inch(p.length_m))} × ${fmt(inch(p.width_m))} in`],['Net area',`${fmt(p.net_area_m2/.09290304)} ft²`],['Material','Provisional: 20 ga perforated mild steel (McNICHOLS)'],['Finish','Black'],['Modeled openings',String(p.holes_m.length)]];$('#details').replaceChildren();for(const [k,v] of fields){const d=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=k;dd.textContent=v;d.append(dt,dd);$('#details').append(d)}$('#panel-note').textContent=(p.notes||'')+' Vertex numbers follow the Earl register. Model dimensions remain provisional.';draw(p);const c=p.vertex_average_m,n=[...p.normal];if((p.side==='Driver'&&n[1]>0)||(p.side==='Passenger'&&n[1]<0))for(let i=0;i<3;i++)n[i]*=-1;$('#pin').textContent=p.id;const position=`${c[0]}m ${c[2]}m ${-c[1]}m`,normal=`${n[0]}m ${n[2]}m ${-n[1]}m`;$('#pin').dataset.position=position;$('#pin').dataset.normal=normal;if(model.updateHotspot)model.updateHotspot({name:'hotspot-selected',position,normal});list();window.refreshPanelInspector?.()}
 function draw(p){const svg=$('#shape'),NS='http://www.w3.org/2000/svg';svg.replaceChildren();const pts=p.flat_vertices_m,xs=pts.map(v=>v[0]),ys=pts.map(v=>v[1]);const lo=[Math.min(...xs),Math.min(...ys)],hi=[Math.max(...xs),Math.max(...ys)];const scale=Math.min(510/(hi[0]-lo[0]),245/(hi[1]-lo[1]));const map=v=>[300+(v[0]-(lo[0]+hi[0])/2)*scale,165-(v[1]-(lo[1]+hi[1])/2)*scale];const path=document.createElementNS(NS,'path');let d='';for(const loop of [pts,...p.holes_m.map(loop=>loop.map(v=>{const delta=v.map((x,j)=>x-p.origin_m[j]);return[p.u_axis,p.v_axis].map(a=>a.reduce((s,x,j)=>s+x*delta[j],0))}))])d+=loop.map((v,i)=>(i?'L':'M')+map(v).join(',')).join(' ')+'Z ';path.setAttribute('d',d);path.setAttribute('fill','#59366e');path.setAttribute('fill-rule','evenodd');path.setAttribute('stroke','#d598ff');path.setAttribute('stroke-width','2');svg.append(path);pts.forEach((v,i)=>{const q=map(v),t=document.createElementNS(NS,'text');t.setAttribute('x',q[0]+7);t.setAttribute('y',q[1]-7);t.setAttribute('fill','#fff');t.setAttribute('font-size','21');t.textContent=i+1;svg.append(t)});}
-$('#search').addEventListener('input',list);$('#region').addEventListener('change',list);$('#side').addEventListener('change',list);$('#focus').addEventListener('click',focus);$('#overall').addEventListener('click',()=>{stopPicking();clearFlash();model.cameraTarget='0m 3.5m 0m';model.cameraOrbit='0deg 75deg 24m'});model.addEventListener('load',()=>{stopPicking();clearFlash();select(selected,false);if(linkedPanel)focus()});model.addEventListener('error',()=>{$('#viewer-status').textContent='3D preview could not load. The panel table and downloads are still available.'});select(selected,false);$('#viewer-status').textContent=helpText;
+$('#search').addEventListener('input',list);$('#region').addEventListener('change',list);$('#side').addEventListener('change',list);$('#focus').addEventListener('click',focus);$('#overall').addEventListener('click',()=>{stopPicking();clearFlash();model.cameraTarget='0m 3.5m 0m';model.cameraOrbit=matchMedia('(min-width: 1100px)').matches?'0deg 75deg 19m':'0deg 75deg 24m'});model.addEventListener('load',()=>{stopPicking();clearFlash();select(selected,false);if(linkedPanel)focus();else if(matchMedia('(min-width: 1100px)').matches)model.cameraOrbit='0deg 75deg 19m'});model.addEventListener('error',()=>{$('#viewer-status').textContent='3D preview could not load. The panel table and downloads are still available.'});select(selected,false);$('#viewer-status').textContent=helpText;
 </script><script src="panel-layers.js?v=flame-eyes"></script><script src="panel-inspector.js?v=morton"></script><script defer src="assets/rear-roof-frame-preview.js?v=rear-body-flush-2"></script></html>
