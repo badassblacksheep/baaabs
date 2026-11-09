@@ -1,11 +1,15 @@
-import {createRenderer,targetZones,zoneRadius} from './renderer.js?v=bass-drop';
+import {createRenderer,zoneRadius} from './renderer.js?v=caravansary';
+import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=caravansary';
+import {createSoundCar} from './sound-car.js?v=1';
 const $=id=>document.getElementById(id);
 const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0};
 const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space','Digit5','Numpad5']);
 let lastBrake=-Infinity, fireCooldown=0, elapsed=0, heckled=false, radioTime=0;
+let music,impactTimer=0,shownArt=-1;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
 const canvas=$('playa');
-state.hits=new Set();
+state.route=0;
+state.charge=0;
 state.cheer=0;
 state.drop=0;
 state.cameraYaw=0;
@@ -41,10 +45,11 @@ function initAudio(){
       audio=new AudioContext();engine=audio.createOscillator();gain=audio.createGain();
       engine.type='triangle';engine.frequency.value=46;gain.gain.value=0;engine.connect(gain).connect(audio.destination);engine.start();
     }
+    if(!music)music=createSoundCar(audio);
     if(sound)audio.resume().catch(()=>{});
   }catch{/* Captions and controls also work without audio. */}
 }
-function hush(){if(gain)gain.gain.setTargetAtTime(0,audio.currentTime,.03);}
+function hush(){music?.stop();if(gain)gain.gain.setTargetAtTime(0,audio.currentTime,.03);}
 function whoosh(){
   if(!sound||!audio)return;
   const buf=audio.createBuffer(1,audio.sampleRate*.48,audio.sampleRate),wave=buf.getChannelData(0);
@@ -57,11 +62,11 @@ function restart(){
   if(!ready)return;
   if(state.mode!=='paused'){
     Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0,cameraYaw:0,cameraLift:0});
-    state.hits.clear();state.drop=state.cheer=0;
+    state.route=state.charge=0;impactTimer=0;state.drop=state.cheer=0;
     lastBrake=-Infinity;fireCooldown=elapsed=0;heckled=false;
   }
-  keys.clear();setMode('drive');radio('ROOF CREW  /  See that pink ring? Poof inside it!');initAudio();
-  window.speechSynthesis?.cancel();$('start').blur();previous=performance.now();
+  keys.clear();setMode('drive');radio('ROOF CREW  /  Follow the arrow. Party side toward the art!');initAudio();
+  window.speechSynthesis?.cancel();canvas.focus({preventScroll:true});previous=performance.now();
 }
 function end(){
   keys.clear();hush();radio('');state.fire=0;setMode('over');
@@ -79,14 +84,11 @@ function pause(){
   setMode('paused');radio('');$('eyebrow').textContent='DEEP PLAYA';$('title').textContent='Paused.';
   $('copy').textContent='Earl and the crew are right where you left them.';$('start').textContent='Resume drive →';
 }
-function nearestZone(){
-  let nearest=-1,distance=Infinity;
-  targetZones.forEach((zone,i)=>{
-    if(state.hits.has(i))return;
-    const d=Math.hypot(state.x-zone.x,state.z-zone.z);
-    if(d<distance){nearest=i;distance=d;}
-  });
-  return {nearest,distance};
+function targetInfo(){
+  const target=targets[state.route],piece=art[target.art],dx=target.x-state.x,dz=target.z-state.z;
+  const bearing=Math.atan2(dx,-dz)-state.yaw;
+  return {piece,index:target.art,distance:Math.hypot(dx,dz),bearing:Math.atan2(Math.sin(bearing),Math.cos(bearing)),
+    aligned:partyAlignment(state,piece)>=Math.cos(Math.PI/5)};
 }
 function bassSound(full){
   if(!sound||!audio)return;
@@ -103,21 +105,26 @@ function bassSound(full){
   });
 }
 function scorePoof(){
-  const {nearest,distance}=nearestZone();
-  if(nearest<0||distance>zoneRadius)return;
-  state.hits.add(nearest);
-  const full=state.hits.size===targetZones.length;
+  const info=targetInfo();
+  if(state.drop>0||info.distance>zoneRadius)return;
+  if(!info.aligned){radio('ROOF CREW  /  Art on our left! Follow the arrow.');return;}
+  state.route=(state.route+1)%targets.length;
+  state.charge++;
+  const full=state.charge===3;
   state.cheer=full?2.4:1.45;
   if(full)state.drop=2.4;
   bassSound(full);
   radio(full?'BASS DROP!  /  The whole roof is jumping.':'ROOF CREW  /  Again! Hit the next ring.');
 }
 function press(k){
-  if(state.mode!=='drive'||keys.has(k))return;
-  keys.add(k);
+  if(state.mode!=='drive')return;
+  // Only continuous controls need a keyup; one-shot commands cannot get stuck.
+  if(['KeyA','KeyD','Space'].includes(k))keys.add(k);
   if(k==='Digit5'||k==='Numpad5'){
+    if(state.cruise)return;
     state.cruise=true;
-    state.speed=5*state.gear;
+    state.cruiseSpeed=5*state.gear;
+    state.speed=state.cruiseSpeed;
     radio('CRUISE  /  Holding 5.0 mph.');
   }
   if(k==='KeyB'||k==='Space')state.cruise=false;
@@ -134,8 +141,9 @@ function press(k){
 }
 window.addEventListener('keydown',e=>{
   if(e.code==='Escape'){pause();return;}
-  if(state.mode!=='drive'||!controls.has(e.code))return;
-  e.preventDefault();if(!e.repeat)press(e.code);
+  const k=e.key==='5'?'Digit5':e.code;
+  if(state.mode!=='drive'||!controls.has(k)||e.metaKey||e.ctrlKey||e.altKey)return;
+  e.preventDefault();if(!e.repeat)press(k);
 });
 window.addEventListener('keyup',e=>keys.delete(e.code));
 window.addEventListener('blur',pause);
@@ -151,11 +159,11 @@ function advance(dt){
   state.cheer=Math.max(0,state.cheer-dt);
   if(state.drop>0){
     state.drop=Math.max(0,state.drop-dt);
-    if(state.drop===0)state.hits.clear();
+    if(state.drop===0)state.charge=0;
   }
   elapsed+=dt;fireCooldown-=dt;state.fire=Math.max(0,state.fire-dt);
   if(radioTime>0&&(radioTime-=dt)<=0)$('radio').textContent='';
-  if(state.cruise)state.speed=5*state.gear;
+  if(state.cruise)state.speed=state.cruiseSpeed;
   else if(keys.has('Space'))state.speed+=state.gear*.62*dt;
   else state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-.115*dt);
   const tenths=Math.round(Math.abs(state.speed)*10);
@@ -165,11 +173,27 @@ function advance(dt){
   const target=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));
   state.steer+=(target-state.steer)*(1-Math.exp(-dt*5));
   const meters=state.speed*.44704*dt;
-  state.yaw+=meters*Math.tan(state.steer*.69)/6.05;
-  state.x+=Math.sin(state.yaw)*meters;state.z-=Math.cos(state.yaw)*meters;
-  const {distance}=nearestZone();
-  $('bass').value=state.hits.size;
-  $('zonehint').textContent=state.drop>0?'BASS DROP!':distance<=zoneRadius?'IN THE RING · FIRE!':Math.ceil(distance-zoneRadius)+' m to pink ring';
+  const yaw=state.yaw+meters*Math.tan(state.steer*.69)/6.05;
+  const x=state.x+Math.sin(yaw)*meters,z=state.z-Math.cos(yaw)*meters;
+  impactTimer=Math.max(0,impactTimer-dt);
+  const obstacle=meters&&obstacles.find(piece=>{
+    const next=clearance(x,z,yaw,piece);
+    return next<=0&&next<clearance(state.x,state.z,state.yaw,piece);
+  });
+  if(obstacle){
+    state.speed=0;state.cruise=false;
+    if(impactTimer===0){radio('ROOF CREW  /  This is a drive-by art tour. The “by” is important.',4);impactTimer=4;}
+  }else{state.x=x;state.z=z;state.yaw=yaw;}
+  const info=targetInfo();
+  $('bass').value=state.charge;
+  if(shownArt!==info.index){
+    const link=$('art-credit');link.href=info.piece.url;link.firstChild.textContent=info.piece.name+' ↗';
+    link.querySelector('span').textContent=info.piece.credit;shownArt=info.index;
+  }
+  const steer=Math.abs(info.bearing)<.22?'Ahead':info.bearing<0?'Left':'Right';
+  $('zonehint').textContent=state.drop>0?'BASS DROP!':info.distance>zoneRadius?
+    steer+' · '+Math.ceil(info.distance-zoneRadius)+' m to ring':info.aligned?'PARTY SIDE ALIGNED · FIRE!':'Follow arrow · art on left';
+  if(audio&&sound)music?.update(state);
   if(audio&&sound){engine.frequency.setTargetAtTime(40+tenths*.48,audio.currentTime,.09);gain.gain.setTargetAtTime(.055,audio.currentTime,.09);}
 }
 function frame(ms){

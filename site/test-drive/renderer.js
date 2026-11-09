@@ -1,3 +1,4 @@
+import {buildLandmarks,art,targets,otherSculptures} from './landmarks.js?v=caravansary';
 // A single interleaved triangle batch per object keeps the workshop model inexpensive to draw.
 const sub=(a,b)=>a.map((v,i)=>v-b[i]);
 const add=(a,b)=>a.map((v,i)=>v+b[i]);
@@ -72,11 +73,11 @@ function passengers(cheering){
   }
   return people;
 }
-export const targetZones=[{x:0,z:-11},{x:-5,z:-30},{x:2,z:-50}];
+
 export const zoneRadius=6;
 const palette=[0xffc977,0xff629a,0x80fbea,0xc9a2ff].map(rgb);
 // Original low-poly interpretation of Ben Bartlett's Event Horizon (2025).
-const horizonCenter=[3,6.15,-24];
+const horizonCenter=[art[0].x,6.15,art[0].z];
 function eventHorizon(){
   const frame=new Geometry(),rings=[],steel=rgb(0x453d57);
   const [x,y,z]=horizonCenter;
@@ -118,7 +119,7 @@ function eventHorizon(){
 function scenery(){
   const g=new Geometry(); let seed=83;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
   // A sequence of luminous kinetic-sculpture silhouettes leads from the spawn into deep playa.
-  for(const [x,z,r] of [[21,-58,6],[-54,-74,9],[60,16,5],[-32,45,7]]){
+  for(const [x,z,r] of otherSculptures){
     for(let ring=0;ring<3;ring++){
       const turn=ring*Math.PI/3+.35;
       const at=a=>[x+r*Math.cos(a)*Math.cos(turn),r+.3+r*Math.sin(a),z+r*Math.cos(a)*Math.sin(turn)];
@@ -130,15 +131,7 @@ function scenery(){
     g.tri([x-w,0,z],[x+w,0,z],[x,h,z],rgb(0x66516b));
     g.beam([x,h,z],[x+.5,h+.2,z],.18,palette[i%4],3);
   }
-  // Distant Man effigy on a timber plinth.
-  const ox=38,oz=-89, pt=(x,y)=>[ox+x,y,oz];
-  for(const s of [-1,1]){
-    g.beam(pt(s*3,0),pt(s,6),.36,rgb(0x8b5860));
-    g.beam(pt(s*1.5,6),pt(0,9),.2,palette[0]);
-    g.beam(pt(0,9),pt(0,12),.28,palette[0]);
-    g.beam(pt(0,11.6),pt(s*2.8,15),.18,palette[0]);
-  }
-  g.beam(pt(0,12.1),pt(0,13.3),.48,palette[0]);
+  buildLandmarks(g);
   return g;
 }
 const vertex=`
@@ -194,7 +187,10 @@ export async function createRenderer(canvas){
     circle.tri(point(i,1),point(i+1,1),point(i,.93),color,false);
     circle.tri(point(i+1,1),point(i+1,.93),point(i,.93),color,false);
   }
-  const marker=buffer(circle);
+  const marker=buffer(circle),chevron=new Geometry(),lime=rgb(0xffef95);
+  chevron.tri([-1.3,0,.38],[0,0,-2.55],[0,0,-1.2],lime,false);
+  chevron.tri([1.3,0,.38],[0,0,-1.2],[0,0,-2.55],lime,false);
+  const arrow=buffer(chevron);
   const flame=new Geometry();
   for(let i=0;i<9;i++){
     const ring=j=>[Math.cos(j*2*Math.PI/9)*.46,.65,Math.sin(j*2*Math.PI/9)*.46];
@@ -237,10 +233,10 @@ export async function createRenderer(canvas){
       object(mesh,horizonCenter,spin,[1,1,1],.8*Math.sin(spin*.83+i));
     });
     const rot=Math.PI/2+state.yaw,base=[state.x,0,state.z];
-    for(const [i,zone] of targetZones.entries()){
-      if(state.hits.has(i))continue;
-      const pulse=1+.025*Math.sin(time*4);
-      object(marker,[zone.x,0,zone.z],0,[zoneRadius*pulse,1,zoneRadius*pulse]);
+    if(state.drop<=0){
+      const zone=targets[state.route], radius=zoneRadius*(1+.022*Math.sin(time*4));
+      object(marker,[zone.x,0,zone.z],0,[radius,1,radius]);
+      object(arrow,[zone.x,.12,zone.z],zone.angle);
     }
     object(shadow,base,rot);object(bus,base,rot);
     const jumping=state.cheer>0;
