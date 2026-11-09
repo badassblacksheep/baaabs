@@ -20,3 +20,19 @@
   font-weight: 400;
   font-display: swap;
 }
+
+/* Translucent model playback controls on phones. */
+@media (max-width: 760px) {
+  .model-controls #push-it,
+  .model-controls #rotation-toggle {
+    background: rgba(20, 18, 29, .38);
+    border-color: rgba(255, 255, 255, .42);
+    color: #f8f5f1;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+  .model-controls #push-it:hover,
+  .model-controls #rotation-toggle:hover {
+    background: rgba(20, 18, 29, .58);
+  }
+}
