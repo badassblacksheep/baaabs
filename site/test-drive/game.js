@@ -1,4 +1,5 @@
-import {createRenderer,zoneRadius} from './renderer.js?v=rainbow';
+import {createClockMap} from './city-clock.js';
+import {createRenderer,zoneRadius} from './renderer.js?v=city-clock';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=playa-models';
 import {createSoundCar} from './sound-car.js?v=1';
 const $=id=>document.getElementById(id);
@@ -8,6 +9,7 @@ let lastBrake=-Infinity, fireCooldown=0, elapsed=0, heckled=false, radioTime=0;
 let music,impactTimer=0,shownArt=-1;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
 const canvas=$('playa');
+const drawClock=createClockMap($('city-clock'));
 state.route=0;
 state.charge=0;
 state.cheer=0;
@@ -198,7 +200,7 @@ function advance(dt){
 }
 function frame(ms){
   const dt=Math.min(.1,Math.max(0,(ms-previous)/1000));previous=ms;
-  if(state.mode==='drive')advance(dt);
+  if(state.mode==='drive'){advance(dt);drawClock(state);}
   if(state.mode==='drive'||state.mode==='intro')draw(state,ms/1000);
   requestAnimationFrame(frame);
 }

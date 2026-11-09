@@ -1,3 +1,4 @@
+import {buildCity} from './city-clock.js';
 import {art,targets} from './landmarks.js?v=playa-models';
 import {Geometry,rgb,sub,add,mul,cross,unit} from '../assets/models/playa/geometry.js';
 import {buildMan} from '../assets/models/playa/man-2014.js';
@@ -55,14 +56,9 @@ function passengers(cheering){
 }
 
 export const zoneRadius=6;
-const palette=[0xffc977,0xff629a,0x80fbea,0xc9a2ff].map(rgb);
 function scenery(){
-  const g=new Geometry(); let seed=83;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/4294967296);
-  for(let i=0;i<180;i++){
-    const a=rand()*6.28,r=220+rand()*100,x=r*Math.sin(a),z=r*Math.cos(a),w=1+rand()*4,h=1+rand()*4;
-    g.tri([x-w,0,z],[x+w,0,z],[x,h,z],rgb(0x66516b));
-    g.beam([x,h,z],[x+.5,h+.2,z],.18,palette[i%4],3);
-  }
+  const g=new Geometry();
+  buildCity(g);
   buildMan(g,art[2]);
   buildHeadMaze(g,art[1]);
   return g;

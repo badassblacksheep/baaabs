@@ -7,3 +7,5 @@ body[data-mode=over]:before{content:"";position:fixed;inset:0;background:linear-
 #playa{cursor:grab;touch-action:none}#playa.dragging{cursor:grabbing}#art-credit{position:fixed;z-index:1;right:4vw;bottom:12vh;color:#fff5da;text-shadow:0 1px 4px #211525;font:600 12px/1.4 ui-monospace,monospace;text-align:right;text-decoration:none}#art-credit span{display:block;font-size:10px}body:not([data-mode=drive]) #art-credit{display:none}
 
 #playa:focus{outline:none}#special{display:none;position:fixed;z-index:1;top:13vh;left:4vw;padding:9px 12px;border-left:3px solid #ff72b4;background:#271c32ce;color:white;pointer-events:none}body[data-mode=drive] #special{display:grid;gap:4px}#special label{font:bold 13px monospace;letter-spacing:.12em}#bass{height:9px;width:148px;accent-color:#ff70b3}#zonehint{font-size:10px;letter-spacing:.04em}@media(max-width:650px){header .location{display:none}}
+
+#city-clock{display:none;position:fixed;z-index:1;right:4vw;top:13vh;width:clamp(85px,11vw,145px);height:auto;border-radius:50%;background:#261d2db8;pointer-events:none}body[data-mode=drive] #city-clock{display:block}
