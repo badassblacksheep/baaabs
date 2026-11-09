@@ -30,3 +30,9 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 ## Panel pages and mass baseline
 
 The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The 206-panel register has 193.719615 m² net area. At 40% open, estimated bare skins: 0.063-in aluminum ~1,107 lb; 20-ga steel ~1,833 lb. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
+
+## Future BAAABS launch-party fundraiser (planning only)
+
+We intend to explore a Seattle launch party that blends queer nightlife, Burner culture, and the broader arts community. The event should introduce BAAABS to audiences beyond existing circles and raise money for construction. No date, venue, or booking is confirmed; do not advertise it as scheduled.
+
+The working checklist and source of truth for event planning is [BAAABS Launch Party — Checklist](https://docs.google.com/spreadsheets/d/1BAVp-JZbJpvkJ2p4vI2laHVVlUEH3ITbwHsXk8UQkss/edit), in the BAAABS Google Drive. Keep scope minimal: validate venue/co-host economics, budget, performers, ticketing, promotion, reveal, and closeout before adding production extras. Planning targets (not commitments): 100+ paid attendees and $1,500+ net proceeds.
