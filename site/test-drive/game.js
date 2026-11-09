@@ -1,7 +1,7 @@
 import {createRenderer} from './renderer.js?v=event-horizon';
 const $=id=>document.getElementById(id);
-const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0};
-const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space']);
+const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0};
+const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space','Digit5','Numpad5']);
 let lastBrake=-Infinity, fireCooldown=0, elapsed=0, heckled=false, radioTime=0;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
 const canvas=$('playa');
@@ -53,7 +53,7 @@ function whoosh(){
 function restart(){
   if(!ready)return;
   if(state.mode!=='paused'){
-    Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,fire:0,cameraYaw:0,cameraLift:0});
+    Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0,cameraYaw:0,cameraLift:0});
     lastBrake=-Infinity;fireCooldown=elapsed=0;heckled=false;
   }
   keys.clear();setMode('drive');radio('ROOF CREW  /  Take us to Event Horizon!');initAudio();
@@ -78,7 +78,17 @@ function pause(){
 function press(k){
   if(state.mode!=='drive'||keys.has(k))return;
   keys.add(k);
-  if(k==='KeyW'||k==='KeyS')state.gear=k==='KeyW'?1:-1;
+  if(k==='Digit5'||k==='Numpad5'){
+    state.cruise=true;
+    state.speed=5*state.gear;
+    radio('CRUISE  /  Holding 5.0 mph.');
+  }
+  if(k==='KeyB'||k==='Space')state.cruise=false;
+  if(k==='KeyW'||k==='KeyS'){
+    const gear=k==='KeyW'?1:-1;
+    if(gear!==state.gear)state.cruise=false;
+    state.gear=gear;
+  }
   if(k==='KeyB'){
     if(elapsed-lastBrake>=.42)state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-.72);
     lastBrake=elapsed;
@@ -97,18 +107,19 @@ for(const b of document.querySelectorAll('[data-key]')){
   b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);press(b.dataset.key);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.key));
 }
-$('shift').onclick=()=>{state.gear*=-1;};
+$('shift').onclick=()=>{state.gear*=-1;state.cruise=false;};
 $('start').onclick=restart;
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',sound);if(!sound){hush();window.speechSynthesis?.cancel();}else initAudio();};
 function advance(dt){
   elapsed+=dt;fireCooldown-=dt;state.fire=Math.max(0,state.fire-dt);
   if(radioTime>0&&(radioTime-=dt)<=0)$('radio').textContent='';
-  if(keys.has('Space'))state.speed+=state.gear*.62*dt;
+  if(state.cruise)state.speed=5*state.gear;
+  else if(keys.has('Space'))state.speed+=state.gear*.62*dt;
   else state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-.115*dt);
   const tenths=Math.round(Math.abs(state.speed)*10);
-  $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=state.gear===1?'DRIVE':'REVERSE';
+  $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=(state.gear===1?'DRIVE':'REVERSE')+(state.cruise?' · CRUISE':'');
   if(tenths>50){end();return;}
-  if(!heckled&&tenths>=46){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
+  if(!state.cruise&&!heckled&&tenths>=46){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
   const target=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));
   state.steer+=(target-state.steer)*(1-Math.exp(-dt*5));
   const meters=state.speed*.44704*dt;
