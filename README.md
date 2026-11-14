@@ -40,7 +40,7 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Exterior skin mass study
 
-The 206 modeled panels sum to **193.7196 m² (2,085.18 ft²)** net surface area. At 40% open area, the previous 0.063-in perforated aluminum skin is approximately **1,107 lb**, while the proposed McNICHOLS 20-ga perforated steel is **1,833 lb** (~726 lb heavier). All values exclude frames, hardware, coatings and nesting waste. Track material decisions at <https://baaabs.org/panels.html>; use <https://baaabs.org/the_build.html> for the interactive panel workshop.
+The 206 modeled panels sum to **195.3043 m² (2,102.24 ft²)** net surface area. At 40% open area, the previous 0.063-in perforated aluminum skin is approximately **1,116 lb**, while the proposed McNICHOLS 20-ga perforated steel is **1,849 lb** (~733 lb heavier). All values exclude frames, hardware, coatings and nesting waste. Track material decisions at <https://baaabs.org/panels.html>; use <https://baaabs.org/the_build.html> for the interactive panel workshop.
 
 ## Contributions
 

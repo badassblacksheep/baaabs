@@ -29,7 +29,7 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Panel pages and mass baseline
 
-The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The 206-panel register has 193.719615 m² net area. At 40% open, estimated bare skins: 0.063-in aluminum ~1,107 lb; 20-ga steel ~1,833 lb. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The 206-panel register has 195.304257 m² net area. At 40% open, estimated bare skins: 0.063-in aluminum ~1,116 lb; 20-ga steel ~1,849 lb. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
 
 ## Future BAAABS launch-party fundraiser (planning only)
 

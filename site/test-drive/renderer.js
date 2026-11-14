@@ -12,7 +12,7 @@ function transform(p,n){
   return add(t,add(v,mul(add(mul(r,q[3]),cross(q,r)),2)));
 }
 async function loadEarl(){
-  const response=await fetch('../assets/models/earl-roof-attachment-study.glb');
+  const response=await fetch('../assets/models/earl-roof-attachment-study.glb?v=temple-ears-1');
   if(!response.ok)throw Error('Model download failed');
   const data=await response.arrayBuffer(), dv=new DataView(data), len=dv.getUint32(12,true);
   const doc=JSON.parse(new TextDecoder().decode(new Uint8Array(data,20,len))), offset=28+len;
