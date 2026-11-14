@@ -23,3 +23,9 @@ main h3{font-size:1.16rem}main p{max-width:78ch}main a{text-decoration:underline
 details{border-block-start:1px solid #484450;padding:.75rem 0}summary{cursor:pointer;color:#a3ebd8;font-weight:700}summary:focus-visible{outline:2px solid #8ee4d1}.tabular{font-variant-numeric:tabular-nums}
 @media(max-width:700px){.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.visuals{grid-template-columns:1fr;gap:.6rem}.report-body{gap:1rem}.panel-head{align-items:center}.panel-head a{max-width:6rem}}
 @media(max-width:500px){.report-body{grid-template-columns:1fr}.panel-head h2{font-size:1.25rem}.visuals figcaption{font-size:.78rem}.readouts dd{font-size:1.55rem}.control output{font-size:1.25rem}}
+
+.design-tabs{display:flex;flex-wrap:wrap;gap:.3rem;border-bottom:1px solid #5a5262;margin-bottom:2rem}
+.design-tabs a{display:block;padding:.7rem .85rem;color:#b9b4c5;text-decoration:none;border-bottom:3px solid transparent;font-size:.91rem}
+.design-tabs a[aria-current="page"]{color:#abf1d9;border-color:#abf1d9;font-weight:700}
+.design-tabs a:hover{background:#211b29}.shore-readouts{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:700px){.shore-readouts{grid-template-columns:repeat(2,minmax(0,1fr))}.design-tabs a{font-size:.82rem;padding:.6rem}}

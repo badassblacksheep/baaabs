@@ -1,0 +1,36 @@
+{
+  "revision": "02-thomas-shoring",
+  "date": "2026-11-14",
+  "deck_length_ft": 38,
+  "deck_width_ft": 8,
+  "deck_front_x_m": -6.357811,
+  "deck_rear_x_m": 5.224589,
+  "previous_front_x_m": -5.748212,
+  "front_extension_m": 0.6095990000000002,
+  "front_post_x_m": -6.27,
+  "front_post_inset_in": 3.457125984251981,
+  "deck_top_z_m": 4.0204,
+  "shore_positions_m": [
+    [
+      -0.2618115000000001,
+      -1.1692,
+      3.8604
+    ],
+    [
+      -0.2618115000000001,
+      1.1692,
+      3.8604
+    ]
+  ],
+  "shore_assumption": "One compression-only vertical shore per longitudinal edge girder at the midpoint between the interior bearers; effective stiffness includes prop, seats, Thomas body structure and its chassis load path.",
+  "corners_assumption": "Both rear corners transfer gravity through the rear drop-frame into the chassis rails, with the same analytical sill sections and fixed rail-seat restraint as the front portal. The participating load is solved, not assigned as a fraction.",
+  "stiffness_lbf_per_in": [
+    0,
+    1000,
+    5000,
+    20000,
+    "rigid"
+  ],
+  "nominal_lbf_per_in": 5000,
+  "shore_mass": "New shore and bracket weights remain unassigned; results contain the changed roof frame and plywood only."
+}

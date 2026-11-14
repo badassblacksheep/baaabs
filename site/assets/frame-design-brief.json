@@ -1,7 +1,7 @@
 {
-  "revision": "lightweight-brief-4-deck-target",
-  "date": "2026-10-19",
-  "status": "Target geometry updated; binary models, panels, fabrication schedules and audits pending rebuild. Neither concept is load-rated or approved for fabrication",
+  "revision": "lightweight-brief-5-38ft-thomas-shoring",
+  "date": "2026-11-14",
+  "status": "38 \u00d7 8 ft footprint approved by owner for structural iteration 02. Static parametric study; occupancy, connections and fabrication remain unresolved. Neither concept in the historical station comparison is selected or load-rated.",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
   "requirements": {
     "people": 20,
@@ -10,11 +10,11 @@
     "use": "Dancing while the bus moves at up to 5 mph",
     "maximum_event_speed_mph": 5,
     "deck_footprint_m": [
-      10.9728,
+      11.5824,
       2.4384
     ],
-    "deck_surface_height_m": 3.4004,
-    "deck_geometry_basis": "New target: 36 ft × 8 ft (10.9728 × 2.4384 m). Existing GLB meshes, panel coordinates and historical reports not yet regenerated; do not treat as updated.",
+    "deck_surface_height_m": 4.0204,
+    "deck_geometry_basis": "Owner approved 38 \u00d7 8 ft on 2026-11-14. Extend 2 ft forward from the iteration 01 footprint; front corner post centerlines sit about 3.46 in aft of the front edge. Structural iteration geometry is site/structural/iteration-02-design.json.",
     "exterior_panel_count": 206,
     "road_width_maximum_in": 102,
     "road_requirement_source": "project-constraints.json",
@@ -71,7 +71,6 @@
   ],
   "not_adopted": [
     "Rub-rail cutting or welding uprights to the bus body",
-    "Using the existing body as an assumed dance-floor support",
     "Treating a 2x live-load sensitivity as a validated dancing factor",
     "Any final member sizes, connection details or fabrication drawings"
   ],
@@ -81,5 +80,30 @@
     "basis": "User confirms BAAAHS has individual cabin posts, not paired wall portals. Exact structure unknown.",
     "trials": "Three and four individual posts; centerline, over one rail, or near one wall. Illustrative positions only.",
     "status": "Supplementary concept investigation; no final sections, mass, capacity or road-envelope acceptance."
+  },
+  "structural_iterations": {
+    "current": "../structural/",
+    "baseline": "../structural/baseline.html",
+    "footprint_change_reason": "The previous 36 ft deck stopped aft of the front corner post centerlines. The owner authorized increasing length so the floor and edge girders extend over these supports. A 38 ft target provides simple dimensions and direct bearing.",
+    "body_support_assumption": "Iteration 02 adds two compression-only vertical shores into the Thomas structural body. Effective stiffness and capacity are unmeasured; the report sweeps assumed stiffness without assigning a safe rating.",
+    "rear_support_assumption": "Both rear corners transfer gravity through the rear drop-frame to the chassis rails, using the same modeled portal/sill sections and fixed rail-seat restraint as the front corners.",
+    "history": [
+      {
+        "date": "2026-11-13",
+        "footprint_ft": [
+          36,
+          8
+        ],
+        "report": "../structural/baseline.html"
+      },
+      {
+        "date": "2026-11-14",
+        "footprint_ft": [
+          38,
+          8
+        ],
+        "report": "../structural/"
+      }
+    ]
   }
 }

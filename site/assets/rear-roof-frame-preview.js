@@ -213,6 +213,65 @@
     result.set(binary,28+padded);
     return new Blob([result],{type:'model/gltf-binary'});
   }
+  // Owner-approved iteration 02: extend the 36 ft roof two feet forward.
+  // Preserve member section sizes and the existing portal/post coordinates.
+  function reviseRoof38(doc) {
+    if (doc.asset.extras?.roof_iteration === '02-thomas-shoring') return;
+    const entries=sceneNodes(doc), old=floorEnvelope(doc,entries);
+    if (!old.measured || Math.abs(old.x1-old.x0-36*.3048)>.005)
+      throw new Error('38 ft roof revision requires the recorded 36 ft extraction geometry');
+    const ratio=38/36, front=old.x1-38*.3048;
+    const mapX=x=>front+(x-old.x0)*ratio;
+    const stretch=identity();stretch[0]=ratio;stretch[12]=front-ratio*old.x0;
+    function setMatrix(node,matrix) {
+      delete node.translation;delete node.rotation;delete node.scale;node.matrix=matrix;
+    }
+    // The selected components are roots or children of the identity body group.
+    // Refuse future hierarchy changes that would silently distort their positions.
+    const parents=new Map();
+    for (const n of doc.nodes)for(const child of n.children||[])parents.set(child,n);
+    let floors=0,girders=0,joists=0,diagonals=0;
+    const remove=new Set();
+    for(const [i,e] of entries) {
+      const n=e.node,name=n.name||'';
+      const floor=/^Dancefloor_section_/i.test(name);
+      const rails=n.extras?.component==='rails';
+      const girder=/^Deck edge girder/.test(name),joist=/^Floor joist/.test(name);
+      const diagonal=/^Roof bay \d+ diagonal/.test(name);
+      if(/^Nose return \|/.test(name)) {remove.add(i);continue;}
+      if(!(floor||rails||girder||joist||diagonal))continue;
+      const parent=parents.get(i);
+      if(parent && nodeMatrix(parent).some((v,j)=>Math.abs(v-identity()[j])>1e-8))
+        throw new Error('Unexpected parent transform for '+name);
+      if(floor||rails) {
+        setMatrix(n,multiply(stretch,e.world));if(floor)floors++;
+      } else if(girder) {
+        const m=e.world.slice();m[0]*=ratio;m[1]*=ratio;m[2]*=ratio;m[12]=mapX(m[12]);
+        setMatrix(n,m);girders++;
+      } else if(joist) {
+        const m=e.world.slice();m[12]=mapX(m[12]);setMatrix(n,m);joists++;
+      } else {
+        // These unit-box diagonals run along local Y; local X is vertical.
+        const m=e.world, delta=[ratio*m[4],m[5],m[6]];
+        const length=Math.hypot(...delta),width=Math.hypot(m[0],m[1],m[2]),depth=Math.hypot(m[8],m[9],m[10]);
+        if(Math.abs(delta[1])>1e-5)throw new Error('Expected a horizontal roof diagonal');
+        const z=[delta[2]/length,0,-delta[0]/length];
+        setMatrix(n,[0,width,0,0,...delta,0,z[0]*depth,0,z[2]*depth,0,mapX(m[12]),m[13],m[14],1]);
+        diagonals++;
+      }
+      n.extras={...(n.extras||{}),roof_iteration:'02-thomas-shoring'};
+    }
+    if(floors!==12||girders!==2||joists!==13||diagonals!==8||remove.size!==2)
+      throw new Error('Unexpected roof member inventory');
+    for(const scene of doc.scenes)scene.nodes=scene.nodes.filter(i=>!remove.has(i));
+    for(const n of doc.nodes)if(n.children)n.children=n.children.filter(i=>!remove.has(i));
+    // Retain original mesh data as provenance, but remove the obsolete returns from the scene.
+    doc.asset.extras={...(doc.asset.extras||{}),roof_iteration:'02-thomas-shoring',
+      roof_dimensions_ft:[38,8],roof_front_extension_ft:2,
+      roof_revision_note:'Owner approved 38 x 8 ft deck over front posts; new shore landing geometry awaits survey.',
+      deck_preserved:false};
+  }
+
   async function build(source) {
     const response = await fetch(source);
     if (!response.ok) throw new Error('GLB request failed: '+response.status);
@@ -239,7 +298,8 @@
       deck_rear_overhang_from_support_m:env.x1-rearFace.x,
       rear_roof_frame_status:'CONCEPT ONLY - rear chassis feet and engine clearances unverified',
       rear_roof_frame_method:method, deck_preserved:true};
-    return {blob:packageGlb(doc,binary),method};
+    reviseRoof38(doc);
+    return {blob:packageGlb(doc,binary),method:method+'; 38 x 8 ft roof'};
   }
   const base = viewers[0].dataset.rearFrameSrc;
   const source = new URL(base,document.baseURI).href;
@@ -247,7 +307,7 @@
     const url=URL.createObjectURL(blob);
     viewers.forEach(viewer=>{viewer.src=url;viewer.dataset.rearFrameMethod=method;});
     for (const a of document.querySelectorAll('a[data-rear-frame-download]')) {
-      a.href=url;a.download='baaabs-earl-rear-frame-concept.glb';
+      a.href=url;a.download='baaabs-earl-38ft-roof-study.glb';
     }
     document.dispatchEvent(new CustomEvent('rear-frame-ready',{detail:{method}}));
   }).catch(error=>{
