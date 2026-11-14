@@ -15,6 +15,8 @@
 
 Start structural work by reading [Earl’s structural tracker](https://baaabs.org/structural/) (`site/structural/index.html`). Use it for the current roof-frame layout, survey deliverables, engineering decisions and fabrication status. Older studies provide comparison history. When measurements, drawings or decisions change, update the relevant row and dated progress entry, link the supporting evidence, and identify assumptions explicitly. Only record a fabrication release against the reviewed drawing revision and its scope.
 
+The [interactive roof load report](site/structural/index.html#interactive-title) records the current gravity-only occupancy and tube-wall trials, including the effect of the provisional rear portal. Read its engineering findings before changing the roof or describing a dancer limit. The model has no approved occupancy. Keep the displayed cases and geometry revision together when updating the report.
+
 ## Site typography
 
 Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and the standalone names `BAAABS` and `BAAAHS`. Both names have first-class status in site typography. Match either name as a whole word regardless of capitalization, including next to punctuation, and preserve its written case. In sentences, headings, captions, buttons, and navigation labels, style only the name itself. Use the site’s regular typography for the surrounding text and the hero tagline.
