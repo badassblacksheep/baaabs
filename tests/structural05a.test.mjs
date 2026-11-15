@@ -74,7 +74,7 @@ test('material schedule covers every modeled member without rounding its dimensi
 });
 
 test('05a navigation and local resources resolve and every historical page retains its own current tab',()=>{
- const names=['iteration-05a.html','index.html','iteration-04.html','iteration-03.html','iteration-02.html','baseline.html'];
+ const names=['iteration-05a.html','iteration-05.html','index.html','iteration-04.html','iteration-03.html','iteration-02.html','baseline.html'];
  for(const name of names){
   const html=read('site/structural/'+name);
   const nav=html.match(/<nav class="design-tabs".*?<\/nav>/s)[0];

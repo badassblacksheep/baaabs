@@ -41,7 +41,7 @@ jobs:
           python3 tools/build-interior-support-study.py
           git diff --exit-code -- site/assets/interior-support-study.json
       - name: Check structural report and workshop revision
-        run: node --test tests/structural-report.test.mjs tests/structural05.test.mjs tests/structural05a.test.mjs
+        run: node --test tests/structural-report.test.mjs tests/structural05.test.mjs tests/structural05a.test.mjs tests/structural06.test.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
@@ -53,6 +53,8 @@ jobs:
       - name: Build the X-braced panel workshop model
         run: |
           python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb pages-dist/assets/models/baaabs-earl-x-braced-workshop.glb
+      - name: Bake the current six-shore model
+        run: node tools/bake-structural06.mjs pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:

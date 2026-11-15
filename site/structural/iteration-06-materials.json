@@ -1,0 +1,636 @@
+{
+  "revision": "06",
+  "tubeMaterial": "ASTM A500 Grade C carbon-steel HSS",
+  "plateMaterial": "ASTM A36 carbon steel",
+  "yieldMPa": 345,
+  "elasticModulusGPa": 200,
+  "densityKgM3": 7850,
+  "designWallFactor": 0.93,
+  "groups": [
+    {
+      "group": "Upper side chords",
+      "size": "6 \u00d7 2 in",
+      "nominalWall": "\u215b in",
+      "note": "6 in vertical",
+      "members": [
+        {
+          "name": "Deck edge girder",
+          "widthM": 0.0508,
+          "depthM": 0.1524,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Deck edge girder.001",
+          "widthM": 0.0508,
+          "depthM": 0.1524,
+          "nominalWallM": 0.003175
+        }
+      ]
+    },
+    {
+      "group": "Lower side chords",
+      "size": "6 \u00d7 2 in",
+      "nominalWall": "3/16 in",
+      "note": "6 in vertical; retained from 05",
+      "members": [
+        {
+          "name": "Truss lower chord driver",
+          "widthM": 0.0508,
+          "depthM": 0.1524,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Truss lower chord passenger",
+          "widthM": 0.0508,
+          "depthM": 0.1524,
+          "nominalWallM": 0.0047625
+        }
+      ]
+    },
+    {
+      "group": "Deck joists",
+      "size": "4 \u00d7 2 in",
+      "nominalWall": "\u215b in",
+      "note": "No more than 24 in apart",
+      "members": [
+        {
+          "name": "Floor joist 00",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 02",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 03",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 04",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 05",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 06",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 07",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 08",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 09",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 10",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 11",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 12",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 13",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 14",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 15",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 16",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 17",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 18",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 19",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 20",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Floor joist 22",
+          "widthM": 0.0508,
+          "depthM": 0.1016,
+          "nominalWallM": 0.003175
+        }
+      ]
+    },
+    {
+      "group": "Truss diagonals, verticals and raised ties",
+      "size": "2 \u00d7 2 in",
+      "nominalWall": "\u215b in",
+      "note": "Full triangulation; no special access jambs",
+      "members": [
+        {
+          "name": "Truss vertical driver 1",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 2",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 3",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 4",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 5",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 6",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical driver 7",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 0",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 1",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 2",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 3",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 4",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 5",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 6",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web driver 7",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 1",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 2",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 3",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 4",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 5",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 6",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss vertical passenger 7",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 0",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 1",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 2",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 3",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 4",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 5",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 6",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Truss web passenger 7",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Lower transverse tie 0",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Lower transverse tie 1",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Lower transverse tie 2",
+          "widthM": 0.0508,
+          "depthM": 0.0508,
+          "nominalWallM": 0.003175
+        }
+      ]
+    },
+    {
+      "group": "End-portal posts",
+      "size": "4 \u00d7 4 in",
+      "nominalWall": "\u00bc in",
+      "note": "Front and rear",
+      "members": [
+        {
+          "name": "Front corner post",
+          "widthM": 0.1016,
+          "depthM": 0.1016,
+          "nominalWallM": 0.00635
+        },
+        {
+          "name": "Front corner post.001",
+          "widthM": 0.1016,
+          "depthM": 0.1016,
+          "nominalWallM": 0.00635
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front corner post",
+          "widthM": 0.1016,
+          "depthM": 0.1016,
+          "nominalWallM": 0.00635
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front corner post.001",
+          "widthM": 0.1016,
+          "depthM": 0.1016,
+          "nominalWallM": 0.00635
+        }
+      ]
+    },
+    {
+      "group": "End-portal transverse sills",
+      "size": "8 \u00d7 3 in",
+      "nominalWall": "\u00bc in",
+      "note": "8 in vertical",
+      "members": [
+        {
+          "name": "Front transverse sill",
+          "widthM": 0.0762,
+          "depthM": 0.2032,
+          "nominalWallM": 0.00635
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front transverse sill",
+          "widthM": 0.0762,
+          "depthM": 0.2032,
+          "nominalWallM": 0.00635
+        }
+      ]
+    },
+    {
+      "group": "Roof-plane X braces",
+      "size": "45 \u00d7 45 mm",
+      "nominalWall": "\u215b in",
+      "note": "Inherited modeled size; stock selection unresolved",
+      "members": [
+        {
+          "name": "Roof bay 1 diagonal",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 1 diagonal.001",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 2 diagonal",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 2 diagonal.001",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 3 diagonal",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 3 diagonal.001",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 4 diagonal",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        },
+        {
+          "name": "Roof bay 4 diagonal.001",
+          "widthM": 0.045,
+          "depthM": 0.045,
+          "nominalWallM": 0.003175
+        }
+      ]
+    },
+    {
+      "group": "Portal crossmembers",
+      "size": "65 \u00d7 65 mm",
+      "nominalWall": "3/16 in",
+      "note": "Inherited modeled size; stock selection unresolved",
+      "members": [
+        {
+          "name": "Front portal crossmember",
+          "widthM": 0.065,
+          "depthM": 0.065,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Front portal crossmember.001",
+          "widthM": 0.065,
+          "depthM": 0.065,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front portal crossmember",
+          "widthM": 0.065,
+          "depthM": 0.065,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front portal crossmember.001",
+          "widthM": 0.065,
+          "depthM": 0.065,
+          "nominalWallM": 0.0047625
+        }
+      ]
+    },
+    {
+      "group": "Portal X braces",
+      "size": "38 \u00d7 38 mm",
+      "nominalWall": "3/16 in",
+      "note": "Inherited modeled size; stock selection unresolved",
+      "members": [
+        {
+          "name": "Front portal X brace",
+          "widthM": 0.038,
+          "depthM": 0.038,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Front portal X brace.001",
+          "widthM": 0.038,
+          "depthM": 0.038,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front portal X brace",
+          "widthM": 0.038,
+          "depthM": 0.038,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Front portal X brace.001",
+          "widthM": 0.038,
+          "depthM": 0.038,
+          "nominalWallM": 0.0047625
+        }
+      ]
+    },
+    {
+      "group": "Portal knee braces",
+      "size": "\u224852 \u00d7 52 mm",
+      "nominalWall": "3/16 in",
+      "note": "Inherited modeled size; stock selection unresolved",
+      "members": [
+        {
+          "name": "Portal knee brace",
+          "widthM": 0.052,
+          "depthM": 0.052001,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Portal knee brace.001",
+          "widthM": 0.052,
+          "depthM": 0.052001,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Side knee brace",
+          "widthM": 0.052,
+          "depthM": 0.052,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Side knee brace.001",
+          "widthM": 0.052,
+          "depthM": 0.052,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Portal knee brace",
+          "widthM": 0.052,
+          "depthM": 0.052001,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Portal knee brace.001",
+          "widthM": 0.052,
+          "depthM": 0.052001,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Side knee brace",
+          "widthM": 0.052,
+          "depthM": 0.052,
+          "nominalWallM": 0.0047625
+        },
+        {
+          "name": "Rear study \u00b7 mirror of Side knee brace.001",
+          "widthM": 0.052,
+          "depthM": 0.052,
+          "nominalWallM": 0.0047625
+        }
+      ]
+    }
+  ],
+  "shores": {
+    "count": 6,
+    "size": "3 \u00d7 3 \u00d7 \u215b in HSS",
+    "nominalWallM": 0.003175,
+    "plateThicknessM": 0.01905,
+    "topPlateM": [
+      0.18,
+      0.16
+    ],
+    "bottomPlateM": [
+      0.6,
+      0.18
+    ],
+    "massEachLbf": 47.65330157337413,
+    "saddleDesignVerified": false
+  },
+  "procurementApproved": false
+}

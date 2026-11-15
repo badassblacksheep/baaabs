@@ -1,5 +1,5 @@
 {
-  "revision": "lightweight-brief-7-accessible-shared-truss",
+  "revision": "lightweight-brief-8-six-shore-truss",
   "date": "2026-11-14",
   "status": "38 \u00d7 8 ft footprint approved by owner for structural iteration 02. Static parametric study; occupancy, connections and fabrication remain unresolved. Neither concept in the historical station comparison is selected or load-rated.",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -31,7 +31,9 @@
       "heavy_cargo": false,
       "access_without_structural_disassembly": true,
       "provisional_allowance_lb": 250,
-      "reserved_central_service_strip_in": 24
+      "reserved_central_service_strip_in": 24,
+      "dedicated_side_opening_required": false,
+      "access_basis": "Preserve height and practical retrieval routes; full truss diagonals per owner revision 06. No structural disassembly for access."
     }
   },
   "variables": [
@@ -97,7 +99,7 @@
     "current": "../structural/",
     "baseline": "../structural/baseline.html",
     "footprint_change_reason": "The previous 36 ft deck stopped aft of the front corner post centerlines. The owner authorized increasing length so the floor and edge girders extend over these supports. A 38 ft target provides simple dimensions and direct bearing.",
-    "body_support_assumption": "Iteration 02 adds two compression-only vertical shores into the Thomas structural body. Effective stiffness and capacity are unmeasured; the report sweeps assumed stiffness without assigning a safe rating.",
+    "body_support_assumption": "Iteration 06 uses six compression-only lower-node shores at three equally spaced 115-inch stations. Effective stiffness and body capacity are unmeasured. Coordinates are literature-informed model guesses.",
     "rear_support_assumption": "Both rear corners transfer gravity through the rear drop-frame to the chassis rails, using the same modeled portal/sill sections and fixed rail-seat restraint as the front corners.",
     "history": [
       {
@@ -139,7 +141,7 @@
       "models": "structural-models-04.json"
     },
     "iteration_05": {
-      "report": "../structural/",
+      "report": "../structural/iteration-05.html",
       "date": "2026-11-14",
       "timezone": "America/Los_Angeles",
       "target_people": 20,
@@ -150,6 +152,17 @@
       "service_storage_allowance_lbf": 250,
       "models": "structural-models-05.json",
       "status": "Concept only. Permanent service access modeled; chassis seats, joints, buckling, dynamics, clearances and cabin protection unverified."
+    },
+    "iteration_06": {
+      "report": "../structural/",
+      "date": "2026-11-14",
+      "candidate": "Full perimeter truss with six body shores",
+      "cabin_uprights": 0,
+      "body_shores": 6,
+      "pair_pitch_in": 115,
+      "truss_depth_m": 0.8,
+      "model": "structural-models-06.json",
+      "status": "Owner-preferred concept; not released for fabrication or occupancy"
     }
   }
 }

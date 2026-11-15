@@ -7,12 +7,13 @@ import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
 import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js?v=rainbow';
 function transform(p,n){
+  if(n.matrix){const m=n.matrix;return [0,1,2].map(i=>m[i]*p[0]+m[i+4]*p[1]+m[i+8]*p[2]+m[i+12]);}
   const s=n.scale||[1,1,1], t=n.translation||[0,0,0], q=n.rotation||[0,0,0,1];
   const v=p.map((x,i)=>x*s[i]), r=cross(q,v);
   return add(t,add(v,mul(add(mul(r,q[3]),cross(q,r)),2)));
 }
 async function loadEarl(){
-  const response=await fetch('../assets/models/earl-roof-attachment-study.glb?v=temple-ears-1');
+  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=1');
   if(!response.ok)throw Error('Model download failed');
   const data=await response.arrayBuffer(), dv=new DataView(data), len=dv.getUint32(12,true);
   const doc=JSON.parse(new TextDecoder().decode(new Uint8Array(data,20,len))), offset=28+len;

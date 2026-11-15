@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('accessible candidate controls use only solved loads and retain failure qualification',async()=>{
- const html=read('site/structural/index.html'),data=JSON.parse(read('site/structural/iteration-05-data.json'));
+ const html=read('site/structural/iteration-05.html'),data=JSON.parse(read('site/structural/iteration-05-data.json'));
  class Element{constructor(){this.events={};}addEventListener(k,f){this.events[k]=f;}querySelector(){return field;}}
  const field={disabled:true},nodes=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()]));
  const get=k=>{assert.ok(nodes.has(k),k);return nodes.get(k)};
@@ -52,7 +52,7 @@ test('iteration 05 frame has permanent access, raised ties, unchanged skin and d
 test('earlier iterations retain their distinct model runtimes and all local references resolve',()=>{
  assert.match(read('site/structural/iteration-03.html'),/rear-roof-frame-preview-03/);
  assert.match(read('site/structural/iteration-04.html'),/rear-roof-frame-preview-04/);
- for(const f of ['index.html','iteration-04.html','iteration-03.html','iteration-02.html','baseline.html']){
+ for(const f of ['iteration-05.html','index.html','iteration-04.html','iteration-03.html','iteration-02.html','baseline.html']){
   const html=read('site/structural/'+f);assert.match(html,/05 · Shared structure/);
   for(const [,ref]of html.matchAll(/(?:href|src)="([^"#]+)"/g)){
    if(/^(https?:|data:|mailto:)/.test(ref))continue;
