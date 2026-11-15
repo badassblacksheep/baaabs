@@ -272,42 +272,46 @@
       deck_preserved:false};
   }
 
-  // Visual representation of iteration 02's two vertical spring supports.
-  // Body landing height is sampled from the donor reference mesh; actual structure awaits survey.
-  function appendConceptShores(doc) {
-    if(doc.asset.extras?.concept_shoring_revision==='03')return;
-    const girder=doc.nodes.find(n=>n.name==='Deck edge girder');
-    if(!girder)throw new Error('Missing reference girder for conceptual shore geometry');
-    const material=doc.materials.push({name:'Workshop_mounts_concept_shores',
-      pbrMetallicRoughness:{baseColorFactor:[.96,.46,.10,1],metallicFactor:.25,roughnessFactor:.6},
-      emissiveFactor:[.07,.025,0]})-1;
-    const mesh=JSON.parse(JSON.stringify(doc.meshes[girder.mesh]));
-    mesh.name='Conceptual shore display box';for(const p of mesh.primitives)p.material=material;
-    const meshIndex=doc.meshes.push(mesh)-1,children=[];
-    const x=-.2618115,landing=2.787072,pad=.02,top=3.8304;
-    const lower=landing+pad,upper=top-pad;
-    function box(name,translation,scale,role) {
-      const index=doc.nodes.push({name,mesh:meshIndex,translation,scale,
-        extras:{component:'mounts',concept_shore:true,role,
-          design_status:'CONCEPT ONLY: visual dimensions; load path, sections and connections await survey',
-          effective_path_stiffness_lbf_per_in:5000,section_capacity_verified:false}})-1;
-      children.push(index);
+  function applyIteration04(doc,variant) {
+    const source=doc.nodes.find(n=>n.name==='Deck edge girder');
+    const template=structuredClone(doc.meshes[source.mesh]);
+    const remove=new Set();
+    for(const [i,e] of sceneNodes(doc))if(/^(Deck edge girder|Floor joist|Roof bay |Transverse deck bearer|Driver upright|Passenger upright)/.test(e.node.name||''))remove.add(i);
+    for(const scene of doc.scenes)scene.nodes=scene.nodes.filter(i=>!remove.has(i));
+    for(const node of doc.nodes)if(node.children)node.children=node.children.filter(i=>!remove.has(i));
+    const material=doc.materials.push({name:'Workshop_deckframe_iteration04',pbrMetallicRoughness:{baseColorFactor:[.16,.57,.60,1],metallicFactor:.4,roughnessFactor:.5}})-1;
+    for(const primitive of template.primitives)primitive.material=material;
+    const frameMesh=doc.meshes.push(template)-1,children=[];
+    const convert=p=>[p[0],p[2],-p[1]];
+    function member(m) {
+      const a=convert(m.a),b=convert(m.b),d=b.map((v,i)=>v-a[i]),L=Math.hypot(...d),x=d.map(v=>v/L);
+      let y=convert(m.axis_y);const dot=y.reduce((v,a,i)=>v+a*x[i],0);y=y.map((v,i)=>v-dot*x[i]);const yn=Math.hypot(...y);y=y.map(v=>v/yn);
+      const z=[x[1]*y[2]-x[2]*y[1],x[2]*y[0]-x[0]*y[2],x[0]*y[1]-x[1]*y[0]];
+      const matrix=[...x.map(v=>v*L),0,...y.map(v=>v*m.width),0,...z.map(v=>v*m.depth),0,...a.map((v,i)=>(v+b[i])/2),1];
+      children.push(doc.nodes.push({name:m.name,mesh:frameMesh,matrix,extras:{component:'deckframe',structural_revision:'04',analytical_member:m.name,nominal_wall_in:variant.roofWallNominalIn,connection_details_verified:false}})-1);
     }
-    for(const side of [-1,1]) {
-      const z=-side*1.1692,label=side<0?'Driver':'Passenger';
-      box('Concept shore | '+label+' vertical',[x,(lower+upper)/2,z],[.07,upper-lower,.07],'vertical');
-      box('Concept shore | '+label+' upper bearing',[x,top-pad/2,z],[.18,pad,.16],'upper_bearing');
-      box('Concept shore | '+label+' provisional landing',[x,landing+pad/2,z],[.60,pad,.18],'landing');
+    for(const m of variant.members)if(/^(Deck edge girder|Floor joist|Roof bay |Transverse deck bearer)/.test(m.name))member(m);
+    const shoreMaterial=doc.materials.push({name:'Workshop_mounts_concept_shores',pbrMetallicRoughness:{baseColorFactor:[.96,.46,.10,1],metallicFactor:.25,roughnessFactor:.6}})-1;
+    const shoreMesh=structuredClone(template);for(const primitive of shoreMesh.primitives)primitive.material=shoreMaterial;
+    const si=doc.meshes.push(shoreMesh)-1;
+    const top=3.8604-.1524/2,landing=2.787072,pad=.02;
+    for(const [j,pt]of variant.shorePositions.entries()) {
+      const [x,y]=pt,z=-y,label=(y<0?'Driver':'Passenger')+' '+(Math.floor(j/2)+1);
+      for(const [role,translation,scale]of [
+        ['vertical',[x,(landing+pad+top-pad)/2,z],[.07,top-landing-2*pad,.07]],
+        ['upper_bearing',[x,top-pad/2,z],[.18,pad,.16]],
+        ['landing',[x,landing+pad/2,z],[.60,pad,.18]]])
+        children.push(doc.nodes.push({name:'Concept shore | '+label+' '+role,mesh:si,translation,scale,extras:{component:'mounts',concept_shore:true,role,section_capacity_verified:false,structural_revision:'04'}})-1);
     }
+    // Outer sill dimensions are unchanged; the selected thicker wall is recorded explicitly.
+    for(const node of doc.nodes)if((node.name||'').includes('Front transverse sill'))node.extras={...(node.extras||{}),nominal_wall_in:.25,structural_revision:'04'};
     doc.scenes[doc.scene??0].nodes.push(doc.nodes.length);
-    doc.nodes.push({name:'Conceptual Thomas shoring | survey required',children,extras:{component:'mounts'}});
-    doc.asset.extras={...(doc.asset.extras||{}),concept_shoring_revision:'03',
-      concept_shore_positions_m:[[-.2618115,-1.1692,3.8604],[-.2618115,1.1692,3.8604]],
-      concept_landing_z_m:landing,concept_shore_display_section_m:.07,
-      concept_shore_note:'Two compression-only supports shown. Pads indicate proposed structural landing zones, not roof-skin capacity. Display sections and mass are unverified.'};
+    doc.nodes.push({name:'Iteration 04 | cabin-free roof concept',children,extras:{component:'structure'}});
+    doc.asset.extras={...(doc.asset.extras||{}),structural_iteration:'04',structural_variant:variant.id,concept_shoring_revision:'04',concept_shore_positions_m:variant.shorePositions,cabin_uprights:0,roof_wall_nominal_in:variant.roofWallNominalIn,portal_sill_wall_nominal_in:.25,
+      structural_note:'Concept only. Coincident joints are analytical idealizations, not fabrication details. Body landing capacity and cabin protection require engineering verification.'};
   }
 
-  async function build(source) {
+  async function build(source,variant) {
     const response = await fetch(source);
     if (!response.ok) throw new Error('GLB request failed: '+response.status);
     const array = new Uint8Array(await response.arrayBuffer());
@@ -334,22 +338,33 @@
       rear_roof_frame_status:'CONCEPT ONLY - rear chassis feet and engine clearances unverified',
       rear_roof_frame_method:method, deck_preserved:true};
     reviseRoof38(doc);
-    appendConceptShores(doc);
-    return {blob:packageGlb(doc,binary),method:method+'; 38 x 8 ft roof with two conceptual shores'};
+    applyIteration04(doc,variant);
+    return {blob:packageGlb(doc,binary),method:method+'; iteration 04, '+variant.pairs+' shore pairs, no cabin uprights'};
   }
   const base = viewers[0].dataset.rearFrameSrc;
   const source = new URL(base,document.baseURI).href;
-  build(source).then(({blob,method})=>{
-    const url=URL.createObjectURL(blob);
-    viewers.forEach(viewer=>{viewer.src=url;viewer.dataset.rearFrameMethod=method;});
-    for (const a of document.querySelectorAll('a[data-rear-frame-download]')) {
-      a.href=url;a.download='baaabs-earl-38ft-shored-study.glb';
+  const manifestUrl=new URL('../structural-models-04.json',source).href;
+  const cache=new Map();
+  fetch(manifestUrl).then(r=>{if(!r.ok)throw Error('Model manifest unavailable');return r.json();}).then(async config=>{
+    async function select(viewer,id) {
+      const variant=config.variants.find(v=>v.id===id);if(!variant)throw Error('Unknown structural variant');
+      if(!cache.has(id))cache.set(id,build(source,variant).then(({blob,method})=>({url:URL.createObjectURL(blob),method})));
+      const {url,method}=await cache.get(id);viewer.src=url;viewer.dataset.rearFrameMethod=method;viewer.dataset.shoreVariant=id;
+      for(const a of document.querySelectorAll('a[data-rear-frame-download]'))if(!a.dataset.shoreVariant||a.dataset.shoreVariant===id){a.href=url;a.download='baaabs-earl-iteration04-'+id+'.glb';}
+      document.dispatchEvent(new CustomEvent('rear-frame-ready',{detail:{method,variant:id}}));
     }
-    document.dispatchEvent(new CustomEvent('rear-frame-ready',{detail:{method}}));
-  }).catch(error=>{
-    console.error('Rear-frame concept preview failed, using original Earl model',error);
-    viewers.forEach(viewer=>{viewer.src=source;});
+    for(const variant of config.variants){
+      if(!cache.has(variant.id))cache.set(variant.id,build(source,variant).then(({blob,method})=>({url:URL.createObjectURL(blob),method})));
+      cache.get(variant.id).then(({url})=>{for(const a of document.querySelectorAll('a[data-rear-frame-download]'))if(a.dataset.shoreVariant===variant.id){a.href=url;a.download='baaabs-earl-iteration04-'+variant.id+'.glb';}}).catch(fail);
+    }
+    for(const viewer of viewers){
+      viewer.addEventListener('structural-variant',event=>select(viewer,event.detail.id).catch(fail));
+      await select(viewer,viewer.dataset.shoreVariant||config.selected);
+    }
+  }).catch(fail);
+  function fail(error) {
+    console.error('Structural concept model could not load',error);
     const status=document.querySelector('#rear-frame-status');
-    if (status) status.textContent='Rear-frame concept could not load; showing original model.';
-  });
+    if(status)status.textContent='The iteration 04 model could not load. Reload to retry; the original source is not this design.';
+  }
 })();

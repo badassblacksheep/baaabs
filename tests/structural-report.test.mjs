@@ -48,7 +48,7 @@ const raw=fs.readFileSync(root+'/site/assets/models/earl-roof-attachment-study.g
 const original=JSON.parse(raw.subarray(20,20+raw.readUInt32LE(12)).toString());
 const viewer={dataset:{rearFrameSrc:'assets/models/earl-roof-attachment-study.glb'}},download={};
 let result;const Url=class extends URL{static createObjectURL(blob){result=blob;return 'blob:test';}};
-const source=fs.readFileSync(root+'/site/assets/rear-roof-frame-preview.js','utf8').replace('  const base = viewers[0]', '  globalThis.api={sceneNodes,floorEnvelope,meshBounds,reviseRoof38,appendConceptShores};\n  const base = viewers[0]');
+const source=fs.readFileSync(root+'/site/assets/rear-roof-frame-preview-03.js','utf8').replace('  const base = viewers[0]', '  globalThis.api={sceneNodes,floorEnvelope,meshBounds,reviseRoof38,appendConceptShores};\n  const base = viewers[0]');
 const context={document:{baseURI:'https://baaabs.org/',querySelectorAll:s=>s.startsWith('model-viewer')?[viewer]:[download],dispatchEvent:()=>{},querySelector:()=>null},fetch:async()=>({ok:true,arrayBuffer:async()=>raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength)}),URL:Url,Blob,TextDecoder,TextEncoder,Uint8Array,DataView,CustomEvent:class{},console};
 vm.runInNewContext(source,context);
 await new Promise(setImmediate);
@@ -89,7 +89,7 @@ test('conceptual ceilings bracket the first exceedance and preserve physical cro
 });
 
 test('headcount and preference controls rank only qualifying concepts, with explicit color states',async()=>{
- const root=path.join(repository,'site/structural'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const root=path.join(repository,'site/structural'),html=fs.readFileSync(path.join(root,'iteration-03.html'),'utf8');
  const data=JSON.parse(fs.readFileSync(path.join(root,'capacity-data.json'),'utf8'));
  class Element{constructor(){this.style={};this.events={};this.attrs={};this.hidden=true;}setAttribute(k,v){this.attrs[k]=v;}addEventListener(k,v){this.events[k]=v;}querySelector(){return field;}}
  const map=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()])),field={disabled:true};
@@ -117,4 +117,51 @@ test('capacity fetch failure leaves controls disabled and exposes a readable fal
  const get=k=>{if(!nodes.has(k))nodes.set(k,{hidden:true,querySelector:()=>field,addEventListener:()=>{}});return nodes.get(k)};
  vm.runInNewContext(fs.readFileSync(path.join(repository,'site/structural/capacity.js'),'utf8'),{document:{getElementById:get},fetch:async()=>({ok:false})});
  await new Promise(setImmediate);assert.equal(field.disabled,true);assert.equal(get('capacity-error').hidden,false);
+});
+
+test('iteration 04 models preserve sheep panels, remove cabin posts, and expose every download',async()=>{
+ const root=repository,raw=fs.readFileSync(root+'/site/assets/models/earl-roof-attachment-study.glb'),config=JSON.parse(fs.readFileSync(root+'/site/assets/structural-models-04.json','utf8'));
+ const viewer={dataset:{rearFrameSrc:'assets/models/earl-roof-attachment-study.glb'},events:{},addEventListener(k,fn){this.events[k]=fn;}};
+ const links=config.variants.map(v=>({dataset:{shoreVariant:v.id}})),blobs=new Map();
+ class Url extends URL{static createObjectURL(b){const key='blob:'+blobs.size;blobs.set(key,b);return key;}}
+ const source=fs.readFileSync(root+'/site/assets/rear-roof-frame-preview.js','utf8').replace('  const base = viewers[0]','  globalThis.api={sceneNodes,floorEnvelope,meshBounds};\n  const base = viewers[0]');
+ const context={document:{baseURI:'https://baaabs.org/',querySelectorAll:s=>s.startsWith('model-viewer')?[viewer]:links,querySelector:()=>null,dispatchEvent:()=>{}},fetch:async url=>url.includes('structural-models')?{ok:true,json:async()=>config}:{ok:true,arrayBuffer:async()=>raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength)},structuredClone,URL:Url,Blob,TextDecoder,TextEncoder,Uint8Array,DataView,CustomEvent:class{},console};
+ vm.runInNewContext(source,context);await new Promise(setImmediate);await new Promise(setImmediate);
+ assert.equal(blobs.size,3);assert.equal(viewer.dataset.shoreVariant,'shores-3');
+ const original=JSON.parse(raw.subarray(20,20+raw.readUInt32LE(12)).toString()),before=context.api.sceneNodes(original);
+ for(const link of links){assert.ok(blobs.has(link.href));const bytes=Buffer.from(await blobs.get(link.href).arrayBuffer()),d=JSON.parse(bytes.subarray(20,20+bytes.readUInt32LE(12)).toString()),after=context.api.sceneNodes(d),variant=config.variants.find(v=>v.id===link.dataset.shoreVariant);
+  assert.equal(d.asset.extras.structural_variant,variant.id);assert.equal(d.asset.extras.cabin_uprights,0);
+  const nodes=[...after.values()];assert.equal(nodes.filter(e=>/^(Driver|Passenger) upright/.test(e.node.name||'')).length,0);
+  assert.equal(nodes.filter(e=>e.node.extras?.concept_shore&&e.node.extras.role==='vertical').length,2*variant.pairs);
+  for(const [i,e]of before)if(e.node.extras?.panel_id)assert.deepEqual(after.get(i),e);
+  const env=context.api.floorEnvelope(d,after);assert.ok(Math.abs(env.x1-env.x0-38*.3048)<1e-5);
+  const girder=nodes.find(e=>e.node.name==='Deck edge girder'),b=context.api.meshBounds(d,girder.node,girder.world);assert.ok(Math.abs(b.hi[1]-b.lo[1]-.1524)<1e-6);
+  assert.ok(link.download.endsWith(variant.id+'.glb'));
+ }
+});
+
+test('iteration 04 published ceilings and selected score follow the stated rules',()=>{
+ const d=JSON.parse(fs.readFileSync(repository+'/site/structural/iteration-04-data.json','utf8'));
+ assert.equal(d.scenarios.length,27);assert.equal(d.ranking.length,36);assert.equal(d.search.length,180);
+ assert.equal(d.selected.id,'grid6-3-3.175-c0-portal');assert.equal(d.selected.result.belowCeiling,true);
+ for(const s of d.scenarios){assert.ok(s.results[s.ceiling].stress<=207);assert.ok(s.results[s.ceiling+1].stress>207);
+  for(const r of s.results){assert.ok(Math.abs(r.total-s.frameWeight-s.panelLbf-r.people*450)<.02);assert.ok(r.shoreReactions.every(v=>v>=-.01));}
+ }
+ assert.deepEqual(d.scenarios.filter(s=>s.share===1&&s.pairs===3).map(s=>s.ceiling),[25,25,25]);
+ for(const label of ['soft-body','one-shore-lost','middle-pair-lost','3x-people'])assert.equal(d.sensitivity.find(s=>s.label===label).result.belowCeiling,false);
+});
+
+test('iteration 04 controls agree with every solved crowd, skin share and shore count',async()=>{
+ const root=repository+'/site/structural',html=fs.readFileSync(root+'/iteration-04.html','utf8'),data=JSON.parse(fs.readFileSync(root+'/iteration-04-data.json','utf8'));
+ class Element{constructor(){this.style={};this.events={};}setAttribute(){}addEventListener(k,v){this.events[k]=v;}dispatchEvent(){}querySelector(){return field;}}
+ const field={disabled:true},map=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()]));
+ const get=k=>{assert.ok(map.has(k),k);return map.get(k)};
+ for(const [k,v]of Object.entries({people:20,pairs:3,wall:0,panels:2,priority:.7}))get(k).value=String(v);
+ vm.runInNewContext(fs.readFileSync(root+'/iteration04.js','utf8'),{document:{getElementById:get},fetch:async()=>({ok:true,json:async()=>data}),CustomEvent:class{}});await new Promise(setImmediate);assert.equal(field.disabled,false);
+ for(let n=1;n<=30;n++)for(let pairs=1;pairs<=3;pairs++)for(let share=0;share<=2;share++)for(const priority of [.5,.7,.9]){
+  for(const [k,v]of Object.entries({people:n,pairs,panels:share,priority}))get(k).value=String(v);get('design-controls').events.input();
+  data.scenarios.filter(s=>s.pairs===pairs&&s.share===share/2).forEach((s,i)=>{const r=s.results[n],reserve=207/r.stress,score=100*(priority*Math.min(reserve/1.25,1)+(1-priority)*data.minFrameWeight/s.frameWeight),color=reserve>=1.25?'green':reserve>=1?'yellow':'red';
+   assert.equal(+get('score-'+i).textContent,Math.round(score));assert.ok(get('card-'+i).className.includes(color));assert.equal(+get('ceiling-'+i).textContent,s.ceiling);
+  });
+ }
 });

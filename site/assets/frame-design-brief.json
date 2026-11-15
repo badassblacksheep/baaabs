@@ -1,5 +1,5 @@
 {
-  "revision": "lightweight-brief-6-conceptual-headcount",
+  "revision": "lightweight-brief-7-accessible-shared-truss",
   "date": "2026-11-14",
   "status": "38 \u00d7 8 ft footprint approved by owner for structural iteration 02. Static parametric study; occupancy, connections and fabrication remain unresolved. Neither concept in the historical station comparison is selected or load-rated.",
   "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -20,7 +20,19 @@
     "road_requirement_source": "project-constraints.json",
     "road_retained": "Donor bus, all permanent supports and every retained fitting",
     "road_removed": "Roof deck/removable frame, sheep panels, projecting support assemblies, speakers and event equipment",
-    "removable_connections": true
+    "removable_connections": true,
+    "service_storage": {
+      "contents": [
+        "lighting controllers",
+        "sound controllers",
+        "cables",
+        "small organized totes"
+      ],
+      "heavy_cargo": false,
+      "access_without_structural_disassembly": true,
+      "provisional_allowance_lb": 250,
+      "reserved_central_service_strip_in": 24
+    }
   },
   "variables": [
     "Station count and positions, subject to actual attachment access",
@@ -111,9 +123,33 @@
           38,
           8
         ],
-        "report": "../structural/",
+        "report": "../structural/iteration-03.html",
         "scope": "Conceptual headcount stress screen and model shoring visualization; operating occupancy unresolved"
       }
-    ]
+    ],
+    "iteration_04": {
+      "report": "../structural/iteration-04.html",
+      "date": "2026-11-15",
+      "target_people": 20,
+      "selected": "grid6-3-3.175-c0-portal",
+      "cabin_uprights": 0,
+      "shore_pairs": 3,
+      "panel_allowance_lbf": 2311.25,
+      "status": "Concept only; body load paths, dynamic response, failure tolerance and cabin protection unverified",
+      "models": "structural-models-04.json"
+    },
+    "iteration_05": {
+      "report": "../structural/",
+      "date": "2026-11-14",
+      "timezone": "America/Los_Angeles",
+      "target_people": 20,
+      "candidate": "accessible end-supported shared truss",
+      "cabin_uprights": 0,
+      "body_shores": 0,
+      "panel_allowance_lbf": 2311.25,
+      "service_storage_allowance_lbf": 250,
+      "models": "structural-models-05.json",
+      "status": "Concept only. Permanent service access modeled; chassis seats, joints, buckling, dynamics, clearances and cabin protection unverified."
+    }
   }
 }

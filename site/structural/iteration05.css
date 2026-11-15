@@ -1,0 +1,9 @@
+.study-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1.5rem 0}
+.study-metrics article{padding:1.1rem;border:1px solid #40797c;border-radius:12px;background:#122326;min-width:0}
+.study-metrics span,.study-metrics small{display:block;color:#c2d3d3;line-height:1.5}
+.study-metrics strong{display:block;font-size:clamp(1.3rem,2.8vw,2rem);margin:.5rem 0;color:#eaf9f7}
+#study05-controls fieldset{border:1px solid #40545b;border-radius:10px;padding:1rem}
+#study05-controls select{max-width:100%;background:#132126;color:#eef5f4;padding:.7rem;border:1px solid #688186;border-radius:6px}
+.design-tabs{flex-wrap:wrap}.model-wrap{background:#18252c;border:1px solid #527176;border-radius:14px}
+@media(max-width:800px){.study-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.study-metrics{grid-template-columns:1fr}.planner-controls{grid-template-columns:1fr}}
