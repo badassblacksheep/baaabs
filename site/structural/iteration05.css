@@ -7,3 +7,8 @@
 .design-tabs{flex-wrap:wrap}.model-wrap{background:#18252c;border:1px solid #527176;border-radius:14px}
 @media(max-width:800px){.study-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.study-metrics{grid-template-columns:1fr}.planner-controls{grid-template-columns:1fr}}
+
+.download-links{display:flex;flex-wrap:wrap;gap:.65rem 1.5rem}
+.table-wrap{overflow-x:auto}
+.table-wrap th,.table-wrap td{padding:.75rem .8rem;text-align:left}
+.table-wrap th{line-height:1.4}
