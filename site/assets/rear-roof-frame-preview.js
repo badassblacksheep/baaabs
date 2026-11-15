@@ -272,6 +272,41 @@
       deck_preserved:false};
   }
 
+  // Visual representation of iteration 02's two vertical spring supports.
+  // Body landing height is sampled from the donor reference mesh; actual structure awaits survey.
+  function appendConceptShores(doc) {
+    if(doc.asset.extras?.concept_shoring_revision==='03')return;
+    const girder=doc.nodes.find(n=>n.name==='Deck edge girder');
+    if(!girder)throw new Error('Missing reference girder for conceptual shore geometry');
+    const material=doc.materials.push({name:'Workshop_mounts_concept_shores',
+      pbrMetallicRoughness:{baseColorFactor:[.96,.46,.10,1],metallicFactor:.25,roughnessFactor:.6},
+      emissiveFactor:[.07,.025,0]})-1;
+    const mesh=JSON.parse(JSON.stringify(doc.meshes[girder.mesh]));
+    mesh.name='Conceptual shore display box';for(const p of mesh.primitives)p.material=material;
+    const meshIndex=doc.meshes.push(mesh)-1,children=[];
+    const x=-.2618115,landing=2.787072,pad=.02,top=3.8304;
+    const lower=landing+pad,upper=top-pad;
+    function box(name,translation,scale,role) {
+      const index=doc.nodes.push({name,mesh:meshIndex,translation,scale,
+        extras:{component:'mounts',concept_shore:true,role,
+          design_status:'CONCEPT ONLY: visual dimensions; load path, sections and connections await survey',
+          effective_path_stiffness_lbf_per_in:5000,section_capacity_verified:false}})-1;
+      children.push(index);
+    }
+    for(const side of [-1,1]) {
+      const z=-side*1.1692,label=side<0?'Driver':'Passenger';
+      box('Concept shore | '+label+' vertical',[x,(lower+upper)/2,z],[.07,upper-lower,.07],'vertical');
+      box('Concept shore | '+label+' upper bearing',[x,top-pad/2,z],[.18,pad,.16],'upper_bearing');
+      box('Concept shore | '+label+' provisional landing',[x,landing+pad/2,z],[.60,pad,.18],'landing');
+    }
+    doc.scenes[doc.scene??0].nodes.push(doc.nodes.length);
+    doc.nodes.push({name:'Conceptual Thomas shoring | survey required',children,extras:{component:'mounts'}});
+    doc.asset.extras={...(doc.asset.extras||{}),concept_shoring_revision:'03',
+      concept_shore_positions_m:[[-.2618115,-1.1692,3.8604],[-.2618115,1.1692,3.8604]],
+      concept_landing_z_m:landing,concept_shore_display_section_m:.07,
+      concept_shore_note:'Two compression-only supports shown. Pads indicate proposed structural landing zones, not roof-skin capacity. Display sections and mass are unverified.'};
+  }
+
   async function build(source) {
     const response = await fetch(source);
     if (!response.ok) throw new Error('GLB request failed: '+response.status);
@@ -299,7 +334,8 @@
       rear_roof_frame_status:'CONCEPT ONLY - rear chassis feet and engine clearances unverified',
       rear_roof_frame_method:method, deck_preserved:true};
     reviseRoof38(doc);
-    return {blob:packageGlb(doc,binary),method:method+'; 38 x 8 ft roof'};
+    appendConceptShores(doc);
+    return {blob:packageGlb(doc,binary),method:method+'; 38 x 8 ft roof with two conceptual shores'};
   }
   const base = viewers[0].dataset.rearFrameSrc;
   const source = new URL(base,document.baseURI).href;
@@ -307,7 +343,7 @@
     const url=URL.createObjectURL(blob);
     viewers.forEach(viewer=>{viewer.src=url;viewer.dataset.rearFrameMethod=method;});
     for (const a of document.querySelectorAll('a[data-rear-frame-download]')) {
-      a.href=url;a.download='baaabs-earl-38ft-roof-study.glb';
+      a.href=url;a.download='baaabs-earl-38ft-shored-study.glb';
     }
     document.dispatchEvent(new CustomEvent('rear-frame-ready',{detail:{method}}));
   }).catch(error=>{

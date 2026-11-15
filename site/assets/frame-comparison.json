@@ -1,7 +1,7 @@
 {
   "revision": "lightweight-comparison-1",
   "brief": {
-    "revision": "lightweight-brief-5-38ft-thomas-shoring",
+    "revision": "lightweight-brief-6-conceptual-headcount",
     "date": "2026-11-14",
     "status": "38 \u00d7 8 ft footprint approved by owner for structural iteration 02. Static parametric study; occupancy, connections and fabrication remain unresolved. Neither concept in the historical station comparison is selected or load-rated.",
     "objective": "Reduce the installed weight of the dance-floor and sheep-support systems while preserving the shared functional requirements",
@@ -104,7 +104,17 @@
             38,
             8
           ],
-          "report": "../structural/"
+          "report": "../structural/iteration-02.html"
+        },
+        {
+          "date": "2026-11-14",
+          "iteration": 3,
+          "footprint_ft": [
+            38,
+            8
+          ],
+          "report": "../structural/",
+          "scope": "Conceptual headcount stress screen and model shoring visualization; operating occupancy unresolved"
         }
       ]
     }
