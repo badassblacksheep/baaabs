@@ -43,8 +43,9 @@
   }
   fetch('iteration-06-data.json').then(r=>{if(!r.ok)throw Error('Data unavailable');return r.json();}).then(show).catch(error=>{get('data-error06').hidden=false;put('data-error06','Interactive data did not load. Controls remain unavailable; static results and the source download remain below.');console.error(error);});
   const model=get('model06'),colors=new WeakMap();
-  function modelView(){
+  async function modelView(){
     for(const material of model.model?.materials||[]){
+      await material.ensureLoaded();
       if(!colors.has(material))colors.set(material,[...material.pbrMetallicRoughness.baseColorFactor]);
       const color=colors.get(material),group=material.name.match(/^Workshop_([^_]+)_/)?.[1];
       if(material.name.startsWith('Panel_')||['deck','equipment','rails','sound','eye_effect'].includes(group)){

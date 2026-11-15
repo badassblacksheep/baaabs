@@ -32,7 +32,7 @@ sources='<ol>'+''.join('<li><a href="'+escape(x['url'],quote=True)+'">'+escape(x
 old=(S/'iteration-05a.html').read_text();head=old[:old.index('<main')]
 head=re.sub(r'<title>.*?</title>','<title>Six shores, full truss · Earl structural iteration 06</title>',head)
 head=re.sub(r'<meta name="description"[^>]+>','<meta name="description" content="Explore a full-height perimeter truss with six equally spaced shores, inferred from Thomas HDX literature. Interactive results, exact material walls and the calculation record.">',head)
-head=head.replace('https://baaabs.org/structural/iteration-05a.html','https://baaabs.org/structural/').replace('iteration05a.js?v=1','iteration06.js?v=1').replace('structural-preview-05.js?v=access-1','structural-preview-06.js?v=1').replace('</head>','<link rel="stylesheet" href="iteration06.css?v=1"></head>')
+head=head.replace('https://baaabs.org/structural/iteration-05a.html','https://baaabs.org/structural/').replace('iteration05a.js?v=1','iteration06.js?v=2').replace('structural-preview-05.js?v=access-1','structural-preview-06.js?v=1').replace('</head>','<link rel="stylesheet" href="iteration06.css?v=2"></head>')
 body=f'''<main class="study05a study06">{tabs('index.html')}
 <p class="eyebrow">Iteration 06 · November 14, 2026 · Preferred concept</p>
 <h1>Full truss.<br>Six shores.<br>Same room below.</h1>

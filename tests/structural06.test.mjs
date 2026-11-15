@@ -18,6 +18,10 @@ test('06 controls show only solved crowd/gear and independent support sensitivit
  get('people06').value='20';get('gear06').value='250';get('scenario06').value='default';
  const ctx={document:{getElementById:get,querySelectorAll:()=>[field]},fetch:async()=>({ok:true,json:async()=>data}),console};
  vm.runInNewContext(read('site/structural/iteration06.js'),ctx);await new Promise(setImmediate);
+ let loaded=false,paint;
+ get('model06').model={materials:[{name:'Panel_test',async ensureLoaded(){loaded=true;},get pbrMetallicRoughness(){assert.ok(loaded,'load deferred material before inspecting color');return {baseColorFactor:[1,1,1,1],setBaseColorFactor(v){paint=v;}};},setAlphaMode(){}}]};
+ await get('model06').events.load();assert.equal(paint[3],0);
+ get('skin06').checked=true;await get('skin06').events.change();assert.equal(paint[3],1);
  assert.equal(field.disabled,false);assert.throws(()=>ctx.Baaabs06.selected(data,19,250),/Unsolved/);
  assert.throws(()=>ctx.Baaabs06.scenario(data,'unknown'),/Unsolved/);
  for(const r of data.equipment){
