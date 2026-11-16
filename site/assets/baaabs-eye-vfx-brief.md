@@ -1,4 +1,4 @@
-# BAAABS eyes — VFX handoff, revision 3
+# BAAABS eyes — VFX handoff, revision 4
 
 **Mischief, then cute. All theater. No malice.**
 
@@ -7,7 +7,33 @@ powerful, blinks, and looks innocent. Preserve the visual intensity and the
 friendly emotional payoff. The owner approved this revision's fire treatment
 on 16 November 2026. Live model: https://baaabs.org/eyes.html
 
-## Cue sheet
+## Active study: shallow bowls, ovine Sauron only
+
+The owner has temporarily selected only ovine Sauron. The existing positions,
+aperture planes and comic cant remain, but the eye shells are shallow spherical
+caps: **0.6371 m (~25.08 inches) across and 0.0889 m (3.5 inches) deep**.
+The spherical radius is (a²+h²)/(2h), where a is half the aperture and h is
+its depth. These are prototype modeling dimensions, not fabricated optics.
+
+The active 16-second loop has three related outward ripple treatments:
+
+| Time | Ripple |
+|---|---|
+| 0–5⅓ s | Approved Backdraft |
+| 5⅓–10⅔ s | Double crest: sharper leading wave and smaller echo |
+| 10⅔–16 s | Rolling bloom: broader curling lobes |
+
+Blend between treatments over the final ⅔ second of each section. Preserve the
+charred iris, pupil silhouette and warm palette. **The right eye leads by
+16 frames / ⅔ second**, one quarter of the 64-frame pulse. This is the
+sine/cosine relationship of the eruption rhythm, not a quarter of the full show.
+The whole shifted stream wraps continuously at 384 frames.
+
+The other expressions and full show remain embedded in the native model and
+reproducible from this repository. They are inactive in the current website,
+game and Blender playback. The comedic design tenet remains in force.
+
+## Archived five-look cue sheet
 
 | Time in loop | Look | Hold | Emotional beat |
 |---|---|---:|---|
@@ -60,23 +86,23 @@ the model transforms when interpreting the scene. Measure the real bowls.
 
 ## Files and reproduction
 
-The handoff ZIP contains the current animated GLB, this brief, two neutral UV
-loops, two paired 16-second references, and editable procedural source.
-The separate Blender derivative retains all six native animation clips.
+The revision-3 handoff ZIP remains an archived reference for the approved fire
+and former show. The current GLB, builder and this brief describe revision 4.
+The updated Blender derivative retains seven native clips.
 
-The native fire loop is 128 frames at 24 fps: 5⅓ seconds, repeated three times
-per 16-second hold. The model uses 256×256 fire textures; the supplied neutral
-movies are 512×512, and paired movies are 1024×512. MP4s are convenient viewing
-references. Generate lossless frames from the included source for compositing:
+The ovine loop now has 384 frames at 24 fps (16 seconds). The inactive vertical
+Sauron reference remains 128 frames (5⅓ seconds), repeated three times for its
+16-second hold. Native textures are 256×256. Export neutral UV movies, paired
+motion references and optional lossless frames from the current repo:
 
 ```sh
 python3 -m pip install 'numpy>=2.0,<3'
-python3 source/export-eye-vfx.py rendered --size 1024 --frames
+python3 tools/export-eye-vfx.py rendered --size 1024 --frames
 ```
 
-FFmpeg must be installed. The exporter writes 128 RGB PNGs per look when
-`--frames` is present. File 0000 follows file 0127; do not add a duplicate end
-frame. Play three cycles for an infernal hold.
+FFmpeg must be installed. The exporter writes 384 ovine and 128 vertical Sauron
+RGB PNG frames with `--frames`. Do not add a duplicate end frame. The paired
+ovine export already contains both the mirrored cant and right-eye phase lead.
 
 The deterministic field advects noise with `z = 8d - 16t`, where `d` is distance
 from the pupil edge toward the shell and `t` is normalized loop time. Eruption
@@ -85,11 +111,12 @@ This is a procedural art-direction reference, not a fluid or combustion solver.
 A production fluid render can replace it while matching silhouette, outward
 transport, palette, timing, and comic cut.
 
-Native clip names are `BAAABS | Eye cycle`, `Ovine`, `Rainbow`, `Anime`, `Sauron`,
-and `Otaku`, with the same `BAAABS | ` prefix on each. The complete cycle is
-56 seconds; individual infernal clips are 16 seconds and the others 8 seconds.
-Fire-frame switches use glTF STEP interpolation. Keep STEP when importing;
-crossfading scales creates double images. Blender's active track is Eye cycle.
+The active `BAAABS | Eye cycle` and individual `BAAABS | Ovine` clips both
+play the 16-second three-ripple study. `BAAABS | Archived five-look show`
+retains the former 56-second cue sequence. Individual `Rainbow`, `Anime`,
+`Sauron` and `Otaku` clips retain the same `BAAABS | ` prefix. Fire-frame
+switches use glTF STEP interpolation; crossfading scales creates double images.
+Blender's active track is Eye cycle, with the others muted.
 
 ## Physical prototype acceptance
 

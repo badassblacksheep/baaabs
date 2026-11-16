@@ -1,44 +1,39 @@
 /* Native glTF eye clips are shared by the website and downloadable model. */
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  const names = {cycle:'Eye cycle',ovine:'Ovine',rainbow:'Rainbow',anime:'Anime',otaku:'Otaku',sauron:'Sauron'};
-  const labels = {ovine:'Ovine Sauron · 16 seconds of mischief',rainbow:'Ovine rainbow · 8 seconds of cute',anime:'Vegeta · warm, angular stare',otaku:'Otaku · ^_^',sauron:'Sauron · 16 seconds of mischief'};
-  const sequence = [[16,'ovine'],[24,'rainbow'],[32,'anime'],[48,'sauron'],[56,'otaku']];
+  const ripples = ['Backdraft', 'Double crest', 'Rolling bloom'];
   for (const viewer of document.querySelectorAll('model-viewer[data-animated-eyes]')) {
     const controls = document.querySelector(`[data-eye-controls="${viewer.id}"]`);
-    const select = controls?.querySelector('[data-eye-mode]');
     const pause = controls?.querySelector('[data-eye-pause]');
     const status = controls?.querySelector('[data-eye-status]');
-    let mode = 'cycle', paused = reduced.matches, ready = false, onScreen = true;
+    let paused = reduced.matches, ready = false, onScreen = true;
     function playback() {
       if (!ready) return;
       if (paused || document.hidden || !onScreen) viewer.pause(); else viewer.play();
       if (pause) {pause.textContent = paused ? 'Play eyes' : 'Pause eyes';pause.setAttribute('aria-pressed',String(paused));}
     }
-    function choose(value) {
-      mode = value;
+    function choose() {
       if (!ready) return;
-      viewer.animationName = 'BAAABS | '+names[mode];
+      viewer.animationName = 'BAAABS | Eye cycle';
       viewer.animationCrossfadeDuration = 0;
       viewer.currentTime = 0;
       playback();
-      if (select) select.value = mode;
       updateStatus();
     }
     function updateStatus() {
-      const current = mode === 'cycle' ? sequence.find(([end])=>viewer.currentTime%56<end)?.[1] || 'ovine' : mode;
-      if (status && status.textContent !== labels[current]) status.textContent = labels[current];
-      viewer.dataset.eyeMode = current;
+      const current = Math.floor((viewer.currentTime % 16) / (16/3));
+      const label = `Ovine Sauron · ${ripples[current]} · ${current+1}/3`;
+      if (status && status.textContent !== label) status.textContent = label;
+      viewer.dataset.eyeMode = 'ovine';
     }
     function loaded() {
       ready = viewer.availableAnimations.includes('BAAABS | Eye cycle');
       if (!ready) {if(status)status.textContent='Eye model unavailable';return;}
       if (controls) for (const el of controls.querySelectorAll('button,select')) el.disabled=false;
-      choose(mode);
+      choose();
     }
     viewer.addEventListener('load',loaded);
     if (viewer.loaded) loaded();
-    select?.addEventListener('change',()=>choose(select.value));
     pause?.addEventListener('click',()=>{paused=!paused;playback();});
     controls?.querySelector('[data-eye-focus]')?.addEventListener('click',()=>{
       window.revealWorkshopPanels?.();

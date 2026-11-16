@@ -9,7 +9,7 @@ import pathlib
 import subprocess
 import struct
 import zlib
-from infernal_eyes import FIRE_FRAMES,FIRE_FPS,FIRE_HOLD,OVINE_TILT_DEGREES,fire_field,fire_pixels
+from infernal_eyes import FIRE_FRAMES,FIRE_FPS,FIRE_HOLD,OVINE_TILT_DEGREES,OVINE_FRAMES,RIGHT_PHASE_FRAMES,fire_field,fire_pixels,ovine_pixels
 
 
 def png(pixels,size):
@@ -34,8 +34,8 @@ def main():
         field=fire_field(mode,args.size)
         process=subprocess.Popen(cmd,stdin=subprocess.PIPE)
         try:
-            for frame in range(FIRE_FRAMES):
-                pixels=fire_pixels(field,frame)
+            for frame in range(OVINE_FRAMES if mode=='Ovine' else FIRE_FRAMES):
+                pixels=ovine_pixels(field,frame) if mode=='Ovine' else fire_pixels(field,frame)
                 process.stdin.write(pixels.tobytes())
                 if args.frames:
                     seq=args.output/(mode+'-frames');seq.mkdir(exist_ok=True)
@@ -47,8 +47,9 @@ def main():
         angle=OVINE_TILT_DEGREES*3.141592653589793/180 if mode=='Ovine' else 0
         # In a front view the outside corners rise. Neutral UV master remains
         # unrotated; physical left/right warp belongs to the projection setup.
-        graph=f'[0:v]split=2[l][r];[l]rotate={angle}:fillcolor=black[lc];[r]rotate={-angle}:fillcolor=black[rc];[lc][rc]hstack=inputs=2[v]'
-        subprocess.run(['ffmpeg','-v','error','-y','-stream_loop','2','-i',str(neutral),'-t',str(FIRE_HOLD),
+        split=f'[0:v]split=3[l][r1][r2];[r1]trim=start_frame={RIGHT_PHASE_FRAMES},setpts=PTS-STARTPTS[tail];[r2]trim=end_frame={RIGHT_PHASE_FRAMES},setpts=PTS-STARTPTS[head];[tail][head]concat=n=2:v=1:a=0[r];' if mode=='Ovine' else '[0:v]split=2[l][r];'
+        graph=split+f'[l]rotate={angle}:fillcolor=black[lc];[r]rotate={-angle}:fillcolor=black[rc];[lc][rc]hstack=inputs=2[v]'
+        subprocess.run(['ffmpeg','-v','error','-y','-stream_loop','0' if mode=='Ovine' else '2','-i',str(neutral),'-t',str(FIRE_HOLD),
                         '-filter_complex',graph,'-map','[v]','-an','-c:v','libx264','-preset','slow','-crf','17',
                         '-pix_fmt','yuv420p','-movflags','+faststart',str(args.output/f'{mode}-paired-16s.mp4')],check=True)
         print('Exported',mode,flush=True)

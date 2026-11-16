@@ -15,8 +15,15 @@ PUPILS = {'Sauron': (.039, .211), 'Ovine': (.179, .052)}
 OVINE_TILT_DEGREES = 10
 STANDARD_HOLD = 8
 FIRE_HOLD = 16
-SEQUENCE = [(0,16,'Ovine'),(16,24,'Rainbow'),(24,32,'Anime'),
-            (32,48,'Sauron'),(48,56,'Otaku')]
+ARCHIVE_SEQUENCE = [(0,16,'Ovine'),(16,24,'Rainbow'),(24,32,'Anime'),
+                    (32,48,'Sauron'),(48,56,'Otaku')]
+RIPPLE_NAMES = ('Backdraft', 'Double crest', 'Rolling bloom')
+OVINE_FRAMES = FIRE_FRAMES * len(RIPPLE_NAMES)
+# Each 128-frame reference has two pulses. A quarter pulse is 16 frames,
+# not a quarter of the 384-frame, three-variation show.
+PULSE_FRAMES = FIRE_FRAMES // 2
+RIGHT_PHASE_FRAMES = PULSE_FRAMES // 4
+SEQUENCE = [(0,OVINE_FRAMES/FIRE_FPS,'Ovine')]
 CYCLE_SECONDS = SEQUENCE[-1][1]
 _GRID = np.random.default_rng(73019).random((16,16,16)).astype(np.float32)
 
@@ -68,7 +75,7 @@ def fire_field(mode,size=FIRE_SIZE,tilt=0):
                 anatomy=anatomy,fibers=fibers,fissures=fissures)
 
 
-def fire_pixels(field,frame):
+def fire_pixels(field,frame,variation=0):
     """Frame is continuous; frame+128 is exactly the same field.
 
     z = 8 d - 16 t transports texture OUTWARD; ignition fronts use the same
@@ -81,7 +88,7 @@ def fire_pixels(field,frame):
     z=8*dp-16*t
     ca,sa=np.cos(a),np.sin(a)
     curl=noise(ca*3.1+2,sa*3.1-1,z)
-    bend=(curl-.5)*.65*smooth(0,.55,dp)
+    bend=(curl-.5)*(.65,.78,.95)[variation]*smooth(0,.55,dp)
     nx=np.cos(a+bend)*5.2;ny=np.sin(a+bend)*5.2
     large=noise(nx,ny,z+curl*2)
     medium=noise(nx*2+3,ny*2-7,z*2+large)
@@ -96,6 +103,16 @@ def fire_pixels(field,frame):
     phase=(2*t-.82*dp+.08*(large-.5)+.035*np.sin(a*3))%1
     front=np.exp(-((phase-.22)/.12)**2)
     wake=np.exp(-((phase-.39)/.19)**2)
+    if variation == 1:
+        # A leading crest followed by a smaller turbulent echo, both outward.
+        phase=(phase+.025*np.sin(a*5))%1
+        front=.86*np.exp(-((phase-.19)/.09)**2)+.55*np.exp(-((phase-.39)/.075)**2)
+        wake=np.exp(-((phase-.51)/.15)**2)
+    elif variation == 2:
+        # A broader billow that folds into irregular lobes across the shell.
+        phase=(phase+.055*np.sin(a*4+large*2))%1
+        front=np.exp(-((phase-.24)/.16)**2)*(.72+.38*large)
+        wake=np.exp(-((phase-.46)/.18)**2)
     iris_mask=1-smooth(.66,.85,r)
     fibers=field['fibers']*(1-.88*field['fissures'])
     anatomy=(.18+.82*field['anatomy'])*fibers
@@ -120,3 +137,20 @@ def fire_pixels(field,frame):
     rgb*=smooth(-.004,.006,d)[...,None]
     rgb*= (1-smooth(.93,1.0,r))[...,None]
     return np.rint(np.clip(rgb,0,1)*255).astype(np.uint8)
+
+
+def ovine_pixels(field,frame):
+    """Seamless 16-second succession; preserve the approved first treatment.
+
+    Blend into the next crest shape over the final 2/3 second of each section.
+    Both fields share the same outgoing phase, including the final -> first cut.
+    """
+    position=frame % OVINE_FRAMES
+    variation=int(position // FIRE_FRAMES)
+    phase=position % FIRE_FRAMES
+    pixels=fire_pixels(field,phase,variation)
+    blend=float(smooth(FIRE_FRAMES-16,FIRE_FRAMES,phase))
+    if blend:
+        following=fire_pixels(field,phase,(variation+1)%len(RIPPLE_NAMES))
+        pixels=np.rint(pixels*(1-blend)+following*blend).astype(np.uint8)
+    return pixels

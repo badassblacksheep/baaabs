@@ -1,5 +1,5 @@
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
-import {createEyeRenderer} from './eye-renderer.js?v=3';
+import {createEyeRenderer} from './eye-renderer.js?v=4';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
 import {art,targets} from './landmarks.js?v=lord-snort';
@@ -14,7 +14,7 @@ function transform(p,n){
   return add(t,add(v,mul(add(mul(r,q[3]),cross(q,r)),2)));
 }
 async function loadEarl(){
-  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=eyes-3');
+  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=eyes-4');
   if(!response.ok)throw Error('Model download failed');
   const data=await response.arrayBuffer(), dv=new DataView(data), len=dv.getUint32(12,true);
   const doc=JSON.parse(new TextDecoder().decode(new Uint8Array(data,20,len))), offset=28+len;

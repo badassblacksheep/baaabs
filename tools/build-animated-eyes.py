@@ -12,12 +12,23 @@ import struct
 import zlib
 from infernal_eyes import (FIRE_FRAMES,FIRE_FPS,FIRE_SECONDS,FIRE_SIZE,SHELL_RADIUS,
                           PUPILS,OVINE_TILT_DEGREES,FIRE_HOLD,STANDARD_HOLD,
-                          SEQUENCE,CYCLE_SECONDS,fire_field,fire_pixels)
+                          SEQUENCE,CYCLE_SECONDS,ARCHIVE_SEQUENCE,OVINE_FRAMES,
+                          RIPPLE_NAMES,RIGHT_PHASE_FRAMES,PULSE_FRAMES,
+                          fire_field,fire_pixels,ovine_pixels)
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODES = ['Ovine', 'Rainbow', 'Anime', 'Otaku', 'Sauron']
 TAU = math.tau
-RADIUS = .282
+APERTURE_RADIUS = .277
+HEAD_SCALE = 1.15
+CAP_DEPTH = 3.5 * .0254 / HEAD_SCALE
+CAP_RADIUS = (APERTURE_RADIUS**2 + CAP_DEPTH**2)/(2*CAP_DEPTH)
+# Retain the original aperture plane and eye centers; retract only the bulge.
+RIM_Z = math.sqrt(.282**2 - APERTURE_RADIUS**2)
+
+
+def surface_z(x,y,offset=0):
+    return RIM_Z + CAP_DEPTH + math.sqrt(max(0,CAP_RADIUS**2-x*x-y*y))-CAP_RADIUS + offset*.12
 # U+005E (^) outline extracted from the installed Menlo-Bold font with CoreText.
 # A single real glyph, including its flat crown; never two overlapping strokes.
 CARET_GLYPH = [(360.83984375,729.00390625),(574.21875,457.03125),
@@ -102,7 +113,8 @@ def iris_texture(mode, size=384):
 
 
 def fire_texture(field, frame, size=FIRE_SIZE):
-    return png(fire_pixels(field,frame).tobytes(),size)
+    pixels=ovine_pixels(field,frame) if field['mode']=='Ovine' else fire_pixels(field,frame)
+    return png(pixels.tobytes(),size)
 
 
 class Model:
@@ -151,7 +163,7 @@ class Model:
 
     def node(self, name, **kwargs):
         i = len(self.doc['nodes'])
-        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'3'},**kwargs})
+        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'4'},**kwargs})
         return i
 
     def mesh(self, name, points, faces, mat, uvs=None):
@@ -168,7 +180,7 @@ class Model:
             for i in range(segments+1):
                 a = TAU*i/segments
                 x,y = center[0]+rx*rho*math.cos(a),center[1]+ry*rho*math.sin(a)
-                z = math.sqrt(max(.0001,RADIUS**2-x*x-y*y)) + offset
+                z = surface_z(x,y,offset)
                 points.append([x,y,z]); uv.append([.5+.5*rho*math.cos(a),.5-.5*rho*math.sin(a)])
         for j in range(rings):
             for i in range(segments):
@@ -182,7 +194,7 @@ class Model:
                 for j in range(1,len(polygon)-1):
                     start=len(clipped_points)
                     for x,y,u,v in [polygon[0],polygon[j],polygon[j+1]]:
-                        clipped_points.append([x,y,math.sqrt(max(.0001,RADIUS**2-x*x-y*y))+offset])
+                        clipped_points.append([x,y,surface_z(x,y,offset)])
                         clipped_uv.append([u,v])
                     clipped_faces.extend([start,start+1,start+2])
             points,uv,faces=clipped_points,clipped_uv,clipped_faces
@@ -195,7 +207,7 @@ class Model:
         verts=[];faces=[];steps=8
         def vertex(c,a,b,u,v):
             x=c[0]+(a[0]-c[0])*u+(b[0]-c[0])*v;y=c[1]+(a[1]-c[1])*u+(b[1]-c[1])*v
-            return [x,y,math.sqrt(max(.0001,RADIUS**2-x*x-y*y))+offset]
+            return [x,y,surface_z(x,y,offset)]
         triangles=triangulate(outline) if concave else [((cx,cy),a,outline[(k+1)%len(outline)]) for k,a in enumerate(outline)]
         for c,a,b in triangles:
             for i in range(steps):
@@ -251,7 +263,8 @@ def main():
     fire_materials={}
     for mode in ['Ovine','Sauron']:
         field=fire_field(mode)
-        fire_materials[mode]=[model.material(mode+'_fire_%02d'%i,[1,1,1],fire_texture(field,i)) for i in range(FIRE_FRAMES)]
+        count=OVINE_FRAMES if mode=='Ovine' else FIRE_FRAMES
+        fire_materials[mode]=[model.material(mode+'_fire_%03d'%i,[1,1,1],fire_texture(field,i)) for i in range(count)]
     rainbow_sclera=model.material('Rainbow_sclera',[.75,.65,.46])
     groups=[];fire_nodes=[];shared_fire_meshes={}
     for side,x in [('L',-.7),('R',.7)]:
@@ -270,9 +283,10 @@ def main():
                         shared_fire_meshes[(mode,frame)]=d['nodes'][node]['mesh']
                     else:
                         node=model.node(prefix+'_fire_%02d'%frame,mesh=shared_fire_meshes[(mode,frame)])
-                    d['nodes'][node]['scale']=[1,1,1] if frame==0 else [0,0,0]
-                    d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='iris_to_shell_backdraft')
-                    parts.append(node);fire_nodes.append((node,frame))
+                    shift=RIGHT_PHASE_FRAMES if side=='R' and mode=='Ovine' else 0
+                    d['nodes'][node]['scale']=[1,1,1] if frame==shift else [0,0,0]
+                    d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='iris_to_shell_backdraft',phase_frames=shift)
+                    parts.append(node);fire_nodes.append((node,frame,len(fire_materials[mode]),shift))
             elif mode=='Rainbow':
                 iris=model.cap(prefix+'_iris',.218,.218,mats[mode],.008)
                 parts.append(iris)
@@ -328,12 +342,14 @@ def main():
             group=model.node(prefix,children=children,scale=[1,1,1] if mode=='Ovine' else [0,0,0])
             roots.append(group);groups.append((mode,group,gaze,iris,spark))
         assembly=model.node('Eye_'+side+'_animated_bowl',children=roots,translation=[x,2.3120215,.453])
+        d['nodes'][assembly]['extras'].update(aperture_diameter_m=2*APERTURE_RADIUS*HEAD_SCALE,cap_depth_m=CAP_DEPTH*HEAD_SCALE,geometry='shallow_spherical_cap')
         parent['children'].append(assembly)
-    # Mischief ALWAYS lands on cute: infernal sheep -> rainbow; Sauron -> ^_^.
-    segments=SEQUENCE
-    clips=[('BAAABS | Eye cycle',CYCLE_SECONDS,None)]+[('BAAABS | '+m,FIRE_HOLD if m in ['Ovine','Sauron'] else STANDARD_HOLD,m) for m in MODES]
+    # Owner-selected solo study. Keep the former show and all individual looks.
+    segments=ARCHIVE_SEQUENCE
+    clips=[('BAAABS | Eye cycle',CYCLE_SECONDS,'Ovine'),
+           ('BAAABS | Archived five-look show',56,None)]+[('BAAABS | '+m,FIRE_HOLD if m in ['Ovine','Sauron'] else STANDARD_HOLD,m) for m in MODES]
     for clip,duration,fixed in clips:
-        times=[round(i/24,6) for i in range(duration*24+1)]
+        times=[round(i/24,6) for i in range(int(duration*24)+1)]
         for mode,group,gaze,iris,spark in groups:
             values=[];poses=[];rotations=[];sparkle=[]
             for t in times:
@@ -346,9 +362,11 @@ def main():
                 if mode in ['Ovine','Sauron'] and active==mode and not fixed:
                     blink=1
                     for edge in [16,48]:blink=min(blink,.035+.965*min(1,abs(t-edge)/.13))
+                if fixed=='Ovine':blink=1
                 pulse=1
                 values.append([pulse,blink*pulse,1] if active==mode else [0,0,0])
-                poses.append([(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
+                # The active projected ovine graphic stays on the shallow cap.
+                poses.append([0,0,.0004] if mode=='Ovine' else [(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
                 angle=TAU*t/8 if mode=='Rainbow' else 0
                 rotations.append([0,0,math.sin(angle/2),math.cos(angle/2)])
                 sparkle.append([1+ .13*math.sin(TAU*t/2)]*3)
@@ -356,15 +374,16 @@ def main():
             model.track(clip,gaze,'translation',times,poses)
             if mode=='Rainbow':model.track(clip,iris,'rotation',times,rotations)
             for node in spark:model.track(clip,node,'scale',times,sparkle)
-        for node,frame in fire_nodes:
+        for node,frame,count,shift in fire_nodes:
             total=int(duration*FIRE_FPS)
-            keys={0:[1,1,1] if frame==0 else [0,0,0],total:[1,1,1] if frame==0 else [0,0,0]}
-            for start in range(frame,total,FIRE_FRAMES):
+            keys={0:[1,1,1] if frame==shift else [0,0,0],total:[1,1,1] if frame==(total+shift)%count else [0,0,0]}
+            if frame==shift and total>1:keys[1]=[0,0,0]
+            for start in range((frame-shift)%count,total,count):
                 keys[start]=[1,1,1]
                 if start+1<total:keys[start+1]=[0,0,0]
             ticks=sorted(keys)
             model.track(clip,node,'scale',[i/FIRE_FPS for i in ticks],[keys[i] for i in ticks],'STEP')
-    d['asset'].setdefault('extras',{}).update(eye_revision='3',fire_flow='iris_to_shell_backdraft',fire_frames=FIRE_FRAMES,fire_fps=FIRE_FPS,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^' ,eye_modes=MODES,eye_cycle_seconds=CYCLE_SECONDS,eye_sequence=SEQUENCE,fire_hold_seconds=FIRE_HOLD,standard_hold_seconds=STANDARD_HOLD,ovine_cant_degrees=OVINE_TILT_DEGREES,eye_design='Convex diffusers, native glTF clips, no plugins or external textures',eye_lore='Always follow mischief with cute. Infernal effects are comedic theater and convey no malice.')
+    d['asset'].setdefault('extras',{}).update(eye_revision='4',fire_flow='iris_to_shell_backdraft',fire_frames=FIRE_FRAMES,ovine_frames=OVINE_FRAMES,fire_fps=FIRE_FPS,ovine_ripples=RIPPLE_NAMES,pulse_frames=PULSE_FRAMES,right_phase_frames=RIGHT_PHASE_FRAMES,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^',eye_modes=MODES,active_eye_modes=['Ovine'],eye_cycle_seconds=CYCLE_SECONDS,eye_sequence=SEQUENCE,archived_eye_sequence=ARCHIVE_SEQUENCE,fire_hold_seconds=FIRE_HOLD,standard_hold_seconds=STANDARD_HOLD,ovine_cant_degrees=OVINE_TILT_DEGREES,aperture_diameter_m=2*APERTURE_RADIUS*HEAD_SCALE,cap_depth_m=CAP_DEPTH*HEAD_SCALE,eye_design='Shallow spherical diffusers, native glTF clips, no plugins or external textures',eye_lore='Always follow mischief with cute. Infernal effects are comedic theater and convey no malice. Solo ovine study temporarily active by owner request; full show retained.')
     model.save(ROOT/'site/assets/models/earl-animated-eyes.glb')
 
 

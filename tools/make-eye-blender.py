@@ -10,7 +10,7 @@ bpy.ops.import_scene.gltf(filepath=str(pathlib.Path(source).resolve()))
 scene=bpy.context.scene
 scene.render.fps=24
 scene.frame_start=1
-scene.frame_end=1344
+scene.frame_end=384
 for obj in scene.objects:
     if obj.animation_data:
         obj.animation_data.action=None
@@ -38,7 +38,7 @@ scene.render.engine='CYCLES';scene.cycles.samples=24
 scene.render.resolution_x=1600;scene.render.resolution_y=1000;scene.render.resolution_percentage=100
 scene.view_settings.view_transform='Standard'
 notes=bpy.data.texts.new('READ ME · Animated eyes')
-notes.write('BAAABS animated eyes / 2026-11-16\n\nFull current iteration-06 model with embedded five-mode eye animation, revision 3. Warm Vegeta stare with bounded irises, actual ^ glyphs, and infernal iris-to-shell backdraft with ovine or Sauron pupils. Only Ovine Sauron has the mirrored 10-degree comic cant; Ovine rainbow stays level.\nPress Space to play frames 1–1344 at 24 fps (56 seconds).\nOvine Sauron 0–16s; Ovine rainbow 16–24s; Vegeta 24–32s; Sauron 32–48s; Otaku 48–56s. Always follow mischief with cute; infernal effects must be comedic and convey no malice.\nThe active NLA tracks are Eye cycle. Individual expression tracks are also retained, muted.\nThis is an importable/renderable derivative of the current GLB, with packed textures.\nThe unchanged authoring master remains a separate provenance reference.\nPhysical projector/diffuser engineering is not specified by these visual-effect meshes.\n')
+notes.write('BAAABS animated eyes / revision 4\n\nCurrent iteration-06 model, shallow spherical eye caps about 25 inches across and 3.5 inches deep.\nPress Space for frames 1-384 at 24 fps (16 seconds). Ovine Sauron only: Backdraft, Double crest, Rolling bloom. Right eye leads by 16 frames, one quarter of the 64-frame pulse. Only ovine Sauron has the comic 10-degree cant.\nEye cycle is the active NLA track. Individual expressions and the archived 56-second five-look show remain embedded, muted. These are animation studies; production projection requires physical lens, diffuser and warp calibration.\nBAAABS always follows mischief with cute. Infernal effects are comedic and convey no malice. The solo study is the owner-selected temporary active look.\n')
 for screen in bpy.data.screens:
     for area in screen.areas:
         if area.type=='VIEW_3D':

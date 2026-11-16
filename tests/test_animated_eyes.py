@@ -48,7 +48,7 @@ class Eyes(unittest.TestCase):
             self.assertTrue(any(self.doc['nodes'][i]['name']==f'Eye_{side}_animated_bowl' for i in visited))
 
     def test_all_clips_select_correct_eye_on_both_sides(self):
-        clips=self.doc['animations'];self.assertEqual(len(clips),6)
+        clips=self.doc['animations'];self.assertEqual(len(clips),7)
         for clip in clips:
             active_by_side={s:[] for s in ['L','R']}
             for c in clip['channels']:
@@ -61,20 +61,20 @@ class Eyes(unittest.TestCase):
                 for i in range(len(tracks[0][1])):
                     enabled=[name for name,vals in tracks if vals[i][0]>.01]
                     self.assertEqual(len(enabled),1,(clip['name'],side,i,enabled))
-                    if 'Eye cycle' not in clip['name']:self.assertEqual(enabled[0],clip['name'].split(' | ')[1])
-            if 'Eye cycle' in clip['name']:
+                    if 'Archived' not in clip['name']:self.assertEqual(enabled[0],'Ovine' if 'Eye cycle' in clip['name'] else clip['name'].split(' | ')[1])
+            if 'Archived' in clip['name']:
                 for second,expected in [(0,'Ovine'),(15,'Ovine'),(16,'Rainbow'),(23,'Rainbow'),(24,'Anime'),(31,'Anime'),(32,'Sauron'),(47,'Sauron'),(48,'Otaku'),(55,'Otaku')]:
                     self.assertEqual([n for n,v in active_by_side['L'] if v[second*24][0]>.01],[expected])
                 self.assertEqual(times[-1][0],56)
 
     def test_requested_holds_and_comedic_successors(self):
         expected=[(0,16,'Ovine'),(16,24,'Rainbow'),(24,32,'Anime'),(32,48,'Sauron'),(48,56,'Otaku')]
-        self.assertEqual(self.doc['asset']['extras']['eye_sequence'],[list(row) for row in expected])
+        self.assertEqual(self.doc['asset']['extras']['archived_eye_sequence'],[list(row) for row in expected])
         for clip in self.doc['animations']:
             duration=max(self.values(s['input'])[-1][0] for s in clip['samplers'])
             mode=clip['name'].split(' | ')[1]
-            self.assertEqual(duration,56 if mode=='Eye cycle' else 16 if mode in ['Ovine','Sauron'] else 8)
-        cycle=next(c for c in self.doc['animations'] if c['name'].endswith('Eye cycle'))
+            self.assertEqual(duration,56 if mode=='Archived five-look show' else 16 if mode in ['Eye cycle','Ovine','Sauron'] else 8)
+        cycle=next(c for c in self.doc['animations'] if c['name'].endswith('Archived five-look show'))
         for mode,seconds in [('Ovine',16),('Rainbow',8),('Anime',8),('Sauron',16),('Otaku',8)]:
             channel=next(c for c in cycle['channels'] if self.doc['nodes'][c['target']['node']]['name']==f'Eye_L_{mode}' and c['target']['path']=='scale')
             values=self.values(cycle['samplers'][channel['sampler']]['output'])
@@ -93,6 +93,52 @@ class Eyes(unittest.TestCase):
             rainbow=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_Rainbow')
             self.assertNotIn('rotation',rainbow)
             self.assertIn(f'Eye_{side}_Rainbow_gaze',[self.doc['nodes'][i]['name'] for i in rainbow['children']])
+
+    def test_shallow_spherical_cap_dimensions(self):
+        head=next(n for n in self.doc['nodes'] if n['name']=='SHEEP_HEAD')
+        scale=head['scale'][0]
+        for side in ['L','R']:
+            bowl=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_animated_bowl')
+            n=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_Ovine_dome')
+            points=self.values(self.doc['meshes'][n['mesh']]['primitives'][0]['attributes']['POSITION'])
+            xs,ys,zs=zip(*points)
+            self.assertAlmostEqual((max(xs)-min(xs))*scale,.6371,places=6)
+            self.assertAlmostEqual((max(zs)-min(zs))*scale,.0889,places=6)
+            # All sampled vertices lie on one sphere, not an oblate ellipsoid.
+            h=.0889/scale;a=.6371/scale/2;radius=(a*a+h*h)/(2*h)
+            center=max(zs)-radius
+            for x,y,z in points:
+                self.assertAlmostEqual(x*x+y*y+(z-center)**2,radius**2,places=6)
+            self.assertEqual(bowl['extras']['geometry'],'shallow_spherical_cap')
+
+    def test_right_eye_leads_by_quarter_pulse_over_entire_solo_loop(self):
+        clip=next(c for c in self.doc['animations'] if c['name'].endswith('Eye cycle'))
+        tracks={'L':[],'R':[]}
+        for c in clip['channels']:
+            n=self.doc['nodes'][c['target']['node']]
+            if '_Ovine_fire_' not in n['name']:continue
+            sampler=clip['samplers'][c['sampler']]
+            tracks[n['name'].split('_')[1]].append((n['extras']['fire_frame'],[t[0] for t in self.values(sampler['input'])],self.values(sampler['output'])))
+        for tick in range(384):
+            active={side:[frame for frame,ts,vs in frames if vs[bisect.bisect_right(ts,(tick+.25)/24)-1][0]>.5] for side,frames in tracks.items()}
+            self.assertEqual(active['L'],[tick])
+            self.assertEqual(active['R'],[(tick+16)%384])
+        self.assertEqual(self.doc['asset']['extras']['active_eye_modes'],['Ovine'])
+
+    def test_ripple_variations_are_distinct_and_transition_continuously(self):
+        import sys
+        sys.path.insert(0,str(ROOT/'tools'))
+        import numpy as np
+        from infernal_eyes import fire_field,fire_pixels,ovine_pixels
+        field=fire_field('Ovine',64)
+        first=fire_pixels(field,40,0).astype(float)
+        for variation in [1,2]:
+            self.assertGreater(np.abs(first-fire_pixels(field,40,variation)).mean(),1)
+        for boundary in [128,256,384]:
+            before=ovine_pixels(field,boundary-.001).astype(float)
+            after=ovine_pixels(field,boundary).astype(float)
+            self.assertLess(np.abs(before-after).mean(),.1)
+        self.assertTrue(np.array_equal(ovine_pixels(field,0),ovine_pixels(field,384)))
 
     def test_textures_embedded_and_rainbow_pupil_not_rotated(self):
         names=[self.doc['nodes'][c['target']['node']]['name'] for a in self.doc['animations'] for c in a['channels'] if c['target']['path']=='rotation']
@@ -143,8 +189,8 @@ class Eyes(unittest.TestCase):
                 vs=self.values(sampler['output'])
                 tracks.setdefault(n['name'].rsplit('_',1)[0],[]).append((ts,vs))
             self.assertEqual(len(tracks),4)
-            for frames in tracks.values():
-                self.assertEqual(len(frames),128)
+            for name,frames in tracks.items():
+                self.assertEqual(len(frames),384 if 'Ovine' in name else 128)
                 duration=max(ts[-1] for ts,_ in frames)
                 for i in range(int(duration*32)+1):
                     t=i/32
@@ -170,7 +216,7 @@ class Eyes(unittest.TestCase):
                 self.assertEqual(row[0],0)
                 self.assertTrue(all(row[i]>=row[i+1]>=row[i+2] for i in range(1,len(row),3)))
             frames.setdefault(image['name'].split('_fire_')[0],set()).add(data)
-        self.assertEqual({key:len(value) for key,value in frames.items()},{'Ovine':128,'Sauron':128})
+        self.assertEqual({key:len(value) for key,value in frames.items()},{'Ovine':384,'Sauron':128})
 
 
 if __name__=='__main__':unittest.main()
