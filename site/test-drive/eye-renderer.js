@@ -64,9 +64,10 @@ export async function createEyeRenderer(gl, doc, data, binOffset) {
   }
   const clip=doc.animations?.find(a=>a.name==='BAAABS | Eye cycle');
   const channels=(clip?.channels||[]).map(c=>{const s=clip.samplers[c.sampler];return {...c.target,interpolation:s.interpolation||'LINEAR',times:read(s.input),values:read(s.output),width:doc.accessors[s.output].type==='VEC4'?4:3};});
+  const duration=Math.max(1,...channels.map(c=>c.times[c.times.length-1]));
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   return function drawEyes(camera,origin,angle,time) {
-    const at=reduced.matches?0:time%36,animated=new Map(),world=new Map();
+    const at=reduced.matches?0:time%duration,animated=new Map(),world=new Map();
     for(const c of channels) {
       let lo=0,hi=c.times.length-1;
       while(lo+1<hi){const mid=(lo+hi)>>1;if(c.times[mid]<=at)lo=mid;else hi=mid;}

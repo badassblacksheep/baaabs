@@ -42,6 +42,7 @@ jobs:
           git diff --exit-code -- site/assets/interior-support-study.json
       - name: Build and verify animated eye model
         run: |
+          python3 -m pip install "numpy>=2.0,<3"
           python3 tools/build-animated-eyes.py
           python3 -m unittest discover -s tests -p 'test_animated_eyes.py'
       - name: Check structural report and workshop revision

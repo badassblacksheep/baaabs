@@ -1,5 +1,6 @@
 import json
 import bisect
+import math
 import pathlib
 import struct
 import unittest
@@ -62,9 +63,36 @@ class Eyes(unittest.TestCase):
                     self.assertEqual(len(enabled),1,(clip['name'],side,i,enabled))
                     if 'Eye cycle' not in clip['name']:self.assertEqual(enabled[0],clip['name'].split(' | ')[1])
             if 'Eye cycle' in clip['name']:
-                for second,expected in [(0,'Ovine'),(8,'Rainbow'),(15,'Anime'),(22,'Otaku'),(29,'Sauron'),(32,'Otaku')]:
+                for second,expected in [(0,'Ovine'),(15,'Ovine'),(16,'Rainbow'),(23,'Rainbow'),(24,'Anime'),(31,'Anime'),(32,'Sauron'),(47,'Sauron'),(48,'Otaku'),(55,'Otaku')]:
                     self.assertEqual([n for n,v in active_by_side['L'] if v[second*24][0]>.01],[expected])
-                self.assertEqual(times[-1][0],36)
+                self.assertEqual(times[-1][0],56)
+
+    def test_requested_holds_and_comedic_successors(self):
+        expected=[(0,16,'Ovine'),(16,24,'Rainbow'),(24,32,'Anime'),(32,48,'Sauron'),(48,56,'Otaku')]
+        self.assertEqual(self.doc['asset']['extras']['eye_sequence'],[list(row) for row in expected])
+        for clip in self.doc['animations']:
+            duration=max(self.values(s['input'])[-1][0] for s in clip['samplers'])
+            mode=clip['name'].split(' | ')[1]
+            self.assertEqual(duration,56 if mode=='Eye cycle' else 16 if mode in ['Ovine','Sauron'] else 8)
+        cycle=next(c for c in self.doc['animations'] if c['name'].endswith('Eye cycle'))
+        for mode,seconds in [('Ovine',16),('Rainbow',8),('Anime',8),('Sauron',16),('Otaku',8)]:
+            channel=next(c for c in cycle['channels'] if self.doc['nodes'][c['target']['node']]['name']==f'Eye_L_{mode}' and c['target']['path']=='scale')
+            values=self.values(cycle['samplers'][channel['sampler']]['output'])
+            self.assertEqual(sum(v[0]>.01 for v in values[:-1]),seconds*24)
+
+    def test_only_ovine_sauron_has_the_comic_cant(self):
+        for side,angle,x in [('L',-10,-.7),('R',10,.7)]:
+            bowl=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_animated_bowl')
+            self.assertEqual(bowl['translation'],[x,2.3120215,.453])
+            for mode in ['Ovine']:
+                tilt=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_{mode}_outward_cant')
+                self.assertAlmostEqual(math.degrees(2*math.atan2(tilt['rotation'][2],tilt['rotation'][3])),angle)
+                self.assertEqual([self.doc['nodes'][i]['name'] for i in tilt['children']],[f'Eye_{side}_{mode}_gaze'])
+
+            self.assertFalse(any(n['name']==f'Eye_{side}_Rainbow_outward_cant' for n in self.doc['nodes']))
+            rainbow=next(n for n in self.doc['nodes'] if n['name']==f'Eye_{side}_Rainbow')
+            self.assertNotIn('rotation',rainbow)
+            self.assertIn(f'Eye_{side}_Rainbow_gaze',[self.doc['nodes'][i]['name'] for i in rainbow['children']])
 
     def test_textures_embedded_and_rainbow_pupil_not_rotated(self):
         names=[self.doc['nodes'][c['target']['node']]['name'] for a in self.doc['animations'] for c in a['channels'] if c['target']['path']=='rotation']
@@ -116,7 +144,7 @@ class Eyes(unittest.TestCase):
                 tracks.setdefault(n['name'].rsplit('_',1)[0],[]).append((ts,vs))
             self.assertEqual(len(tracks),4)
             for frames in tracks.values():
-                self.assertEqual(len(frames),32)
+                self.assertEqual(len(frames),128)
                 duration=max(ts[-1] for ts,_ in frames)
                 for i in range(int(duration*32)+1):
                     t=i/32
@@ -142,7 +170,7 @@ class Eyes(unittest.TestCase):
                 self.assertEqual(row[0],0)
                 self.assertTrue(all(row[i]>=row[i+1]>=row[i+2] for i in range(1,len(row),3)))
             frames.setdefault(image['name'].split('_fire_')[0],set()).add(data)
-        self.assertEqual({key:len(value) for key,value in frames.items()},{'Ovine':32,'Sauron':32})
+        self.assertEqual({key:len(value) for key,value in frames.items()},{'Ovine':128,'Sauron':128})
 
 
 if __name__=='__main__':unittest.main()

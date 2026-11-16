@@ -2,8 +2,8 @@
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const names = {cycle:'Eye cycle',ovine:'Ovine',rainbow:'Rainbow',anime:'Anime',otaku:'Otaku',sauron:'Sauron'};
-  const labels = {ovine:'Ovine fire · horizontal pupils',rainbow:'RGB rainbow · sheep pupils',anime:'Vegeta · warm, angular stare',otaku:'Otaku · ^_^',sauron:'Sauron · outward-flowing fire'};
-  const sequence = [[7,'ovine'],[14,'rainbow'],[21,'anime'],[28,'otaku'],[31,'sauron'],[36,'otaku']];
+  const labels = {ovine:'Ovine Sauron · 16 seconds of mischief',rainbow:'Ovine rainbow · 8 seconds of cute',anime:'Vegeta · warm, angular stare',otaku:'Otaku · ^_^',sauron:'Sauron · 16 seconds of mischief'};
+  const sequence = [[16,'ovine'],[24,'rainbow'],[32,'anime'],[48,'sauron'],[56,'otaku']];
   for (const viewer of document.querySelectorAll('model-viewer[data-animated-eyes]')) {
     const controls = document.querySelector(`[data-eye-controls="${viewer.id}"]`);
     const select = controls?.querySelector('[data-eye-mode]');
@@ -26,7 +26,7 @@
       updateStatus();
     }
     function updateStatus() {
-      const current = mode === 'cycle' ? sequence.find(([end])=>viewer.currentTime%36<end)?.[1] || 'ovine' : mode;
+      const current = mode === 'cycle' ? sequence.find(([end])=>viewer.currentTime%56<end)?.[1] || 'ovine' : mode;
       if (status && status.textContent !== labels[current]) status.textContent = labels[current];
       viewer.dataset.eyeMode = current;
     }

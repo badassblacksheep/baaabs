@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Add portable, textured dome eyes and native glTF animation to Earl.
 
-Stdlib only. The body, panel register and structural source geometry are untouched.
+Requires NumPy for the reproducible fire bake. Body and panel geometry are untouched.
 Run before bake-structural06.mjs. Textures, meshes and clips are embedded in the GLB.
 """
 import colorsys
@@ -10,14 +10,14 @@ import math
 import pathlib
 import struct
 import zlib
+from infernal_eyes import (FIRE_FRAMES,FIRE_FPS,FIRE_SECONDS,FIRE_SIZE,SHELL_RADIUS,
+                          PUPILS,OVINE_TILT_DEGREES,FIRE_HOLD,STANDARD_HOLD,
+                          SEQUENCE,CYCLE_SECONDS,fire_field,fire_pixels)
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODES = ['Ovine', 'Rainbow', 'Anime', 'Otaku', 'Sauron']
 TAU = math.tau
 RADIUS = .282
-FIRE_FRAMES = 32
-FIRE_FPS = 16
-FIRE_SECONDS = FIRE_FRAMES / FIRE_FPS
 # U+005E (^) outline extracted from the installed Menlo-Bold font with CoreText.
 # A single real glyph, including its flat crown; never two overlapping strokes.
 CARET_GLYPH = [(360.83984375,729.00390625),(574.21875,457.03125),
@@ -101,60 +101,8 @@ def iris_texture(mode, size=384):
     return png(bytes(pixels), size)
 
 
-def pupil_radius(mode, angle):
-    """Ray intersection with the actual pupil silhouette, in head-local meters."""
-    c,s=abs(math.cos(angle)),abs(math.sin(angle))
-    if mode=='Ovine':
-        p=2/.52
-        return ((c/.179)**p+(s/.052)**p)**(-1/p)
-    lo,hi=0,.24
-    for _ in range(22):
-        r=(lo+hi)/2
-        if (r*c/.031)**(2/3)+(r*s/.232)**2>1:hi=r
-        else:lo=r
-    return (lo+hi)/2
-
-
-def fire_field(mode, size=256):
-    """Precompute distance outward from each pupil boundary, not from its center."""
-    rx,ry=(.269,.269) if mode=='Ovine' else (.269,.253)
-    rays=[pupil_radius(mode,TAU*i/4096) for i in range(4096)]
-    field=[]
-    for y in range(size):
-        for x in range(size):
-            px,py=((x+.5)*2/size-1)*rx,(1-(y+.5)*2/size)*ry
-            r,a=math.hypot(px,py),math.atan2(py,px)
-            rp=rays[round((a%TAU)/TAU*4096)%4096]
-            outer=1/math.hypot(math.cos(a)/rx,math.sin(a)/ry)
-            d=max(0,(r-rp)/max(.01,outer-rp))
-            field.append((d,a))
-    return field
-
-
-def fire_texture(field, frame, size=256):
-    """Looping turbulence advected in +d: tongues travel pupil -> outer rim.
-
-    Every radial term is f(d - velocity*t). Frame changes are native STEP clips,
-    so this outward-flow animation also survives GLB download and Blender import.
-    """
-    pixels=bytearray();time=frame/FIRE_FRAMES
-    for d,a in field:
-        u=TAU*(2*d-time)
-        # Long, branching tongues, with fine filaments riding on the same flow.
-        bend=.34*math.sin(u+5*a)+.15*math.sin(2*u-9*a)
-        noise=.5+.24*math.sin(17*a+1.9*math.sin(5*a)+u+bend)+.16*math.sin(39*a-2*u+2*bend)+.1*math.sin(83*a+3*u)
-        filament=max(0,math.sin(57*a+u*2+4*bend))**8
-        tongue=max(0,(noise-.30)/.7)**1.15
-        reach=.76+.14*math.sin(13*a+u)+.07*math.sin(29*a-u*2)
-        fade=max(0,min(1,(reach-d)*9))
-        heat=min(1, .88*math.exp(-d*7)+(.20+.76*tongue+.22*filament)*fade)
-        heat*=max(0,min(1,(1.02-d)*18))
-        # Incandescent cream -> gold -> orange -> ember red -> warm black.
-        red=min(1,heat*3.3)
-        green=max(0,min(1,(heat-.19)*1.65))
-        blue=max(0,min(.78,(heat-.64)*2.3))
-        pixels.extend(round(255*c) for c in (red,green,blue))
-    return png(bytes(pixels),size)
+def fire_texture(field, frame, size=FIRE_SIZE):
+    return png(fire_pixels(field,frame).tobytes(),size)
 
 
 class Model:
@@ -203,7 +151,7 @@ class Model:
 
     def node(self, name, **kwargs):
         i = len(self.doc['nodes'])
-        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'2'},**kwargs})
+        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'3'},**kwargs})
         return i
 
     def mesh(self, name, points, faces, mat, uvs=None):
@@ -315,7 +263,7 @@ def main():
             sclera=model.cap(prefix+'_dome',.277,.277,rainbow_sclera if mode=='Rainbow' else warmdark)
             iris=None;parts=[];fixed=[];spark=[]
             if mode in ['Ovine','Sauron']:
-                rx,ry=(.269,.269) if mode=='Ovine' else (.269,.253)
+                rx=ry=SHELL_RADIUS
                 for frame,material in enumerate(fire_materials[mode]):
                     if (mode,frame) not in shared_fire_meshes:
                         node=model.cap(prefix+'_fire_%02d'%frame,rx,ry,material,.008)
@@ -323,7 +271,7 @@ def main():
                     else:
                         node=model.node(prefix+'_fire_%02d'%frame,mesh=shared_fire_meshes[(mode,frame)])
                     d['nodes'][node]['scale']=[1,1,1] if frame==0 else [0,0,0]
-                    d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='pupil_outward')
+                    d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='iris_to_shell_backdraft')
                     parts.append(node);fire_nodes.append((node,frame))
             elif mode=='Rainbow':
                 iris=model.cap(prefix+'_iris',.218,.218,mats[mode],.008)
@@ -335,7 +283,7 @@ def main():
                     outline.append((.179*math.copysign(abs(c)**.52,c),.052*math.copysign(abs(sn)**.52,sn)))
                 parts.append(model.shape(prefix+'_horizontal_pupil',outline,black if mode=='Rainbow' else warmblack,.018 if mode=='Rainbow' else .022))
             elif mode=='Sauron':
-                outline=[(.031*math.sin(TAU*i/80)**3,.232*math.cos(TAU*i/80)) for i in range(80)]
+                outline=[(PUPILS[mode][0]*math.copysign(math.sin(TAU*i/80)**2,math.sin(TAU*i/80)),PUPILS[mode][1]*math.cos(TAU*i/80)) for i in range(80)]
                 parts.append(model.shape(prefix+'_vertical_slit',outline,warmblack,.022))
             elif mode=='Anime':
                 # Narrow angular Vegeta stare; the two inner brows point at the nose.
@@ -371,13 +319,19 @@ def main():
                 parts.append(model.cap(prefix+'_soft_highlight',.044,.061,white,.025,(-.079,.105),5,32))
                 parts.append(model.cap(prefix+'_small_highlight',.018,.025,white,.025,(.094,-.097),4,24))
             gaze=model.node(prefix+'_gaze',children=parts)
-            group=model.node(prefix,children=[sclera,*fixed,gaze],scale=[1,1,1] if mode=='Ovine' else [0,0,0])
+            children=[sclera,*fixed,gaze]
+            if mode=='Ovine':
+                angle=math.radians(-inward*OVINE_TILT_DEGREES)
+                graphic=model.node(prefix+'_outward_cant',children=[gaze],rotation=[0,0,math.sin(angle/2),math.cos(angle/2)])
+                d['nodes'][graphic]['extras']['outward_cant_degrees']=-inward*OVINE_TILT_DEGREES
+                children=[sclera,*fixed,graphic]
+            group=model.node(prefix,children=children,scale=[1,1,1] if mode=='Ovine' else [0,0,0])
             roots.append(group);groups.append((mode,group,gaze,iris,spark))
         assembly=model.node('Eye_'+side+'_animated_bowl',children=roots,translation=[x,2.3120215,.453])
         parent['children'].append(assembly)
-    # A 36-second show. The evil reveal is brief and returns directly to ^_^.
-    segments=[(0,7,'Ovine'),(7,14,'Rainbow'),(14,21,'Anime'),(21,28,'Otaku'),(28,31,'Sauron'),(31,36,'Otaku')]
-    clips=[('BAAABS | Eye cycle',36,None)]+[('BAAABS | '+m,8,m) for m in MODES]
+    # Mischief ALWAYS lands on cute: infernal sheep -> rainbow; Sauron -> ^_^.
+    segments=SEQUENCE
+    clips=[('BAAABS | Eye cycle',CYCLE_SECONDS,None)]+[('BAAABS | '+m,FIRE_HOLD if m in ['Ovine','Sauron'] else STANDARD_HOLD,m) for m in MODES]
     for clip,duration,fixed in clips:
         times=[round(i/24,6) for i in range(duration*24+1)]
         for mode,group,gaze,iris,spark in groups:
@@ -386,8 +340,12 @@ def main():
                 phase=t%duration
                 active=fixed or next(m for a,b,m in segments if a<=phase<b)
                 blink=1
-                for b in ([2.6,5.7] if fixed else [2.6,7,10.3,14,17.6,21,24.3,28,31,34.0,35.5]):
+                for b in ([2.6,5.7,10.4,13.2] if fixed else [5.7,12.4,16,19.3,24,27.6,32,38.2,44.5,48,51.3,55.8]):
                     blink=min(blink,.035+.965*min(1,abs(t-b)/.13))
+                # Fire reads as theater; a full blink reveals the cute successor.
+                if mode in ['Ovine','Sauron'] and active==mode and not fixed:
+                    blink=1
+                    for edge in [16,48]:blink=min(blink,.035+.965*min(1,abs(t-edge)/.13))
                 pulse=1
                 values.append([pulse,blink*pulse,1] if active==mode else [0,0,0])
                 poses.append([(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
@@ -399,14 +357,14 @@ def main():
             if mode=='Rainbow':model.track(clip,iris,'rotation',times,rotations)
             for node in spark:model.track(clip,node,'scale',times,sparkle)
         for node,frame in fire_nodes:
-            keys={0:[1,1,1] if frame==0 else [0,0,0],duration:[1,1,1] if frame==0 else [0,0,0]}
-            for loop in range(math.ceil(duration/FIRE_SECONDS)):
-                start=loop*FIRE_SECONDS+frame/FIRE_FPS;end=start+1/FIRE_FPS
-                if start<duration:keys[start]=[1,1,1]
-                if end<duration:keys[end]=[0,0,0]
-            ts=sorted(keys)
-            model.track(clip,node,'scale',ts,[keys[t] for t in ts],'STEP')
-    d['asset'].setdefault('extras',{}).update(eye_revision='2',fire_flow='pupil_outward',fire_frames=FIRE_FRAMES,fire_fps=FIRE_FPS,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^' ,eye_modes=MODES,eye_cycle_seconds=36,eye_design='Convex diffusers, native glTF clips, no plugins or external textures',eye_lore='Occasionally reveal ancient evil; immediately pretend nothing happened.')
+            total=int(duration*FIRE_FPS)
+            keys={0:[1,1,1] if frame==0 else [0,0,0],total:[1,1,1] if frame==0 else [0,0,0]}
+            for start in range(frame,total,FIRE_FRAMES):
+                keys[start]=[1,1,1]
+                if start+1<total:keys[start+1]=[0,0,0]
+            ticks=sorted(keys)
+            model.track(clip,node,'scale',[i/FIRE_FPS for i in ticks],[keys[i] for i in ticks],'STEP')
+    d['asset'].setdefault('extras',{}).update(eye_revision='3',fire_flow='iris_to_shell_backdraft',fire_frames=FIRE_FRAMES,fire_fps=FIRE_FPS,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^' ,eye_modes=MODES,eye_cycle_seconds=CYCLE_SECONDS,eye_sequence=SEQUENCE,fire_hold_seconds=FIRE_HOLD,standard_hold_seconds=STANDARD_HOLD,ovine_cant_degrees=OVINE_TILT_DEGREES,eye_design='Convex diffusers, native glTF clips, no plugins or external textures',eye_lore='Always follow mischief with cute. Infernal effects are comedic theater and convey no malice.')
     model.save(ROOT/'site/assets/models/earl-animated-eyes.glb')
 
 
