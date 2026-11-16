@@ -4,8 +4,8 @@
 
 The infernal look is a comic costume. BAAABS briefly reveals something absurdly
 powerful, blinks, and looks innocent. Preserve the visual intensity and the
-friendly emotional payoff. The owner approved this revision's fire treatment
-on 16 November 2026. Live model: https://baaabs.org/eyes.html
+friendly emotional payoff. The owner approved the underlying Backdraft fire treatment
+on 16 November 2026; revision 4 adds two related ripple variations. Live model: https://baaabs.org/eyes.html
 
 ## Active study: shallow bowls, ovine Sauron only
 
