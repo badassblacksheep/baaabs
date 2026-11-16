@@ -4,9 +4,9 @@ import path from 'node:path';
 import vm from 'node:vm';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const raw=fs.readFileSync(root+'/site/assets/models/earl-roof-attachment-study.glb');
+const raw=fs.readFileSync(root+'/site/assets/models/earl-animated-eyes.glb');
 const config=JSON.parse(fs.readFileSync(root+'/site/assets/structural-models-06.json','utf8'));
-const viewer={dataset:{rearFrameSrc:'assets/models/earl-roof-attachment-study.glb'},addEventListener(){}};
+const viewer={dataset:{rearFrameSrc:'assets/models/earl-animated-eyes.glb'},addEventListener(){}};
 let result;
 class BakeURL extends URL{static createObjectURL(blob){result=blob;return 'blob:baked';}}
 vm.runInNewContext(fs.readFileSync(root+'/site/assets/structural-preview-06.js','utf8'),{

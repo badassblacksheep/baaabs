@@ -46,7 +46,7 @@
    const group=groupOf(material);if(!inputs[group])continue;
    const pbr=material.pbrMetallicRoughness;
    if(!originals.has(material))originals.set(material,{
-    color:[...pbr.baseColorFactor],emissive:[...material.emissiveFactor],alpha:material.getAlphaMode(),
+    color:[...pbr.baseColorFactor],emissive:material.name.startsWith('Workshop_equipment_Eye_')?null:[...material.emissiveFactor],alpha:material.getAlphaMode(),
     metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
    });
    const base=originals.get(material),visible=window.workshopMaterialVisible(material);
@@ -58,7 +58,7 @@
    }
    material.setAlphaMode(visible?base.alpha:'BLEND');
    pbr.setBaseColorFactor(visible?color:[...color.slice(0,3),0]);
-   material.setEmissiveFactor(visible?base.emissive:[0,0,0]);
+   if(base.emissive)material.setEmissiveFactor(visible?base.emissive:[0,0,0]);
   }
   document.querySelector('.model-stage').classList.toggle('panels-hidden',!inputs.panels.checked);
   paintHighlights();

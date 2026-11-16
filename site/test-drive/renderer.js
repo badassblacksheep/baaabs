@@ -1,4 +1,5 @@
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
+import {createEyeRenderer} from './eye-renderer.js?v=1';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
 import {art,targets} from './landmarks.js?v=lord-snort';
@@ -13,7 +14,7 @@ function transform(p,n){
   return add(t,add(v,mul(add(mul(r,q[3]),cross(q,r)),2)));
 }
 async function loadEarl(){
-  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=1');
+  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=eyes-1');
   if(!response.ok)throw Error('Model download failed');
   const data=await response.arrayBuffer(), dv=new DataView(data), len=dv.getUint32(12,true);
   const doc=JSON.parse(new TextDecoder().decode(new Uint8Array(data,20,len))), offset=28+len;
@@ -25,6 +26,7 @@ async function loadEarl(){
   function visit(id,parents){
     const n=doc.nodes[id], chain=[n,...parents];
     for(const prim of doc.meshes[n.mesh]?.primitives||[]){
+      if(n.extras?.eye_revision)continue;
       const pos=accessor(prim.attributes.POSITION), idx=accessor(prim.indices), mat=doc.materials[prim.material];
       const points=[];
       for(let i=0;i<pos.length;i+=3)points.push(chain.reduce(transform,Array.from(pos.subarray(i,i+3))));
@@ -42,7 +44,7 @@ async function loadEarl(){
     for(const child of n.children||[])visit(child,chain);
   }
   for(const id of doc.scenes[doc.scene].nodes)visit(id,[]);
-  return {model,outlets};
+  return {model,outlets,eyeAsset:{doc,data,offset}};
 }
 function passengers(cheering){
   const people=new Geometry();
@@ -116,7 +118,8 @@ export async function createRenderer(canvas){
   const ground=program(skyVert,skyFrag),solid=program(vertex,frag);
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
-  const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadEarl(),bus=buffer(model);
+  const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets,eyeAsset}=await loadEarl(),bus=buffer(model);
+  const drawEyes=await createEyeRenderer(gl,eyeAsset.doc,eyeAsset.data,eyeAsset.offset);
   const robotBus=buffer(robotHeart());
   const snort=lordSnort(), shaft=buffer(snort.base), boar=buffer(snort.boar);
   const installation=eventHorizon({separateLights:true}), lights=buffer(installation.lights), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
@@ -189,6 +192,8 @@ export async function createRenderer(canvas){
       object(arrow,[zone.x,.12,zone.z],zone.angle);
     }
     object(shadow,base,rot);object(bus,base,rot);
+    drawEyes({eye,side,up,look,focal:2.25,aspect:w/h,shift:intro&&!portrait?.38:0},base,rot,time);
+    gl.useProgram(solid);
     const jumping=state.cheer>0;
     object(jumping?dancers:riders,[state.x,jumping?.70*Math.abs(Math.sin(10*state.cheer)):0,state.z],rot);
     if(state.drop>0){

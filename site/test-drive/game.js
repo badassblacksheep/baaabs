@@ -1,6 +1,6 @@
 import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js';
 import {createClockMap} from './city-clock.js';
-import {createRenderer,zoneRadius} from './renderer.js?v=structure06';
+import {createRenderer,zoneRadius} from './renderer.js?v=eyes-1';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
 import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);
