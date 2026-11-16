@@ -1,7 +1,9 @@
 import json
+import bisect
 import pathlib
 import struct
 import unittest
+import zlib
 
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 
@@ -60,7 +62,7 @@ class Eyes(unittest.TestCase):
                     self.assertEqual(len(enabled),1,(clip['name'],side,i,enabled))
                     if 'Eye cycle' not in clip['name']:self.assertEqual(enabled[0],clip['name'].split(' | ')[1])
             if 'Eye cycle' in clip['name']:
-                for second,expected in [(0,'Ovine'),(8,'Rainbow'),(15,'Anime'),(22,'Otaku'),(29,'Sauron'),(32,'Anime')]:
+                for second,expected in [(0,'Ovine'),(8,'Rainbow'),(15,'Anime'),(22,'Otaku'),(29,'Sauron'),(32,'Otaku')]:
                     self.assertEqual([n for n,v in active_by_side['L'] if v[second*24][0]>.01],[expected])
                 self.assertEqual(times[-1][0],36)
 
@@ -75,6 +77,72 @@ class Eyes(unittest.TestCase):
             if tex:
                 image=self.doc['images'][self.doc['textures'][tex['index']]['source']]
                 self.assertIn('bufferView',image);self.assertNotIn('uri',image)
+
+    def test_vegeta_iris_stays_inside_whites_for_entire_gaze(self):
+        for side in ['L','R']:
+            prefix=f'Eye_{side}_Anime'
+            white=next(n for n in self.doc['nodes'] if n['name']==prefix+'_angular_sclera')
+            aperture=white['extras']['eye_aperture']
+            area=sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(aperture,aperture[1:]+aperture[:1]))
+            sign=1 if area>0 else -1
+            # Checking the four corners proves containment for the whole gaze
+            # rectangle and every linear interpolation, including during blinks.
+            for suffix in ['_iris','_small_pupil','_catchlight']:
+                node=next(n for n in self.doc['nodes'] if n['name']==prefix+suffix)
+                prim=self.doc['meshes'][node['mesh']]['primitives'][0]
+                for x,y,_ in self.values(prim['attributes']['POSITION']):
+                    for gx,gy in [(-.003,-.002),(-.003,.002),(.003,-.002),(.003,.002)]:
+                        for a,b in zip(aperture,aperture[1:]+aperture[:1]):
+                            distance=sign*((b[0]-a[0])*(y+gy-a[1])-(b[1]-a[1])*(x+gx-a[0]))
+                            self.assertGreater(distance,0,(side,suffix,x,y,gx,gy))
+
+    def test_otaku_uses_one_font_glyph_per_eye(self):
+        for side in ['L','R']:
+            nodes=[n for n in self.doc['nodes'] if n['name'].startswith(f'Eye_{side}_Otaku_caret')]
+            self.assertEqual(len(nodes),1)
+            self.assertEqual(nodes[0]['extras']['character'],'^')
+            self.assertEqual(nodes[0]['extras']['font'],'Menlo-Bold')
+
+    def test_exactly_one_fire_frame_and_step_sampling(self):
+        for clip in self.doc['animations']:
+            tracks={}
+            for c in clip['channels']:
+                n=self.doc['nodes'][c['target']['node']]
+                if 'fire_frame' not in n.get('extras',{}):continue
+                sampler=clip['samplers'][c['sampler']]
+                self.assertEqual(sampler['interpolation'],'STEP')
+                ts=[v[0] for v in self.values(sampler['input'])]
+                vs=self.values(sampler['output'])
+                tracks.setdefault(n['name'].rsplit('_',1)[0],[]).append((ts,vs))
+            self.assertEqual(len(tracks),4)
+            for frames in tracks.values():
+                self.assertEqual(len(frames),32)
+                duration=max(ts[-1] for ts,_ in frames)
+                for i in range(int(duration*32)+1):
+                    t=i/32
+                    active=sum(vs[bisect.bisect_right(ts,t)-1][0]>.5 for ts,vs in frames)
+                    self.assertEqual(active,1,(clip['name'],t))
+
+    def test_fire_textures_are_warm_and_animated(self):
+        frames={}
+        for image in self.doc['images']:
+            if '_fire_' not in image.get('name',''):continue
+            view=self.doc['bufferViews'][image['bufferView']]
+            data=self.binary[view['byteOffset']:view['byteOffset']+view['byteLength']]
+            cursor=8;compressed=b'';size=None
+            while cursor<len(data):
+                length=struct.unpack_from('>I',data,cursor)[0];kind=data[cursor+4:cursor+8]
+                payload=data[cursor+8:cursor+8+length]
+                if kind==b'IHDR':size=struct.unpack_from('>I',payload)[0]
+                if kind==b'IDAT':compressed+=payload
+                cursor+=12+length
+            raw=zlib.decompress(compressed)
+            for y in range(size):
+                row=raw[y*(size*3+1):(y+1)*(size*3+1)]
+                self.assertEqual(row[0],0)
+                self.assertTrue(all(row[i]>=row[i+1]>=row[i+2] for i in range(1,len(row),3)))
+            frames.setdefault(image['name'].split('_fire_')[0],set()).add(data)
+        self.assertEqual({key:len(value) for key,value in frames.items()},{'Ovine':32,'Sauron':32})
 
 
 if __name__=='__main__':unittest.main()

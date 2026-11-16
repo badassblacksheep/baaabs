@@ -63,14 +63,14 @@ export async function createEyeRenderer(gl, doc, data, binOffset) {
     const t=texture();gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bitmap);bitmap.close();textures.set(tex,t);
   }
   const clip=doc.animations?.find(a=>a.name==='BAAABS | Eye cycle');
-  const channels=(clip?.channels||[]).map(c=>{const s=clip.samplers[c.sampler];return {...c.target,times:read(s.input),values:read(s.output),width:doc.accessors[s.output].type==='VEC4'?4:3};});
+  const channels=(clip?.channels||[]).map(c=>{const s=clip.samplers[c.sampler];return {...c.target,interpolation:s.interpolation||'LINEAR',times:read(s.input),values:read(s.output),width:doc.accessors[s.output].type==='VEC4'?4:3};});
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   return function drawEyes(camera,origin,angle,time) {
     const at=reduced.matches?0:time%36,animated=new Map(),world=new Map();
     for(const c of channels) {
       let lo=0,hi=c.times.length-1;
       while(lo+1<hi){const mid=(lo+hi)>>1;if(c.times[mid]<=at)lo=mid;else hi=mid;}
-      const f=Math.max(0,Math.min(1,(at-c.times[lo])/(c.times[hi]-c.times[lo])));
+      const f=c.interpolation==='STEP'?0:Math.max(0,Math.min(1,(at-c.times[lo])/(c.times[hi]-c.times[lo])));
       const value=Array.from({length:c.width},(_,i)=>c.values[lo*c.width+i]*(1-f)+c.values[hi*c.width+i]*f);
       if(c.path==='rotation'){const len=Math.hypot(...value);for(let i=0;i<4;i++)value[i]/=len;}
       if(!animated.has(c.node))animated.set(c.node,{...doc.nodes[c.node]});animated.get(c.node)[c.path]=value;

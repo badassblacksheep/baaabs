@@ -15,6 +15,58 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 MODES = ['Ovine', 'Rainbow', 'Anime', 'Otaku', 'Sauron']
 TAU = math.tau
 RADIUS = .282
+FIRE_FRAMES = 32
+FIRE_FPS = 16
+FIRE_SECONDS = FIRE_FRAMES / FIRE_FPS
+# U+005E (^) outline extracted from the installed Menlo-Bold font with CoreText.
+# A single real glyph, including its flat crown; never two overlapping strokes.
+CARET_GLYPH = [(360.83984375,729.00390625),(574.21875,457.03125),
+               (456.0546875,457.03125),(300.78125,604.00390625),
+               (145.99609375,457.03125),(27.83203125,457.03125),
+               (241.2109375,729.00390625)]
+
+
+def signed_area(points):
+    return sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(points,points[1:]+points[:1]))/2
+
+
+def clip_polygon(points, outline, inset=(0,0,0)):
+    """Clip XY plus interpolated attributes to a convex aperture.
+
+    Erode each edge by the support of the complete animated gaze rectangle,
+    plus a small rim margin. Every interpolated gaze stays inside the whites.
+    """
+    sign=1 if signed_area(outline)>0 else -1
+    for a,b in zip(outline,outline[1:]+outline[:1]):
+        dx,dy=b[0]-a[0],b[1]-a[1]
+        margin=abs(dy)*inset[0]+abs(dx)*inset[1]+math.hypot(dx,dy)*inset[2]
+        distance=lambda p:sign*(dx*(p[1]-a[1])-dy*(p[0]-a[0]))-margin
+        out=[]
+        for p,q in zip(points,points[1:]+points[:1]):
+            dp,dq=distance(p),distance(q)
+            if dp>=0:out.append(p)
+            if (dp>=0)!=(dq>=0):
+                t=dp/(dp-dq)
+                out.append([p[k]+t*(q[k]-p[k]) for k in range(len(p))])
+        points=out
+        if not points:break
+    return points
+
+
+def triangulate(outline):
+    """Ear clipping for the concave font glyph; preserves the open caret notch."""
+    points=list(outline)
+    if signed_area(points)<0:points.reverse()
+    cross=lambda a,b,c:(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+    triangles=[]
+    while len(points)>3:
+        for i,b in enumerate(points):
+            a,c=points[i-1],points[(i+1)%len(points)]
+            if cross(a,b,c)<=1e-12:continue
+            if any(p not in (a,b,c) and min(cross(a,b,p),cross(b,c,p),cross(c,a,p))>=-1e-12 for p in points):continue
+            triangles.append((a,b,c));points.pop(i);break
+        else:raise ValueError('Cannot triangulate glyph outline')
+    return triangles+[tuple(points)]
 
 
 def png(pixels, size):
@@ -39,7 +91,7 @@ def iris_texture(mode, size=384):
             elif mode == 'Ovine':
                 col = (.48+.44*fiber, .28+.42*fiber, .10+.25*fiber)
             elif mode == 'Anime':
-                col = (.18+.50*(1-r)+.2*fiber, .25+.50*max(0,-py)+.12*fiber, .80+.18*fiber)
+                col = (.82+.17*fiber, .28+.33*fiber, .025+.055*fiber)
             else:
                 col = (.75+.24*fiber, .12+.42*max(0,-py)+.14*fiber, .50+.40*fiber)
             # A crisp limbal ring, radial fibers and a bright inner collarette.
@@ -49,6 +101,62 @@ def iris_texture(mode, size=384):
     return png(bytes(pixels), size)
 
 
+def pupil_radius(mode, angle):
+    """Ray intersection with the actual pupil silhouette, in head-local meters."""
+    c,s=abs(math.cos(angle)),abs(math.sin(angle))
+    if mode=='Ovine':
+        p=2/.52
+        return ((c/.179)**p+(s/.052)**p)**(-1/p)
+    lo,hi=0,.24
+    for _ in range(22):
+        r=(lo+hi)/2
+        if (r*c/.031)**(2/3)+(r*s/.232)**2>1:hi=r
+        else:lo=r
+    return (lo+hi)/2
+
+
+def fire_field(mode, size=256):
+    """Precompute distance outward from each pupil boundary, not from its center."""
+    rx,ry=(.269,.269) if mode=='Ovine' else (.269,.253)
+    rays=[pupil_radius(mode,TAU*i/4096) for i in range(4096)]
+    field=[]
+    for y in range(size):
+        for x in range(size):
+            px,py=((x+.5)*2/size-1)*rx,(1-(y+.5)*2/size)*ry
+            r,a=math.hypot(px,py),math.atan2(py,px)
+            rp=rays[round((a%TAU)/TAU*4096)%4096]
+            outer=1/math.hypot(math.cos(a)/rx,math.sin(a)/ry)
+            d=max(0,(r-rp)/max(.01,outer-rp))
+            field.append((d,a))
+    return field
+
+
+def fire_texture(field, frame, size=256):
+    """Looping turbulence advected in +d: tongues travel pupil -> outer rim.
+
+    Every radial term is f(d - velocity*t). Frame changes are native STEP clips,
+    so this outward-flow animation also survives GLB download and Blender import.
+    """
+    pixels=bytearray();time=frame/FIRE_FRAMES
+    for d,a in field:
+        u=TAU*(2*d-time)
+        # Long, branching tongues, with fine filaments riding on the same flow.
+        bend=.34*math.sin(u+5*a)+.15*math.sin(2*u-9*a)
+        noise=.5+.24*math.sin(17*a+1.9*math.sin(5*a)+u+bend)+.16*math.sin(39*a-2*u+2*bend)+.1*math.sin(83*a+3*u)
+        filament=max(0,math.sin(57*a+u*2+4*bend))**8
+        tongue=max(0,(noise-.30)/.7)**1.15
+        reach=.76+.14*math.sin(13*a+u)+.07*math.sin(29*a-u*2)
+        fade=max(0,min(1,(reach-d)*9))
+        heat=min(1, .88*math.exp(-d*7)+(.20+.76*tongue+.22*filament)*fade)
+        heat*=max(0,min(1,(1.02-d)*18))
+        # Incandescent cream -> gold -> orange -> ember red -> warm black.
+        red=min(1,heat*3.3)
+        green=max(0,min(1,(heat-.19)*1.65))
+        blue=max(0,min(.78,(heat-.64)*2.3))
+        pixels.extend(round(255*c) for c in (red,green,blue))
+    return png(bytes(pixels),size)
+
+
 class Model:
     def __init__(self, source):
         b = source.read_bytes()
@@ -56,6 +164,7 @@ class Model:
         self.doc = json.loads(b[20:20+length])
         self.bin = bytearray(b[28+length:28+length+struct.unpack_from('<I', b, 20+length)[0]])
         self.tracks = {}
+        self.accessor_cache = {}
 
     def data(self, b, target=None):
         self.bin.extend(b'\0'*(-len(self.bin)%4))
@@ -67,14 +176,18 @@ class Model:
 
     def accessor(self, values, width, integer=False):
         flat = [v for row in values for v in row] if width > 1 else values
-        view = self.data(struct.pack('<'+('H' if integer else 'f')*len(flat), *flat))
+        packed=struct.pack('<'+('H' if integer else 'f')*len(flat), *flat)
+        key=(width,integer,packed)
+        if key in self.accessor_cache:return self.accessor_cache[key]
+        view = self.data(packed)
         a = {'bufferView':view,'componentType':5123 if integer else 5126,'count':len(values),'type':{1:'SCALAR',2:'VEC2',3:'VEC3',4:'VEC4'}[width]}
         if not integer:
             rows = values if width>1 else [[v] for v in values]
             a['min'] = [min(v[i] for v in rows) for i in range(width)]
             a['max'] = [max(v[i] for v in rows) for i in range(width)]
         self.doc['accessors'].append(a)
-        return len(self.doc['accessors'])-1
+        index=len(self.doc['accessors'])-1;self.accessor_cache[key]=index
+        return index
 
     def material(self, label, color, texture=None):
         pbr = {'baseColorFactor':[*color,1],'metallicFactor':0,'roughnessFactor':.32}
@@ -90,7 +203,7 @@ class Model:
 
     def node(self, name, **kwargs):
         i = len(self.doc['nodes'])
-        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'1'},**kwargs})
+        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'2'},**kwargs})
         return i
 
     def mesh(self, name, points, faces, mat, uvs=None):
@@ -100,7 +213,7 @@ class Model:
         self.doc['meshes'].append({'name':name,'primitives':[{'attributes':attrs,'indices':self.accessor(faces,1,True),'material':mat}]})
         return self.node(name,mesh=i)
 
-    def cap(self, name, rx, ry, mat, offset=.0, center=(0,0), rings=12, segments=80):
+    def cap(self, name, rx, ry, mat, offset=.0, center=(0,0), rings=12, segments=80, aperture=None):
         points, uv, faces = [],[],[]
         for j in range(rings+1):
             rho = j/rings
@@ -113,24 +226,36 @@ class Model:
             for i in range(segments):
                 a=j*(segments+1)+i;b=a+segments+1
                 faces.extend([a,b,a+1,a+1,b,b+1])
+        if aperture:
+            clipped_points,clipped_uv,clipped_faces=[],[],[]
+            for i in range(0,len(faces),3):
+                triangle=[points[j][:2]+uv[j] for j in faces[i:i+3]]
+                polygon=clip_polygon(triangle,aperture,(.003,.002,.003))
+                for j in range(1,len(polygon)-1):
+                    start=len(clipped_points)
+                    for x,y,u,v in [polygon[0],polygon[j],polygon[j+1]]:
+                        clipped_points.append([x,y,math.sqrt(max(.0001,RADIUS**2-x*x-y*y))+offset])
+                        clipped_uv.append([u,v])
+                    clipped_faces.extend([start,start+1,start+2])
+            points,uv,faces=clipped_points,clipped_uv,clipped_faces
         return self.mesh(name,points,faces,mat,uv)
 
-    def shape(self, name, outline, mat, offset=.018):
+    def shape(self, name, outline, mat, offset=.018, concave=False):
         cx=sum(p[0] for p in outline)/len(outline);cy=sum(p[1] for p in outline)/len(outline)
         # Subdivide and project the entire pupil onto the dome. A coarse triangle
         # fan cuts through the curved iris and leaves apparent holes in the pupil.
         verts=[];faces=[];steps=8
-        def vertex(a,b,u,v):
-            x=cx+(a[0]-cx)*u+(b[0]-cx)*v;y=cy+(a[1]-cy)*u+(b[1]-cy)*v
+        def vertex(c,a,b,u,v):
+            x=c[0]+(a[0]-c[0])*u+(b[0]-c[0])*v;y=c[1]+(a[1]-c[1])*u+(b[1]-c[1])*v
             return [x,y,math.sqrt(max(.0001,RADIUS**2-x*x-y*y))+offset]
-        for k,a in enumerate(outline):
-            b=outline[(k+1)%len(outline)]
+        triangles=triangulate(outline) if concave else [((cx,cy),a,outline[(k+1)%len(outline)]) for k,a in enumerate(outline)]
+        for c,a,b in triangles:
             for i in range(steps):
                 for j in range(steps-i):
                     tris=[[(i,j),(i+1,j),(i,j+1)]]
                     if i+j<steps-1:tris.append([(i+1,j),(i+1,j+1),(i,j+1)])
                     for tri in tris:
-                        start=len(verts);verts.extend(vertex(a,b,u/steps,v/steps) for u,v in tri);faces.extend([start,start+1,start+2])
+                        start=len(verts);verts.extend(vertex(c,a,b,u/steps,v/steps) for u,v in tri);faces.extend([start,start+1,start+2])
         return self.mesh(name,verts,faces,mat)
 
     def track(self, clip, node, prop, times, values, interpolation='LINEAR'):
@@ -166,52 +291,92 @@ def main():
     d.setdefault('extensionsUsed',[])
     if 'KHR_materials_unlit' not in d['extensionsUsed']:d['extensionsUsed'].append('KHR_materials_unlit')
     parent=next(n for n in d['nodes'] if n.get('name')=='SHEEP_HEAD')
-    black=model.material('pupil',[.002,.003,.008]);white=model.material('catchlight',[1,.99,.97]);pink=model.material('blush',[1,.28,.59])
-    dark=model.material('socket',[.008,.006,.014]);gold=model.material('star',[1,.85,.23])
-    mats={mode:model.material(mode,[1,1,1],iris_texture(mode)) for mode in MODES}
-    whites={mode:model.material(mode+'_sclera',([.055,.009,.003] if mode=='Sauron' else [.75,.65,.46] if mode in ['Ovine','Rainbow'] else [.90,.91,1])) for mode in MODES}
-    groups=[]
+    black=model.material('pupil',[.002,.003,.008])
+    warmblack=model.material('warm_pupil',[.004,.002,.001])
+    white=model.material('catchlight',[1,.99,.97])
+    dark=model.material('socket',[.008,.006,.014])
+    warmdark=model.material('warm_black',[.012,.004,.001])
+    cream=model.material('Vegeta_sclera',[1,.88,.67])
+    amber=model.material('caret_gold',[1,.53,.055])
+    blush=model.material('caret_blush',[1,.16,.025])
+    mats={mode:model.material(mode,[1,1,1],iris_texture(mode)) for mode in ['Rainbow','Anime']}
+    fire_materials={}
+    for mode in ['Ovine','Sauron']:
+        field=fire_field(mode)
+        fire_materials[mode]=[model.material(mode+'_fire_%02d'%i,[1,1,1],fire_texture(field,i)) for i in range(FIRE_FRAMES)]
+    rainbow_sclera=model.material('Rainbow_sclera',[.75,.65,.46])
+    groups=[];fire_nodes=[];shared_fire_meshes={}
     for side,x in [('L',-.7),('R',.7)]:
-        # Same socket centers as the removed recesses, in SHEEP_HEAD local coordinates.
         socket=model.cap('Eye_'+side+'_socket',.297,.297,dark,-.014)
-        # The rim backs the convex diffuser; it is a separate, stationary bezel.
         roots=[socket]
+        inward=1 if side=='L' else -1
         for mode in MODES:
-            sclera=model.cap('Eye_'+side+'_'+mode+'_dome',.277,.277,whites[mode])
-            rx,ry=(.218,.218) if mode in ['Ovine','Rainbow'] else (.213,.247) if mode=='Anime' else (.225,.246) if mode=='Otaku' else (.248,.248)
-            iris=model.cap('Eye_'+side+'_'+mode+'_iris',rx,ry,mats[mode],.008)
-            details=[]
+            prefix='Eye_'+side+'_'+mode
+            sclera=model.cap(prefix+'_dome',.277,.277,rainbow_sclera if mode=='Rainbow' else warmdark)
+            iris=None;parts=[];fixed=[];spark=[]
+            if mode in ['Ovine','Sauron']:
+                rx,ry=(.269,.269) if mode=='Ovine' else (.269,.253)
+                for frame,material in enumerate(fire_materials[mode]):
+                    if (mode,frame) not in shared_fire_meshes:
+                        node=model.cap(prefix+'_fire_%02d'%frame,rx,ry,material,.008)
+                        shared_fire_meshes[(mode,frame)]=d['nodes'][node]['mesh']
+                    else:
+                        node=model.node(prefix+'_fire_%02d'%frame,mesh=shared_fire_meshes[(mode,frame)])
+                    d['nodes'][node]['scale']=[1,1,1] if frame==0 else [0,0,0]
+                    d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='pupil_outward')
+                    parts.append(node);fire_nodes.append((node,frame))
+            elif mode=='Rainbow':
+                iris=model.cap(prefix+'_iris',.218,.218,mats[mode],.008)
+                parts.append(iris)
             if mode in ['Ovine','Rainbow']:
-                # Superellipse produces the horizontal, rounded rectangular sheep pupil.
                 outline=[]
                 for i in range(80):
-                    a=TAU*i/80;c,s=math.cos(a),math.sin(a)
-                    outline.append((.179*math.copysign(abs(c)**.52,c),.052*math.copysign(abs(s)**.52,s)))
-                details.append(model.shape('Eye_'+side+'_'+mode+'_horizontal_pupil',outline,black))
+                    a=TAU*i/80;c,sn=math.cos(a),math.sin(a)
+                    outline.append((.179*math.copysign(abs(c)**.52,c),.052*math.copysign(abs(sn)**.52,sn)))
+                parts.append(model.shape(prefix+'_horizontal_pupil',outline,black if mode=='Rainbow' else warmblack,.018 if mode=='Rainbow' else .022))
             elif mode=='Sauron':
-                outline=[(.038*math.sin(TAU*i/80)**3,.226*math.cos(TAU*i/80)) for i in range(80)]
-                details.append(model.shape('Eye_'+side+'_Sauron_vertical_slit',outline,black))
-            elif mode=='Otaku':
-                details.append(model.cap('Eye_'+side+'_Otaku_pupil',.104,.142,black,.017))
-                details.append(model.shape('Eye_'+side+'_Otaku_star_pupil',star(0,.015,.096,5,.45),gold,.025))
+                outline=[(.031*math.sin(TAU*i/80)**3,.232*math.cos(TAU*i/80)) for i in range(80)]
+                parts.append(model.shape(prefix+'_vertical_slit',outline,warmblack,.022))
+            elif mode=='Anime':
+                # Narrow angular Vegeta stare; the two inner brows point at the nose.
+                mirror=lambda pts:[(inward*xx,yy) for xx,yy in pts]
+                # The upper white edge meets the underside of the brow exactly.
+                brow_y=lambda xx:.086+(xx+.244)*(-.127/.456)
+                eye=mirror([(-.236,brow_y(-.236)),(.211,brow_y(.211)),(.126,-.107),(-.203,-.084)])
+                white_node=model.shape(prefix+'_angular_sclera',eye,cream,.014)
+                d['nodes'][white_node]['extras']['eye_aperture']=eye
+                fixed.append(white_node)
+                brow=mirror([(-.239,.160),(.219,.015),(.212,-.041),(-.244,.086)])
+                fixed.append(model.shape(prefix+'_angled_brow',brow,warmblack,.030))
+                cx=inward*.062;cy=-.036
+                iris=model.cap(prefix+'_iris',.042,.054,mats[mode],.020,(cx,cy),7,48,aperture=eye)
+                parts.extend([iris,model.cap(prefix+'_small_pupil',.021,.044,warmblack,.026,(cx,cy),6,40,aperture=eye)])
+                parts.append(model.cap(prefix+'_catchlight',.006,.009,white,.032,(cx-.008,cy+.010),3,16,aperture=eye))
             else:
-                details.append(model.cap('Eye_'+side+'_Anime_pupil',.108,.156,black,.017))
-            if mode!='Sauron':
-                details.append(model.cap('Eye_'+side+'_'+mode+'_soft_highlight',.044,.061,white,.025,(-.079,.105),5,32))
-                details.append(model.cap('Eye_'+side+'_'+mode+'_small_highlight',.018,.025,white,.025,(.094,-.097),4,24))
-            spark=[]
-            if mode=='Otaku':
-                spark.append(model.shape('Eye_'+side+'_Otaku_twinkle',star(.116,.115,.048),white,.028))
-                spark.append(model.shape('Eye_'+side+'_Otaku_twinkle_lower',star(-.10,-.14,.030),gold,.028))
-                for xx in [-.225,.225]:
-                    details.append(model.cap('Eye_'+side+'_Otaku_blush',.029,.013,pink,.028,(xx,-.098),4,24))
-            gaze=model.node('Eye_'+side+'_'+mode+'_gaze',children=[iris,*details,*spark])
-            group=model.node('Eye_'+side+'_'+mode,children=[sclera,gaze],scale=[1,1,1] if mode=='Ovine' else [0,0,0])
+                # Real U+005E glyph, scaled uniformly and projected onto the bowl.
+                scale=.380/(574.21875-27.83203125)
+                glyph=[((xx-301.025390625)*scale,(yy-457.03125)*scale-.065) for xx,yy in CARET_GLYPH]
+                caret=model.shape(prefix+'_caret_glyph',glyph,amber,.025,concave=True)
+                d['nodes'][caret]['extras'].update(character='^',font='Menlo-Bold',unicode='U+005E')
+                parts.append(caret)
+                def stroke(name,a,b,width,material):
+                    dx,dy=b[0]-a[0],b[1]-a[1];length=math.hypot(dx,dy)
+                    nx,ny=-dy/length*width/2,dx/length*width/2
+                    return model.shape(prefix+'_'+name,[(a[0]+nx,a[1]+ny),(b[0]+nx,b[1]+ny),(b[0]-nx,b[1]-ny),(a[0]-nx,a[1]-ny)],material,.025)
+                for j in [-1,1]:
+                    for k in range(2):
+                        xx=j*(.19+k*.025)
+                        parts.append(stroke('blush_%s_%s'%(j,k),(xx-.008,-.116),(xx+.003,-.084),.011,blush))
+            if mode=='Rainbow':
+                parts.append(model.cap(prefix+'_soft_highlight',.044,.061,white,.025,(-.079,.105),5,32))
+                parts.append(model.cap(prefix+'_small_highlight',.018,.025,white,.025,(.094,-.097),4,24))
+            gaze=model.node(prefix+'_gaze',children=parts)
+            group=model.node(prefix,children=[sclera,*fixed,gaze],scale=[1,1,1] if mode=='Ovine' else [0,0,0])
             roots.append(group);groups.append((mode,group,gaze,iris,spark))
         assembly=model.node('Eye_'+side+'_animated_bowl',children=roots,translation=[x,2.3120215,.453])
         parent['children'].append(assembly)
-    # A 36-second show. The evil reveal is brief and returns directly to cute anime.
-    segments=[(0,7,'Ovine'),(7,14,'Rainbow'),(14,21,'Anime'),(21,28,'Otaku'),(28,31,'Sauron'),(31,36,'Anime')]
+    # A 36-second show. The evil reveal is brief and returns directly to ^_^.
+    segments=[(0,7,'Ovine'),(7,14,'Rainbow'),(14,21,'Anime'),(21,28,'Otaku'),(28,31,'Sauron'),(31,36,'Otaku')]
     clips=[('BAAABS | Eye cycle',36,None)]+[('BAAABS | '+m,8,m) for m in MODES]
     for clip,duration,fixed in clips:
         times=[round(i/24,6) for i in range(duration*24+1)]
@@ -223,17 +388,25 @@ def main():
                 blink=1
                 for b in ([2.6,5.7] if fixed else [2.6,7,10.3,14,17.6,21,24.3,28,31,34.0,35.5]):
                     blink=min(blink,.035+.965*min(1,abs(t-b)/.13))
-                pulse=1+.025*math.sin(t*18)+.016*math.sin(t*31) if mode=='Sauron' else 1
+                pulse=1
                 values.append([pulse,blink*pulse,1] if active==mode else [0,0,0])
-                poses.append([.009*math.sin(TAU*t/4),.006*math.sin(TAU*t/8),.003])
-                angle=TAU*t/8 if mode=='Rainbow' else .015*math.sin(TAU*t/4) if mode=='Sauron' else 0
+                poses.append([(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
+                angle=TAU*t/8 if mode=='Rainbow' else 0
                 rotations.append([0,0,math.sin(angle/2),math.cos(angle/2)])
                 sparkle.append([1+ .13*math.sin(TAU*t/2)]*3)
             model.track(clip,group,'scale',times,values)
             model.track(clip,gaze,'translation',times,poses)
-            if mode in ['Rainbow','Sauron']:model.track(clip,iris,'rotation',times,rotations)
+            if mode=='Rainbow':model.track(clip,iris,'rotation',times,rotations)
             for node in spark:model.track(clip,node,'scale',times,sparkle)
-    d['asset'].setdefault('extras',{}).update(eye_revision='1',eye_modes=MODES,eye_cycle_seconds=36,eye_design='Convex diffusers, native glTF clips, no plugins or external textures',eye_lore='Occasionally reveal ancient evil; immediately pretend nothing happened.')
+        for node,frame in fire_nodes:
+            keys={0:[1,1,1] if frame==0 else [0,0,0],duration:[1,1,1] if frame==0 else [0,0,0]}
+            for loop in range(math.ceil(duration/FIRE_SECONDS)):
+                start=loop*FIRE_SECONDS+frame/FIRE_FPS;end=start+1/FIRE_FPS
+                if start<duration:keys[start]=[1,1,1]
+                if end<duration:keys[end]=[0,0,0]
+            ts=sorted(keys)
+            model.track(clip,node,'scale',ts,[keys[t] for t in ts],'STEP')
+    d['asset'].setdefault('extras',{}).update(eye_revision='2',fire_flow='pupil_outward',fire_frames=FIRE_FRAMES,fire_fps=FIRE_FPS,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^' ,eye_modes=MODES,eye_cycle_seconds=36,eye_design='Convex diffusers, native glTF clips, no plugins or external textures',eye_lore='Occasionally reveal ancient evil; immediately pretend nothing happened.')
     model.save(ROOT/'site/assets/models/earl-animated-eyes.glb')
 
 

@@ -38,7 +38,7 @@ scene.render.engine='CYCLES';scene.cycles.samples=24
 scene.render.resolution_x=1600;scene.render.resolution_y=1000;scene.render.resolution_percentage=100
 scene.view_settings.view_transform='Standard'
 notes=bpy.data.texts.new('READ ME · Animated eyes')
-notes.write('BAAABS animated eyes / 2026-11-16\n\nFull current iteration-06 model with embedded five-mode eye animation.\nPress Space to play frames 1–864 at 24 fps (36 seconds).\nOvine 0–7s; Rainbow 7–14s; Anime 14–21s; Otaku 21–28s; Sauron 28–31s; Anime 31–36s.\nThe active NLA tracks are Eye cycle. Individual expression tracks are also retained, muted.\nThis is an importable/renderable derivative of the current GLB, with packed textures.\nThe unchanged authoring master remains a separate provenance reference.\nPhysical projector/diffuser engineering is not specified by these visual-effect meshes.\n')
+notes.write('BAAABS animated eyes / 2026-11-16\n\nFull current iteration-06 model with embedded five-mode eye animation, revision 2. Warm Vegeta stare with bounded irises, actual ^ glyphs, and outward-flowing fire with ovine or Sauron pupils. Rainbow is unchanged.\nPress Space to play frames 1–864 at 24 fps (36 seconds).\nOvine 0–7s; Rainbow 7–14s; Anime 14–21s; Otaku 21–28s; Sauron 28–31s; Otaku 31–36s.\nThe active NLA tracks are Eye cycle. Individual expression tracks are also retained, muted.\nThis is an importable/renderable derivative of the current GLB, with packed textures.\nThe unchanged authoring master remains a separate provenance reference.\nPhysical projector/diffuser engineering is not specified by these visual-effect meshes.\n')
 for screen in bpy.data.screens:
     for area in screen.areas:
         if area.type=='VIEW_3D':
