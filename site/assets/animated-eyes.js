@@ -34,6 +34,11 @@
       if (!next || !viewer.availableAnimations.includes('BAAABS | ' + next[2])) return;
       const version = ++selectionVersion;
       selected = next;
+      // Switch while paused so model-viewer stops the outgoing mixer action.
+      // Otherwise currentTime = 0 rewinds the mixer behind the crossfade's
+      // start time, leaving the previous look visible until that time elapses.
+      // The user's pause preference is restored by playback() below.
+      viewer.pause();
       // Fade-free switches prevent hidden expression meshes blending together.
       viewer.animationCrossfadeDuration = 0;
       viewer.animationName = 'BAAABS | ' + selected[2];
@@ -41,8 +46,8 @@
       viewer.dataset.eyeMode = selected[0];
       const closeup = controls?.querySelector('[data-eye-link]');
       if (closeup) closeup.href = 'eyes.html?eyes=' + selected[0];
-      // Lit applies the new animation on its next update; pause the new action,
-      // not the outgoing one, when changing an expression while paused.
+      // Lit applies the new animation on its next update. Wait for that action
+      // before seeking and restoring playback, including paused selections.
       await viewer.updateComplete;
       if (!ready || version !== selectionVersion) return;
       viewer.currentTime = 0;
