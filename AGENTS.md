@@ -113,3 +113,10 @@ The GLB and motion masters are art-direction references. Production projection n
 The owner selected **Ovine Sauron only for now**, superseding the live five-look sequence. Keep every other expression and the archived five-look show in the source and native GLB clips for later. `BAAABS | Eye cycle` now plays the 16-second solo ovine study everywhere, including the game. The original comedic design tenet remains; this temporary solo study does not erase it.
 
 Replace deep bowls with shallow spherical caps: unchanged aperture centers/planes, 0.6371 m (~25.08 in) diameter, 0.0889 m (3.5 in) sagitta. All eye graphics follow the new surface; these are prototype geometry, not fabrication or optical calibration drawings. Preserve the approved Backdraft as the first of three related outward ripple treatments: Backdraft → Double crest → Rolling bloom → repeat. Each occupies 128 frames at 24 fps with a short smooth transition; full loop 384 frames/16 s. Each section has two pulses, so the right eye leads by **16 frames / 2/3 s / one quarter pulse**, like sine and cosine. Do not confuse this with a quarter of the whole 16-second show. Keep ovine Sauron's comic cant, rainbow level, all other looks intact and inactive.
+
+
+### Eye suite revision 5 — Hypnotoad and selectors (2026-11-16)
+
+Hypnotoad is an additional selectable native clip (`BAAABS | Hypnotoad`), with a 48-frame/24-fps seamless procedural redraw at 512×512; reference and source live in `tools/hypnotoad_eyes.py`. Match the original mustard-gold field, red/yellow bands and irregular horizontal pupils, with differing left/right shapes. Do not substitute a spiral. Exporter supports larger native renders. No show footage or audio is bundled.
+
+Preserve Ovine Sauron as the default, all six individual expressions, and the unchanged archived five-look cue sheet. Homepage, eye lab and workshop selectors share `animated-eyes.js`. Native selection must switch without crossfade, retain pause/reduced-motion behavior and survive a model reload. Homepage controls live below the separate model viewport at widths ≤1000px; no phone playback controls overlay the canvas.

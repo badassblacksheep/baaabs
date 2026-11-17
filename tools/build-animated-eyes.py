@@ -10,6 +10,7 @@ import math
 import pathlib
 import struct
 import zlib
+from hypnotoad_eyes import HYPNO_FRAMES, HYPNO_SIZE, HYPNO_RIGHT_PHASE, hypnotoad_pixels
 from infernal_eyes import (FIRE_FRAMES,FIRE_FPS,FIRE_SECONDS,FIRE_SIZE,SHELL_RADIUS,
                           PUPILS,OVINE_TILT_DEGREES,FIRE_HOLD,STANDARD_HOLD,
                           SEQUENCE,CYCLE_SECONDS,ARCHIVE_SEQUENCE,OVINE_FRAMES,
@@ -17,7 +18,7 @@ from infernal_eyes import (FIRE_FRAMES,FIRE_FPS,FIRE_SECONDS,FIRE_SIZE,SHELL_RAD
                           fire_field,fire_pixels,ovine_pixels)
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MODES = ['Ovine', 'Rainbow', 'Anime', 'Otaku', 'Sauron']
+MODES = ['Ovine', 'Rainbow', 'Anime', 'Otaku', 'Sauron', 'Hypnotoad']
 TAU = math.tau
 APERTURE_RADIUS = .277
 HEAD_SCALE = 1.15
@@ -163,7 +164,7 @@ class Model:
 
     def node(self, name, **kwargs):
         i = len(self.doc['nodes'])
-        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'4'},**kwargs})
+        self.doc['nodes'].append({'name':name,'extras':{'component':'eye_effect','visual_effect_only':True,'eye_revision':'5'},**kwargs})
         return i
 
     def mesh(self, name, points, faces, mat, uvs=None):
@@ -266,6 +267,7 @@ def main():
         count=OVINE_FRAMES if mode=='Ovine' else FIRE_FRAMES
         fire_materials[mode]=[model.material(mode+'_fire_%03d'%i,[1,1,1],fire_texture(field,i)) for i in range(count)]
     rainbow_sclera=model.material('Rainbow_sclera',[.75,.65,.46])
+    hypno_materials=[model.material('Hypnotoad_frame_%02d'%i,[1,1,1],png(hypnotoad_pixels(i).tobytes(),HYPNO_SIZE)) for i in range(HYPNO_FRAMES)]
     groups=[];fire_nodes=[];shared_fire_meshes={}
     for side,x in [('L',-.7),('R',.7)]:
         socket=model.cap('Eye_'+side+'_socket',.297,.297,dark,-.014)
@@ -287,6 +289,17 @@ def main():
                     d['nodes'][node]['scale']=[1,1,1] if frame==shift else [0,0,0]
                     d['nodes'][node]['extras'].update(fire_frame=frame,fire_fps=FIRE_FPS,flow_direction='iris_to_shell_backdraft',phase_frames=shift)
                     parts.append(node);fire_nodes.append((node,frame,len(fire_materials[mode]),shift))
+            elif mode=='Hypnotoad':
+                for frame,material in enumerate(hypno_materials):
+                    if (mode,frame) not in shared_fire_meshes:
+                        node=model.cap(prefix+'_frame_%02d'%frame,SHELL_RADIUS,SHELL_RADIUS,material,.008)
+                        shared_fire_meshes[(mode,frame)]=d['nodes'][node]['mesh']
+                    else:
+                        node=model.node(prefix+'_frame_%02d'%frame,mesh=shared_fire_meshes[(mode,frame)])
+                    shift=HYPNO_RIGHT_PHASE if side=='R' else 0
+                    d['nodes'][node]['scale']=[1,1,1] if frame==shift else [0,0,0]
+                    d['nodes'][node]['extras'].update(hypnotoad_frame=frame,phase_frames=shift)
+                    parts.append(node);fire_nodes.append((node,frame,HYPNO_FRAMES,shift))
             elif mode=='Rainbow':
                 iris=model.cap(prefix+'_iris',.218,.218,mats[mode],.008)
                 parts.append(iris)
@@ -314,7 +327,7 @@ def main():
                 iris=model.cap(prefix+'_iris',.042,.054,mats[mode],.020,(cx,cy),7,48,aperture=eye)
                 parts.extend([iris,model.cap(prefix+'_small_pupil',.021,.044,warmblack,.026,(cx,cy),6,40,aperture=eye)])
                 parts.append(model.cap(prefix+'_catchlight',.006,.009,white,.032,(cx-.008,cy+.010),3,16,aperture=eye))
-            else:
+            elif mode=='Otaku':
                 # Real U+005E glyph, scaled uniformly and projected onto the bowl.
                 scale=.380/(574.21875-27.83203125)
                 glyph=[((xx-301.025390625)*scale,(yy-457.03125)*scale-.065) for xx,yy in CARET_GLYPH]
@@ -362,11 +375,11 @@ def main():
                 if mode in ['Ovine','Sauron'] and active==mode and not fixed:
                     blink=1
                     for edge in [16,48]:blink=min(blink,.035+.965*min(1,abs(t-edge)/.13))
-                if fixed=='Ovine':blink=1
+                if fixed in ['Ovine','Hypnotoad']:blink=1
                 pulse=1
                 values.append([pulse,blink*pulse,1] if active==mode else [0,0,0])
                 # The active projected ovine graphic stays on the shallow cap.
-                poses.append([0,0,.0004] if mode=='Ovine' else [(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
+                poses.append([0,0,.0004] if mode in ['Ovine','Hypnotoad'] else [(.003 if mode=='Anime' else .009)*math.sin(TAU*t/4),(.002 if mode=='Anime' else .006)*math.sin(TAU*t/8),.003])
                 angle=TAU*t/8 if mode=='Rainbow' else 0
                 rotations.append([0,0,math.sin(angle/2),math.cos(angle/2)])
                 sparkle.append([1+ .13*math.sin(TAU*t/2)]*3)
@@ -383,7 +396,7 @@ def main():
                 if start+1<total:keys[start+1]=[0,0,0]
             ticks=sorted(keys)
             model.track(clip,node,'scale',[i/FIRE_FPS for i in ticks],[keys[i] for i in ticks],'STEP')
-    d['asset'].setdefault('extras',{}).update(eye_revision='4',fire_flow='iris_to_shell_backdraft',fire_frames=FIRE_FRAMES,ovine_frames=OVINE_FRAMES,fire_fps=FIRE_FPS,ovine_ripples=RIPPLE_NAMES,pulse_frames=PULSE_FRAMES,right_phase_frames=RIGHT_PHASE_FRAMES,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^',eye_modes=MODES,active_eye_modes=['Ovine'],eye_cycle_seconds=CYCLE_SECONDS,eye_sequence=SEQUENCE,archived_eye_sequence=ARCHIVE_SEQUENCE,fire_hold_seconds=FIRE_HOLD,standard_hold_seconds=STANDARD_HOLD,ovine_cant_degrees=OVINE_TILT_DEGREES,aperture_diameter_m=2*APERTURE_RADIUS*HEAD_SCALE,cap_depth_m=CAP_DEPTH*HEAD_SCALE,eye_design='Shallow spherical diffusers, native glTF clips, no plugins or external textures',eye_lore='Always follow mischief with cute. Infernal effects are comedic theater and convey no malice. Solo ovine study temporarily active by owner request; full show retained.')
+    d['asset'].setdefault('extras',{}).update(eye_revision='5',hypnotoad_frames=HYPNO_FRAMES,hypnotoad_texture_size=HYPNO_SIZE,hypnotoad_style='Morphing black horizontal pupils with red-gold contour bands; Futurama reference',fire_flow='iris_to_shell_backdraft',fire_frames=FIRE_FRAMES,ovine_frames=OVINE_FRAMES,fire_fps=FIRE_FPS,ovine_ripples=RIPPLE_NAMES,pulse_frames=PULSE_FRAMES,right_phase_frames=RIGHT_PHASE_FRAMES,non_rainbow_palette='warm',anime_style='Vegeta angular stare',otaku_style='^_^',eye_modes=MODES,active_eye_modes=['Ovine'],eye_cycle_seconds=CYCLE_SECONDS,eye_sequence=SEQUENCE,archived_eye_sequence=ARCHIVE_SEQUENCE,fire_hold_seconds=FIRE_HOLD,standard_hold_seconds=STANDARD_HOLD,ovine_cant_degrees=OVINE_TILT_DEGREES,aperture_diameter_m=2*APERTURE_RADIUS*HEAD_SCALE,cap_depth_m=CAP_DEPTH*HEAD_SCALE,eye_design='Shallow spherical diffusers, native glTF clips, no plugins or external textures',eye_lore='Always follow mischief with cute. Infernal effects are comedic theater and convey no malice. Solo ovine study temporarily active by owner request; full show retained.')
     model.save(ROOT/'site/assets/models/earl-animated-eyes.glb')
 
 

@@ -1,3 +1,21 @@
 .eye-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0;padding:14px;border:1px solid #57435e;border-radius:14px;background:#1a1521;color:#f8efff;font:14px system-ui,sans-serif}
 .eye-controls label{display:flex;align-items:center;gap:9px}.eye-controls select,.eye-controls button{font:inherit;font-size:16px;border:1px solid #725a7d;border-radius:8px;padding:9px 12px;background:#30243b;color:#fff;cursor:pointer}.eye-controls button:disabled,.eye-controls select:disabled{opacity:.45;cursor:wait}.eye-controls button:hover{background:#493253}.eye-controls :focus-visible{outline:2px solid #b5ffda;outline-offset:3px}.eye-controls output{color:#c4f5db;margin-left:auto;min-width:180px}
 @media(max-width:600px){.eye-controls{gap:8px;padding:12px}.eye-controls output{width:100%;margin-left:0}.eye-controls label{width:100%}.eye-controls select{flex:1;min-width:0}}
+/* Keep the homepage canvas and controls in distinct layout regions on phones. */
+.model-viewport{position:relative}
+.model-stage .model-controls{top:8px;bottom:auto;right:2vw;max-width:calc(100% - 4vw);flex-wrap:wrap;gap:8px;border:1px solid #ffffff24;border-radius:14px;padding:8px 10px;z-index:2}
+.model-eye-label{display:flex;align-items:center;gap:8px;font-size:12px;color:#c8bfd3}
+.model-eye-label select{min-height:40px;max-width:225px;border:1px solid #ffffff48;border-radius:8px;padding:7px 26px 7px 10px;background:#211a2d;color:#f8f5f1;font:14px Arial,sans-serif;cursor:pointer}
+.model-eye-label select:disabled{opacity:.45;cursor:wait}
+.model-controls :focus-visible{outline:2px solid #d8fc6a;outline-offset:3px}
+.model-eye-link{font-size:12px;padding:8px;color:#d7c6ee}
+.model-stage .model-controls .micro{flex-basis:100%;text-align:right}
+@media(max-width:1000px){
+  .model-stage .model-controls{position:static;max-width:none;margin:0;padding:14px 6vw;border-width:1px 0 0;border-radius:0;background:#100d1a;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .model-controls .model-eye-label{grid-column:1/-1;font-size:13px}
+  .model-eye-label select{flex:1;width:100%;max-width:none;min-width:0;font-size:16px;min-height:44px}
+  .model-stage .model-controls .quiet{min-height:44px;padding:8px 6px;font-size:12px;background:#211a2d;backdrop-filter:none}
+  .model-controls .model-eye-link{grid-column:1/-1;text-align:center;padding:2px 8px}
+  .model-stage .model-controls .micro{display:none}
+  #model #earl-soundtrack{position:static;width:min(360px,88%);margin:12px auto}
+}

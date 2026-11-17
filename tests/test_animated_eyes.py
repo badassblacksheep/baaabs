@@ -48,7 +48,7 @@ class Eyes(unittest.TestCase):
             self.assertTrue(any(self.doc['nodes'][i]['name']==f'Eye_{side}_animated_bowl' for i in visited))
 
     def test_all_clips_select_correct_eye_on_both_sides(self):
-        clips=self.doc['animations'];self.assertEqual(len(clips),7)
+        clips=self.doc['animations'];self.assertEqual(len(clips),8)
         for clip in clips:
             active_by_side={s:[] for s in ['L','R']}
             for c in clip['channels']:
@@ -66,6 +66,32 @@ class Eyes(unittest.TestCase):
                 for second,expected in [(0,'Ovine'),(15,'Ovine'),(16,'Rainbow'),(23,'Rainbow'),(24,'Anime'),(31,'Anime'),(32,'Sauron'),(47,'Sauron'),(48,'Otaku'),(55,'Otaku')]:
                     self.assertEqual([n for n,v in active_by_side['L'] if v[second*24][0]>.01],[expected])
                 self.assertEqual(times[-1][0],56)
+
+    def test_hypnotoad_frames_stay_exclusive_and_loop_on_both_eyes(self):
+        clip=next(c for c in self.doc['animations'] if c['name']=='BAAABS | Hypnotoad')
+        tracks={'L':[], 'R':[]}
+        for c in clip['channels']:
+            node=self.doc['nodes'][c['target']['node']]
+            if 'hypnotoad_frame' not in node.get('extras',{}):continue
+            sampler=clip['samplers'][c['sampler']]
+            self.assertEqual(sampler['interpolation'],'STEP')
+            tracks[node['name'].split('_')[1]].append((node['extras']['hypnotoad_frame'],[t[0] for t in self.values(sampler['input'])],self.values(sampler['output'])))
+        for side,shift in [('L',0),('R',12)]:
+            self.assertEqual(len(tracks[side]),48)
+            for tick in range(193):
+                active=[frame for frame,ts,vs in tracks[side] if vs[bisect.bisect_right(ts,(tick+.01)/24)-1][0]>.5]
+                self.assertEqual(active,[(tick+shift)%48])
+        import sys
+        sys.path.insert(0,str(ROOT/'tools'))
+        import numpy as np
+        from hypnotoad_eyes import hypnotoad_pixels
+        first=hypnotoad_pixels(0,64)
+        self.assertTrue(np.array_equal(first,hypnotoad_pixels(48,64)))
+        self.assertGreater(np.abs(first.astype(float)-hypnotoad_pixels(12,64)).mean(),3)
+        self.assertLess(first[32,32].max(),10)  # unmistakable black pupil
+        self.assertGreater(first[10,32,0],150)  # warm gold eye field
+        self.assertTrue(np.all(first[:,:,0]>=first[:,:,1]))
+        self.assertTrue(np.all(first[:,:,1]>=first[:,:,2]))
 
     def test_requested_holds_and_comedic_successors(self):
         expected=[(0,16,'Ovine'),(16,24,'Rainbow'),(24,32,'Anime'),(32,48,'Sauron'),(48,56,'Otaku')]

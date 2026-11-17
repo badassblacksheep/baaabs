@@ -1,4 +1,4 @@
-# BAAABS eyes — VFX handoff, revision 4
+# BAAABS eyes — VFX handoff, revision 5
 
 **Mischief, then cute. All theater. No malice.**
 
@@ -7,9 +7,9 @@ powerful, blinks, and looks innocent. Preserve the visual intensity and the
 friendly emotional payoff. The owner approved the underlying Backdraft fire treatment
 on 16 November 2026; revision 4 adds two related ripple variations. Live model: https://baaabs.org/eyes.html
 
-## Active study: shallow bowls, ovine Sauron only
+## Default study: shallow bowls, ovine Sauron
 
-The owner has temporarily selected only ovine Sauron. The existing positions,
+Ovine Sauron remains the default; the website selectors now expose the entire eye suite. The existing positions,
 aperture planes and comic cant remain, but the eye shells are shallow spherical
 caps: **0.6371 m (~25.08 inches) across and 0.0889 m (3.5 inches) deep**.
 The spherical radius is (a²+h²)/(2h), where a is half the aperture and h is
@@ -30,8 +30,21 @@ sine/cosine relationship of the eruption rhythm, not a quarter of the full show.
 The whole shifted stream wraps continuously at 384 frames.
 
 The other expressions and full show remain embedded in the native model and
-reproducible from this repository. They are inactive in the current website,
-game and Blender playback. The comedic design tenet remains in force.
+reproducible from this repository. They can be selected on the homepage, eye lab and workshop. The game still defaults to ovine Sauron. The comedic design tenet remains in force.
+
+## Hypnotoad
+
+`BAAABS | Hypnotoad` is an eight-second clip repeating a seamless two-second
+cycle. A faithful procedural redraw uses mustard-gold eyes, red/orange/yellow
+contour bands and broad black pupils that wobble between rounded bars and
+three-lobed shapes. The two eyes differ in phase. Keep the unblinking, absurd
+stare; do not replace it with a spiral, fire texture or cool rainbow palette.
+
+Visual reference: https://tenor.com/view/futurama-hypnotoad-hypnotize-gif-3480789
+Source: `tools/hypnotoad_eyes.py`. Native textures are 512×512; the VFX exporter
+renders at the requested resolution directly, rather than upscaling a TV crop.
+No television footage or audio is bundled. The exporter also writes
+`Hypnotoad-neutral-UV.mp4` and `Hypnotoad-paired-8s.mp4`.
 
 ## Archived five-look cue sheet
 
@@ -87,8 +100,8 @@ the model transforms when interpreting the scene. Measure the real bowls.
 ## Files and reproduction
 
 The revision-3 handoff ZIP remains an archived reference for the approved fire
-and former show. The current GLB, builder and this brief describe revision 4.
-The updated Blender derivative retains seven native clips.
+and former show. The current GLB, builder and this brief describe revision 5.
+The GLB now has eight native clips. The separately saved revision-4 Blender derivative predates Hypnotoad.
 
 The ovine loop now has 384 frames at 24 fps (16 seconds). The inactive vertical
 Sauron reference remains 128 frames (5⅓ seconds), repeated three times for its
