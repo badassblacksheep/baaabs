@@ -1,6 +1,6 @@
 import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js';
 import {createClockMap} from './city-clock.js';
-import {createRenderer,zoneRadius} from './renderer.js?v=eyes-5';
+import {createRenderer,zoneRadius} from './renderer.js?v=drive-hypno';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
 import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);
@@ -87,7 +87,7 @@ function pause(){
   releaseCamera();
   keys.clear();hush();if(state.mode!=='drive')return;
   setMode('paused');radio('');$('eyebrow').textContent='DEEP PLAYA';$('title').textContent='Paused.';
-  $('copy').textContent='Earl and the crew are right where you left them.';$('start').textContent='Resume drive →';
+  $('copy').textContent='Your crew and wheels are right where you left them.';$('start').textContent='Resume drive →';
 }
 function targetInfo(){
   const target=targets[state.route],piece=art[target.art],dx=target.x-state.x,dz=target.z-state.z;
@@ -210,8 +210,8 @@ function frame(ms){
   requestAnimationFrame(frame);
 }
 try{
-  draw=await createRenderer($('playa'));ready=true;$('start').disabled=false;$('start').textContent='Start Earl →';requestAnimationFrame(frame);
+  draw=await createRenderer($('playa'));ready=true;$('start').disabled=false;$('start').textContent='Start driving →';requestAnimationFrame(frame);
 }catch(err){
-  console.error(err);$('copy').textContent=err.message.includes('WebGL')?err.message:'Earl couldn’t load. Check your connection and try again.';
+  console.error(err);$('copy').textContent=err.message.includes('WebGL')?err.message:'The playa couldn’t load. Check your connection and try again.';
   $('start').disabled=false;$('start').textContent='Reload';$('start').onclick=()=>location.reload();
 }

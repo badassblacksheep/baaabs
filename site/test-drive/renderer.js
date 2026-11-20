@@ -1,5 +1,4 @@
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
-import {createEyeRenderer} from './eye-renderer.js?v=4';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
 import {art,targets} from './landmarks.js?v=lord-snort';
@@ -7,44 +6,12 @@ import {Geometry,rgb,sub,add,mul,cross,unit} from '../assets/models/playa/geomet
 import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
 import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js?v=rainbow';
-function transform(p,n){
-  if(n.matrix){const m=n.matrix;return [0,1,2].map(i=>m[i]*p[0]+m[i+4]*p[1]+m[i+8]*p[2]+m[i+12]);}
-  const s=n.scale||[1,1,1], t=n.translation||[0,0,0], q=n.rotation||[0,0,0,1];
-  const v=p.map((x,i)=>x*s[i]), r=cross(q,v);
-  return add(t,add(v,mul(add(mul(r,q[3]),cross(q,r)),2)));
-}
-async function loadEarl(){
-  const response=await fetch('../assets/models/baaabs-earl-iteration06-six-shores.glb?v=eyes-5');
+async function loadVehicle(){
+  const response=await fetch('./drive-model.mesh');
   if(!response.ok)throw Error('Model download failed');
-  const data=await response.arrayBuffer(), dv=new DataView(data), len=dv.getUint32(12,true);
-  const doc=JSON.parse(new TextDecoder().decode(new Uint8Array(data,20,len))), offset=28+len;
-  function accessor(id){
-    const a=doc.accessors[id], b=doc.bufferViews[a.bufferView], type={5121:Uint8Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[a.componentType];
-    return new type(data,offset+(b.byteOffset||0)+(a.byteOffset||0),a.count*(a.type==='VEC3'?3:1));
-  }
-  const model=new Geometry(), outlets=[];
-  function visit(id,parents){
-    const n=doc.nodes[id], chain=[n,...parents];
-    for(const prim of doc.meshes[n.mesh]?.primitives||[]){
-      if(n.extras?.eye_revision)continue;
-      const pos=accessor(prim.attributes.POSITION), idx=accessor(prim.indices), mat=doc.materials[prim.material];
-      const points=[];
-      for(let i=0;i<pos.length;i+=3)points.push(chain.reduce(transform,Array.from(pos.subarray(i,i+3))));
-      const component=n.extras?.component, panel=mat.name.startsWith('Panel_');
-      let color=rgb(0x777277);
-      if(panel){const shade=42+(id*17)%32;color=[shade*.94,shade,shade*1.16].map(v=>v/255);}
-      else if(component==='poofer'||component==='ladder'||component==='rails')color=rgb(0xbab2c0);
-      else if(component==='deck')color=rgb(0x9c795d);
-      else if(component==='eye_effect')color=rgb(0xffab45);
-      else if(component==='structure'||component==='equipment')color=rgb(0x494555);
-      else if(mat.pbrMetallicRoughness?.baseColorFactor)color=mat.pbrMetallicRoughness.baseColorFactor.slice(0,3).map(x=>Math.min(.88,x**.48));
-      if(component==='poofer')outlets.push(points.reduce((a,b)=>a[1]>b[1]?a:b));
-      for(let i=0;i<idx.length;i+=3)model.tri(points[idx[i]],points[idx[i+1]],points[idx[i+2]],color);
-    }
-    for(const child of n.children||[])visit(child,chain);
-  }
-  for(const id of doc.scenes[doc.scene].nodes)visit(id,[]);
-  return {model,outlets,eyeAsset:{doc,data,offset}};
+  const packed=response.body.pipeThrough(new DecompressionStream('gzip'));
+  const data=new Float32Array(await new Response(packed).arrayBuffer());
+  return {outlets:[data.subarray(0,3),data.subarray(3,6)],model:{vertices:data.subarray(6)}};
 }
 function passengers(cheering){
   const people=new Geometry();
@@ -69,11 +36,12 @@ function scenery(){
   return g;
 }
 const vertex=`
-attribute vec3 pos,col; varying vec3 tint; uniform vec3 eye,side,up,look,origin;
+attribute vec3 pos,col; varying vec3 tint,eyeUV; uniform vec3 eye,side,up,look,origin;
 uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;uniform float lightPhase;
 void main(){float c=cos(angle),s=sin(angle);vec3 p=pose*(pos*scale);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
+eyeUV=col.x<0.?vec3(-col.x-1.,col.y,col.z):vec3(0.,0.,-1.);
 vec3 paint=col;
 if(lightPhase>=0.){
   float phase=atan(pos.z,pos.x)+.32*pos.y-lightPhase;
@@ -82,7 +50,24 @@ if(lightPhase>=0.){
   paint=brightness*rainbow;
 }
 tint=mix(paint,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
-const frag='precision mediump float; varying vec3 tint; void main(){gl_FragColor=vec4(tint,1.);}';
+const frag=`precision mediump float;
+varying vec3 tint,eyeUV;
+uniform float eyeTime;
+void main(){
+  vec3 color=tint;
+  if(eyeUV.z>=0.){
+    vec2 p=2.*eyeUV.xy-1.;
+    float phase=eyeTime+eyeUV.z*1.5708;
+    vec2 q=p/vec2(.49+.035*sin(phase*2.),.20+.05*sin(phase*3.));
+    float angle=atan(q.y,q.x);
+    float contour=length(q)-1.-.18*sin(phase*3.)*sin(3.*angle);
+    color=mix(vec3(.015,.012,.008),vec3(.97,.24,.025),smoothstep(-.05,.05,contour));
+    color=mix(color,vec3(1.,.82,.13),smoothstep(.18,.28,contour));
+    color=mix(color,vec3(.69,.56,.07),smoothstep(.48,.68,contour));
+    color*=1.-smoothstep(.94,1.,length(p));
+  }
+  gl_FragColor=vec4(color,1.);
+}`;
 const skyVert='attribute vec3 pos;varying vec2 uv;void main(){uv=pos.xy;gl_Position=vec4(pos.xy,0.,1.);}';
 const skyFrag=`precision highp float;varying vec2 uv;uniform vec3 eye,side,up,look;uniform float focal,aspect,shift;
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -105,7 +90,7 @@ color=mix(clay,vec3(.80,.52,.48),1.-exp(-d*.012));}
 gl_FragColor=vec4(color,1.);}`;
 export async function createRenderer(canvas){
   const gl=canvas.getContext('webgl',{antialias:true,alpha:false});
-  if(!gl)throw Error('Earl needs WebGL. Enable graphics acceleration and reload.');
+  if(!gl)throw Error('This game needs WebGL. Enable graphics acceleration and reload.');
   function program(v,f){
     const p=gl.createProgram();
     for(const [type,src] of [[gl.VERTEX_SHADER,v],[gl.FRAGMENT_SHADER,f]]){
@@ -116,10 +101,10 @@ export async function createRenderer(canvas){
     gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;
   }
   const ground=program(skyVert,skyFrag),solid=program(vertex,frag);
-  function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
+  function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,g.vertices instanceof Float32Array?g.vertices:new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
-  const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets,eyeAsset}=await loadEarl(),bus=buffer(model);
-  const drawEyes=await createEyeRenderer(gl,eyeAsset.doc,eyeAsset.data,eyeAsset.offset);
+  const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadVehicle(),bus=buffer(model);
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const robotBus=buffer(robotHeart());
   const snort=lordSnort(), shaft=buffer(snort.base), boar=buffer(snort.boar);
   const installation=eventHorizon({separateLights:true}), lights=buffer(installation.lights), pavilion=buffer(installation.frame), hoops=installation.rings.map(buffer);
@@ -144,7 +129,7 @@ export async function createRenderer(canvas){
   const jet=buffer(flame), shadowGeo=new Geometry();
   for(let i=0;i<32;i++){const pt=j=>[7.8*Math.cos(j*Math.PI/16),.01,2*Math.sin(j*Math.PI/16)];shadowGeo.tri([0,.01,0],pt(i),pt(i+1),rgb(0x55424c),false);}
   const shadow=buffer(shadowGeo), locations=new Map();
-  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','pose','lightPhase'].map(k=>[k,gl.getUniformLocation(p,k)])));
+  for(const p of [solid,ground])locations.set(p,Object.fromEntries(['eye','side','up','look','origin','angle','aspect','focal','shift','scale','pose','lightPhase','eyeTime'].map(k=>[k,gl.getUniformLocation(p,k)])));
   function drawMesh(p,mesh){
     gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);for(const [name,offset] of [['pos',0],['col',12]]){
       const a=gl.getAttribLocation(p,name);if(a<0)continue;gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,3,gl.FLOAT,false,24,offset);
@@ -168,6 +153,7 @@ export async function createRenderer(canvas){
     gl.disable(gl.DEPTH_TEST);camera(ground);drawMesh(ground,skyBuf);
     gl.clear(gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);camera(solid);
     const l=locations.get(solid);
+    gl.uniform1f(l.eyeTime,reducedMotion.matches?0:(time%2)*Math.PI);
     function object(mesh,origin,rotation=0,scale=[1,1,1],pose=identity){
       gl.uniformMatrix3fv(l.pose,false,pose);gl.uniform3fv(l.origin,origin);gl.uniform1f(l.angle,rotation);gl.uniform3fv(l.scale,scale);drawMesh(solid,mesh);
     }
@@ -192,8 +178,6 @@ export async function createRenderer(canvas){
       object(arrow,[zone.x,.12,zone.z],zone.angle);
     }
     object(shadow,base,rot);object(bus,base,rot);
-    drawEyes({eye,side,up,look,focal:2.25,aspect:w/h,shift:intro&&!portrait?.38:0},base,rot,time);
-    gl.useProgram(solid);
     const jumping=state.cheer>0;
     object(jumping?dancers:riders,[state.x,jumping?.70*Math.abs(Math.sin(10*state.cheer)):0,state.z],rot);
     if(state.drop>0){

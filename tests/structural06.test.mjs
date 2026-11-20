@@ -105,8 +105,8 @@ test('current surfaces use 06, archives keep their data, and game handles transf
  for(const file of ['site/index.html','site/the_build.html','site/structural/index.html'])assert.match(read(file),/structural-preview-06.js/);
  assert.match(read('site/structural/iteration-05a.html'),/structural-preview-05.js/);
  assert.match(read('site/structural/iteration-05.html'),/structural-preview-05.js/);
- assert.match(read('site/test-drive/renderer.js'),/baaabs-earl-iteration06-six-shores.glb/);
- const source=read('site/test-drive/renderer.js'),a=source.indexOf('function transform('),b=source.indexOf('async function loadEarl');
+ assert.match(read('tools/bake-drive-model.mjs'),/baaabs-earl-iteration06-six-shores.glb/);
+ const source=read('tools/bake-drive-model.mjs'),a=source.indexOf('function transform('),b=source.indexOf('function bakeVehicle');
  const ctx={};vm.runInNewContext(source.slice(a,b)+';globalThis.apply=transform;',ctx);
  const m=[2,0,0,0,0,3,0,0,0,0,4,0,10,20,30,1];
  assert.deepEqual(Array.from(ctx.apply([1,2,3],{matrix:m})),[12,26,42]);
