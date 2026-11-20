@@ -15,9 +15,9 @@
 <meta name="twitter:description" content="Drive baaabs across deep playa, fire the poofers, and keep it at five miles an hour.">
 <meta name="twitter:image" content="https://baaabs.org/test-drive/test-drive-vi-preview.jpg">
 <meta name="twitter:image:alt" content="A black sheep in sunglasses drives a pink convertible beneath a neon BAAABS Test Drive VI logo.">
-<link rel="stylesheet" href="./game.css?v=thumbs-1"></head>
+<link rel="stylesheet" href="./game.css?v=floating-stick-1"></head>
 <body data-mode="intro"><canvas id="playa" tabindex="-1" aria-label="Third-person view of baaabs on deep playa"></canvas>
-<header><a href="/" aria-label="BAAABS home"><span class="brand">baaabs</span></a><span class="location">BLACK ROCK CITY, NV</span><button id="sound" aria-pressed="true">Sound on</button></header>
+<header><a href="/" aria-label="BAAABS home"><span class="brand">baaabs</span></a><span class="location">BLACK ROCK CITY, NV</span><button id="switch-controls" aria-pressed="false">Use buttons</button><button id="sound" aria-pressed="true">Sound on</button></header>
 <main id="panel"><div id="eyebrow">DEEP PLAYA &nbsp;/&nbsp; TEST DRIVE</div><h1 id="title">Drive<br><span class="wordmark">baaabs</span></h1><p id="copy">One black sheep. Two rear poofers.<br>Keep it at five miles an hour.</p><button id="start" disabled>Loading playa…</button></main>
 <canvas id="city-clock" aria-label="Black Rock City street map. baaabs is the mint arrow, the Man is at the center." width="260" height="260"></canvas>
 <div id="speed"><span id="gear">DRIVE</span><strong id="mph">0.0</strong><small>MPH &nbsp;/&nbsp; LIMIT 5</small></div>
@@ -26,6 +26,10 @@
 <footer id="keys"><span><kbd>W</kbd> Forward</span><span><kbd>S</kbd> Brake / reverse</span><span><kbd>A</kbd><kbd>D</kbd> Steer</span><span><kbd>Space</kbd> Fire jets</span><span><kbd>5</kbd> Cruise at 5</span><span><kbd>Drag</kbd> Orbit camera</span></footer>
 <a id="art-credit" href="https://www.eventhorizon.art/" target="_blank" rel="noopener">Event Horizon ↗<span>Ben Bartlett · 2025</span></a>
 <div id="touch" role="group" aria-label="Driving controls">
+  <span id="stick-hint">Hold playa to drive<br>Drag to look</span>
+  <div id="stick" aria-hidden="true">
+    <span id="stick-vector"></span><span id="stick-knob"></span>
+  </div>
   <div class="steering-pad">
     <button data-key="Space" class="jets">Fire jets</button>
     <div class="thumb-pair" role="group" aria-label="Steering">
@@ -34,6 +38,7 @@
     </div>
   </div>
   <div class="drive-pad">
+    <button data-key="Space" class="stick-jets">Fire jets</button>
     <button data-key="Digit5" id="cruise-button" aria-label="Cruise at 5 mph" aria-pressed="false">Cruise 5</button>
     <div class="thumb-pair" role="group" aria-label="Direction">
       <button data-key="KeyS" aria-label="Brake or reverse">Back</button>
@@ -41,4 +46,4 @@
     </div>
   </div>
 </div>
-<script type="module" src="./game.js?v=thumbs-1"></script></body></html>
+<script type="module" src="./game.js?v=floating-stick-1"></script></body></html>

@@ -27,21 +27,41 @@ function releaseCamera(){
   if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
 }
 canvas.addEventListener('pointerdown',e=>{
-  if(drag||e.button!==0||!['intro','drive'].includes(state.mode))return;
+  if(e.button!==0||!['intro','drive'].includes(state.mode))return;
+  if(e.pointerType!=='mouse' && state.mode==='drive' && !document.body.classList.contains('button-mode')){
+    if(pendingStick || stickPointer!==null || drag)return;
+    const hold={id:e.pointerId,x:e.clientX,y:e.clientY};
+    pendingStick=hold;
+    canvas.setPointerCapture(hold.id);
+    hold.timer=setTimeout(()=>engageStick(hold),300);
+    return;
+  }
+  if(drag)return;
   drag={id:e.pointerId,x:e.clientX,y:e.clientY};
   canvas.setPointerCapture(e.pointerId);
   canvas.classList.add('dragging');
 });
 canvas.addEventListener('pointermove',e=>{
+  if(e.pointerId===stickPointer){moveStick(e);return;}
+  if(e.pointerId===pendingStick?.id){
+    const hold=pendingStick;
+    if(Math.hypot(e.clientX-hold.x,e.clientY-hold.y)<9)return;
+    clearTimeout(hold.timer);pendingStick=null;
+    drag={id:hold.id,x:hold.x,y:hold.y};
+    canvas.classList.add('dragging');
+  }
   if(e.pointerId!==drag?.id)return;
   state.cameraYaw-=(e.clientX-drag.x)*.007;
   state.cameraLift=Math.max(-6,Math.min(20,state.cameraLift+(e.clientY-drag.y)*.048));
   drag.x=e.clientX;drag.y=e.clientY;
 });
 for(const event of ['pointerup','pointercancel','lostpointercapture']){
-  canvas.addEventListener(event,e=>{if(e.pointerId===drag?.id)releaseCamera();});
+  canvas.addEventListener(event,e=>{
+    if(e.pointerId===pendingStick?.id||e.pointerId===stickPointer)releaseStick();
+    if(e.pointerId===drag?.id)releaseCamera();
+  });
 }
-function setMode(mode){for(const id of touchKeys.keys())setTouch(id,null);releaseCamera();state.mode=mode;document.body.dataset.mode=mode;}
+function setMode(mode){releaseStick();for(const id of touchKeys.keys())setTouch(id,null);releaseCamera();state.mode=mode;document.body.dataset.mode=mode;}
 function radio(message,seconds=2.7){$('radio').textContent=message;radioTime=seconds;}
 function initAudio(){
   try{
@@ -147,6 +167,9 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 // Each thumb owns its press. A captured finger can slide between paired buttons.
 const touchKeys=new Map();
 const touchButtons=[...document.querySelectorAll('[data-key]')];
+document.addEventListener('contextmenu',e=>{
+  if(e.target.closest('button,#stick,#playa'))e.preventDefault();
+});
 function held(code){return keys.has(code)||[...touchKeys.values()].some(b=>b.dataset.key===code);}
 function setTouch(id,button){
   const previous=touchKeys.get(id);
@@ -158,7 +181,42 @@ function setTouch(id,button){
   button.classList.add('active');
   press(button.dataset.key,false);
 }
+const stick=$('stick'),knob=$('stick-knob'),vector=$('stick-vector');
+let pendingStick=null,stickPointer=null,stickTurn=0,stickDrive=0,anchorX=0,anchorY=0;
+function engageStick(hold){
+  if(pendingStick!==hold)return;
+  pendingStick=null;stickPointer=hold.id;anchorX=hold.x;anchorY=hold.y;
+  stick.style.left=anchorX+'px';stick.style.top=anchorY+'px';
+  stick.classList.add('engaged');vector.hidden=true;
+}
+function releaseStick(){
+  const id=stickPointer??pendingStick?.id;
+  if(pendingStick)clearTimeout(pendingStick.timer);
+  pendingStick=null;stickPointer=null;stickTurn=0;stickDrive=0;
+  stick.classList.remove('engaged');knob.style.transform='';
+  if(id!=null && canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
+}
+function moveStick(e){
+  const dx=e.clientX-anchorX,dy=e.clientY-anchorY;
+  const travel=42,scale=Math.max(travel,Math.hypot(dx,dy));
+  const x=dx/scale,y=dy/scale;
+  const axis=v=>Math.sign(v)*Math.max(0,(Math.abs(v)-.16)/.84);
+  stickTurn=axis(x);stickDrive=axis(-y);
+  if(stickDrive)state.cruise=false;
+  const distance=Math.hypot(x,y)*travel;
+  knob.style.transform='translate('+x*travel+'px,'+y*travel+'px)';
+  vector.hidden=distance<7;
+  vector.style.width=distance+'px';
+  vector.style.transform='rotate('+Math.atan2(y,x)+'rad)';
+}
+$('switch-controls').onclick=e=>{
+  releaseStick();for(const id of touchKeys.keys())setTouch(id,null);
+  const buttons=document.body.classList.toggle('button-mode');
+  e.currentTarget.textContent=buttons?'Use joystick':'Use buttons';
+  e.currentTarget.setAttribute('aria-pressed',String(buttons));
+};
 for(const b of touchButtons){
+  b.addEventListener('click',e=>{if(e.detail===0)press(b.dataset.key,false);});
   b.addEventListener('pointerdown',e=>{
     e.preventDefault();b.setPointerCapture(e.pointerId);setTouch(e.pointerId,b);
   });
@@ -184,12 +242,12 @@ function advance(dt){
   if(state.cruise)state.speed=state.cruiseSpeed;
   else {
     const forward=held('KeyW'),reverse=held('KeyS');
-    const direction=Number(forward)-Number(reverse);
+    const direction=forward||reverse?Number(forward)-Number(reverse):stickDrive;
     if(direction && state.speed*direction>=0){
-      state.gear=direction;
+      state.gear=Math.sign(direction);
       state.speed+=direction*.62*dt;
     }else{
-      const deceleration=forward||reverse?2.4:.115;
+      const deceleration=forward||reverse||stickDrive?2.4:.115;
       state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-deceleration*dt);
     }
   }
@@ -197,7 +255,8 @@ function advance(dt){
   $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=(state.gear===1?'DRIVE':'REVERSE')+(state.cruise?' · CRUISE':'');
   if(tenths>50){end();return;}
   if(!state.cruise&&!heckled&&tenths>=46){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
-  const target=Number(held('KeyD'))-Number(held('KeyA'));
+  const left=held('KeyA'),right=held('KeyD');
+  const target=left||right?Number(right)-Number(left):stickTurn;
   state.steer+=(target-state.steer)*(1-Math.exp(-dt*5));
   const meters=state.speed*.44704*dt;
   const yaw=state.yaw+meters*Math.tan(state.steer*.69)/6.05;
