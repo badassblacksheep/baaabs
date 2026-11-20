@@ -5,8 +5,8 @@ import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=l
 import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);
 const state={mode:'intro',x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0};
-const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','KeyB','KeyF','Space','Digit5','Numpad5']);
-let lastBrake=-Infinity, fireCooldown=0, elapsed=0, heckled=false, radioTime=0;
+const keys=new Set(),controls=new Set(['KeyW','KeyS','KeyA','KeyD','Space','Digit5','Numpad5']);
+let fireCooldown=0, heckled=false, radioTime=0;
 let music,impactTimer=0,shownArt=-1;
 let sound=true, audio,engine,gain,ready=false,previous=0,draw;
 const canvas=$('playa');
@@ -68,7 +68,7 @@ function restart(){
     Object.assign(state,{x:0,z:0,yaw:0,steer:0,speed:0,gear:1,cruise:false,fire:0,cameraYaw:0,cameraLift:0});
     state.robot=spawnRobot();
     state.route=state.charge=0;impactTimer=0;state.drop=state.cheer=0;
-    lastBrake=-Infinity;fireCooldown=elapsed=0;heckled=false;
+    fireCooldown=0;heckled=false;
   }
   keys.clear();setMode('drive');radio('ROOF CREW  /  Follow the arrow. Party side toward the art!');initAudio();
   window.speechSynthesis?.cancel();canvas.focus({preventScroll:true});previous=performance.now();
@@ -124,7 +124,8 @@ function scorePoof(){
 function press(k){
   if(state.mode!=='drive')return;
   // Only continuous controls need a keyup; one-shot commands cannot get stuck.
-  if(['KeyA','KeyD','Space'].includes(k))keys.add(k);
+  if(['KeyW','KeyS','KeyA','KeyD'].includes(k))keys.add(k);
+  if(k==='KeyW'||k==='KeyS')state.cruise=false;
   if(k==='Digit5'||k==='Numpad5'){
     if(state.cruise)return;
     state.cruise=true;
@@ -132,17 +133,7 @@ function press(k){
     state.speed=state.cruiseSpeed;
     radio('CRUISE  /  Holding 5.0 mph.');
   }
-  if(k==='KeyB'||k==='Space')state.cruise=false;
-  if(k==='KeyW'||k==='KeyS'){
-    const gear=k==='KeyW'?1:-1;
-    if(gear!==state.gear)state.cruise=false;
-    state.gear=gear;
-  }
-  if(k==='KeyB'){
-    if(elapsed-lastBrake>=.42)state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-.72);
-    lastBrake=elapsed;
-  }
-  if(k==='KeyF'&&fireCooldown<=0){state.fire=.62;fireCooldown=.85;whoosh();scorePoof();}
+  if(k==='Space'&&fireCooldown<=0){state.fire=.62;fireCooldown=.85;whoosh();scorePoof();}
 }
 window.addEventListener('keydown',e=>{
   if(e.code==='Escape'){pause();return;}
@@ -157,7 +148,6 @@ for(const b of document.querySelectorAll('[data-key]')){
   b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);press(b.dataset.key);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.key));
 }
-$('shift').onclick=()=>{state.gear*=-1;state.cruise=false;};
 $('start').onclick=restart;
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',sound);if(!sound){hush();window.speechSynthesis?.cancel();}else initAudio();};
 function advance(dt){
@@ -166,11 +156,20 @@ function advance(dt){
     state.drop=Math.max(0,state.drop-dt);
     if(state.drop===0)state.charge=0;
   }
-  elapsed+=dt;fireCooldown-=dt;state.fire=Math.max(0,state.fire-dt);
+  fireCooldown-=dt;state.fire=Math.max(0,state.fire-dt);
   if(radioTime>0&&(radioTime-=dt)<=0)$('radio').textContent='';
   if(state.cruise)state.speed=state.cruiseSpeed;
-  else if(keys.has('Space'))state.speed+=state.gear*.62*dt;
-  else state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-.115*dt);
+  else {
+    const forward=keys.has('KeyW'),reverse=keys.has('KeyS');
+    const direction=Number(forward)-Number(reverse);
+    if(direction && state.speed*direction>=0){
+      state.gear=direction;
+      state.speed+=direction*.62*dt;
+    }else{
+      const deceleration=forward||reverse?2.4:.115;
+      state.speed=Math.sign(state.speed)*Math.max(0,Math.abs(state.speed)-deceleration*dt);
+    }
+  }
   const tenths=Math.round(Math.abs(state.speed)*10);
   $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=(state.gear===1?'DRIVE':'REVERSE')+(state.cruise?' · CRUISE':'');
   if(tenths>50){end();return;}
