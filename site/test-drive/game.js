@@ -41,7 +41,7 @@ canvas.addEventListener('pointermove',e=>{
 for(const event of ['pointerup','pointercancel','lostpointercapture']){
   canvas.addEventListener(event,e=>{if(e.pointerId===drag?.id)releaseCamera();});
 }
-function setMode(mode){releaseCamera();state.mode=mode;document.body.dataset.mode=mode;}
+function setMode(mode){for(const id of touchKeys.keys())setTouch(id,null);releaseCamera();state.mode=mode;document.body.dataset.mode=mode;}
 function radio(message,seconds=2.7){$('radio').textContent=message;radioTime=seconds;}
 function initAudio(){
   try{
@@ -121,10 +121,10 @@ function scorePoof(){
   bassSound(full);
   radio(full?'BASS DROP!  /  The whole roof is jumping.':'ROOF CREW  /  Again! Hit the next ring.');
 }
-function press(k){
+function press(k,keyboard=true){
   if(state.mode!=='drive')return;
   // Only continuous controls need a keyup; one-shot commands cannot get stuck.
-  if(['KeyW','KeyS','KeyA','KeyD'].includes(k))keys.add(k);
+  if(keyboard && ['KeyW','KeyS','KeyA','KeyD'].includes(k))keys.add(k);
   if(k==='KeyW'||k==='KeyS')state.cruise=false;
   if(k==='Digit5'||k==='Numpad5'){
     if(state.cruise)return;
@@ -144,9 +144,32 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>keys.delete(e.code));
 window.addEventListener('blur',pause);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-for(const b of document.querySelectorAll('[data-key]')){
-  b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);press(b.dataset.key);});
-  for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>keys.delete(b.dataset.key));
+// Each thumb owns its press. A captured finger can slide between paired buttons.
+const touchKeys=new Map();
+const touchButtons=[...document.querySelectorAll('[data-key]')];
+function held(code){return keys.has(code)||[...touchKeys.values()].some(b=>b.dataset.key===code);}
+function setTouch(id,button){
+  const previous=touchKeys.get(id);
+  if(previous===button)return;
+  touchKeys.delete(id);
+  if(previous && ![...touchKeys.values()].includes(previous))previous.classList.remove('active');
+  if(!button)return;
+  touchKeys.set(id,button);
+  button.classList.add('active');
+  press(button.dataset.key,false);
+}
+for(const b of touchButtons){
+  b.addEventListener('pointerdown',e=>{
+    e.preventDefault();b.setPointerCapture(e.pointerId);setTouch(e.pointerId,b);
+  });
+  b.addEventListener('pointermove',e=>{
+    if(!b.hasPointerCapture(e.pointerId)||!b.closest('.thumb-pair'))return;
+    const next=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-key]');
+    setTouch(e.pointerId,next?.parentElement===b.parentElement?next:null);
+  });
+  for(const event of ['pointerup','pointercancel','lostpointercapture']){
+    b.addEventListener(event,e=>setTouch(e.pointerId,null));
+  }
 }
 $('start').onclick=restart;
 $('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'Sound on':'Sound off';$('sound').setAttribute('aria-pressed',sound);if(!sound){hush();window.speechSynthesis?.cancel();}else initAudio();};
@@ -160,7 +183,7 @@ function advance(dt){
   if(radioTime>0&&(radioTime-=dt)<=0)$('radio').textContent='';
   if(state.cruise)state.speed=state.cruiseSpeed;
   else {
-    const forward=keys.has('KeyW'),reverse=keys.has('KeyS');
+    const forward=held('KeyW'),reverse=held('KeyS');
     const direction=Number(forward)-Number(reverse);
     if(direction && state.speed*direction>=0){
       state.gear=direction;
@@ -174,7 +197,7 @@ function advance(dt){
   $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=(state.gear===1?'DRIVE':'REVERSE')+(state.cruise?' · CRUISE':'');
   if(tenths>50){end();return;}
   if(!state.cruise&&!heckled&&tenths>=46){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
-  const target=Number(keys.has('KeyD'))-Number(keys.has('KeyA'));
+  const target=Number(held('KeyD'))-Number(held('KeyA'));
   state.steer+=(target-state.steer)*(1-Math.exp(-dt*5));
   const meters=state.speed*.44704*dt;
   const yaw=state.yaw+meters*Math.tan(state.steer*.69)/6.05;
@@ -189,6 +212,8 @@ function advance(dt){
     state.speed=0;state.cruise=false;
     if(impactTimer===0){radio(traffic?'ROOF CREW  /  Give Robot Heart a little room.':'ROOF CREW  /  This is a drive-by art tour. The “by” is important.',4);impactTimer=4;}
   }else{state.x=x;state.z=z;state.yaw=yaw;}
+  const cruiseButton=$('cruise-button');
+  if((cruiseButton.getAttribute('aria-pressed')==='true')!==state.cruise)cruiseButton.setAttribute('aria-pressed',String(state.cruise));
   state.robot=advanceRobot(state.robot,state,dt);
   const info=targetInfo();
   $('bass').value=state.charge;
