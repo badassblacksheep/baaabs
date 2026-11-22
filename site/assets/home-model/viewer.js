@@ -169,7 +169,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name + "?v=dj-booth-1",base));
+  const response=await fetch(new URL(name + "?v=convex-shell-1",base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;
@@ -206,7 +206,7 @@ function loadBusPhoto(version){
     gl.activeTexture(gl.TEXTURE0);
     schedule();
   };
-  image.src = new URL('earl-photo.jpg?v=dj-booth-1',base);
+  image.src = new URL('earl-photo.jpg?v=convex-shell-1',base);
 }
 function loadAtlas(version){
   const image=new Image();

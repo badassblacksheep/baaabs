@@ -18,7 +18,7 @@ def load(name):
 class Eyes(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.before,_=load('earl-roof-attachment-study.glb')
+        cls.before,cls.original_binary=load('earl-roof-attachment-study.glb')
         cls.doc,cls.binary=load('earl-animated-eyes.glb')
 
     def values(self,index):
@@ -55,6 +55,37 @@ class Eyes(unittest.TestCase):
         self.assertEqual(picks, ids)
         self.assertEqual(len(ids), 206)
         self.assertCountEqual(panel_nodes, sorted(ids))
+
+    def test_all_six_hoof_meshes_and_placements_are_unchanged(self):
+        def hooves(doc, binary):
+            parents = {child:index for index,obj in enumerate(doc['nodes']) for child in obj.get('children',[])}
+            result = {}
+            for index,node in enumerate(doc['nodes']):
+                if 'mesh' not in node:
+                    continue
+                primitives = doc['meshes'][node['mesh']]['primitives']
+                name = doc['materials'][primitives[0]['material']]['name']
+                if not name.startswith('Panel_K-'):
+                    continue
+                transforms = []
+                while True:
+                    transforms.append({k:node[k] for k in ('matrix','translation','rotation','scale') if k in node})
+                    if index not in parents:
+                        break
+                    index = parents[index]
+                    node = doc['nodes'][index]
+                payload = []
+                for prim in primitives:
+                    for semantic,accessor in sorted({**prim['attributes'],'indices':prim['indices']}.items()):
+                        a = doc['accessors'][accessor]
+                        view = doc['bufferViews'][a['bufferView']]
+                        start = view.get('byteOffset',0)
+                        payload.append((semantic,a,view,binary[start:start+view['byteLength']]))
+                result[name.split('_')[1]] = transforms,payload
+            return result
+        before = hooves(self.before,self.original_binary)
+        self.assertEqual(len(before),6)
+        self.assertEqual(before,hooves(self.doc,self.binary))
 
     def test_old_flame_placeholders_disconnected(self):
         visited=set()

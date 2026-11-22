@@ -12,9 +12,14 @@ import numpy as np
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
 from dj_booth import APERTURE, CENTER_X, PANEL_IDS, apply_dj_booth, panel_loops, read_accessor, signed_area
+from dj_panel_layout import gltf_coordinates, sheet_sources, transform_points
 from glb_bounds import transform
 
 Model = runpy.run_path(str(ROOT/'tools/build-animated-eyes.py'))['Model']
+
+
+def polygon_area(loop):
+    return np.linalg.norm(np.cross(loop,np.roll(loop,-1,axis=0)).sum(axis=0))/2
 
 
 class BoothTests(unittest.TestCase):
@@ -38,6 +43,12 @@ class BoothTests(unittest.TestCase):
                 continue
             mesh = self.doc['meshes'][node['mesh']]
             materials = [self.doc['materials'][p['material']] for p in mesh['primitives']]
+            for prim, material in zip(mesh['primitives'],materials):
+                for tex in (material['pbrMetallicRoughness'].get('baseColorTexture'),material.get('normalTexture')):
+                    if tex is None:
+                        continue
+                    uv = read_accessor(self.model,prim['attributes']['TEXCOORD_'+str(tex.get('texCoord',0))])
+                    self.assertTrue(np.isfinite(uv).all(),node['name'])
             for record in [node, mesh, *materials]:
                 e = record['extras']
                 self.assertEqual(e['material'], 'Provisional McNICHOLS perforated mild steel')
@@ -59,11 +70,12 @@ class BoothTests(unittest.TestCase):
         pieces = {p['id']:p for p in layout['pieces']}
         with (ROOT/'site/assets/earl-symmetric-panel-register.csv').open(newline='') as f:
             original = {r['Panel ID']:json.loads(r['Vertices (world meters)']) for r in csv.DictReader(f)}
-        from dj_panel_layout import sheet_sources, transform_points
         sources = sheet_sources(self.model)
         self.assertEqual(set(sources), set(pieces))
         self.assertEqual(len(sources), 206)
         covered = defaultdict(float)
+        reference = json.loads((ROOT/'reference/panels/earl-before-dj.json').read_text())
+        reference_holes = {p['id']:p['holes_m'] for p in reference['panels']}
         for pid, source in sources.items():
             n = self.doc['nodes'][source['node']]
             self.assertEqual(n['extras']['panel_id'], pid)
@@ -94,14 +106,46 @@ class BoothTests(unittest.TestCase):
                 areas = 0
                 for f in pieces[pid]['faces']:
                     loop = np.asarray(f.get('vertices_m',original[f['source']]))
-                    area = np.linalg.norm(np.cross(loop,np.roll(loop,-1,axis=0)).sum(axis=0))/2
+                    area = polygon_area(loop) - sum(polygon_area(h) for h in f.get('holes_m',[]))
                     areas += area
                     covered[f['source']] += area
                 self.assertAlmostEqual(n['extras']['net_area_m2'], areas, delta=.002, msg=pid)
         for pid, area in covered.items():
             loops = panel_loops(original[pid]) if pid in PANEL_IDS else [original[pid]]
-            expected = sum(np.linalg.norm(np.cross(loop,np.roll(loop,-1,axis=0)).sum(axis=0))/2 for loop in loops)
+            expected = sum(polygon_area(loop) for loop in loops) - sum(polygon_area(h) for h in reference_holes[pid])
             self.assertAlmostEqual(expected, area, delta=.0003, msg=pid+' lost or gained skin area')
+
+    def test_revised_orbital_sheets_have_both_original_eye_holes(self):
+        # Each existing rim segment must be an actual exposed mesh edge, even
+        # when the exterior perimeter and the panel ID allocation change.
+        survey = json.loads((ROOT/'reference/panels/earl-before-dj.json').read_text())
+        sources = sheet_sources(self.model)
+        orbital = [p for p in survey['panels'] if p['region'] == 'Face' and p['holes_m']]
+        self.assertEqual({p['id'] for p in orbital},{'F-P-007','F-D-007'})
+        for original in orbital:
+            original_id = original['id']
+            hole, = original['holes_m']
+            expected = gltf_coordinates(hole)
+            found = False
+            for pid,source in sources.items():
+                obj = self.doc['nodes'][source['node']]
+                if original_id not in obj.get('extras',{}).get('source_panels',[]):
+                    continue
+                prim = source['prim']
+                vertices = transform_points(read_accessor(self.model,prim['attributes']['POSITION']),source['world'])
+                near = np.linalg.norm(expected[:,None,:]-vertices[None,:,:],axis=2)
+                if np.any(near.min(axis=1) > .00002):
+                    continue
+                ring = near.argmin(axis=1)
+                triangles = read_accessor(self.model,prim['indices']).reshape(-1,3)
+                counts = defaultdict(int)
+                for tri in triangles:
+                    for a,b in zip(tri,np.roll(tri,-1)):
+                        counts[tuple(sorted((a,b)))] += 1
+                for a,b in zip(ring,np.roll(ring,-1)):
+                    self.assertEqual(counts[tuple(sorted((a,b)))],1,pid+' has a closed or broken eye aperture')
+                found = True
+            self.assertTrue(found,original_id+' missing its original interior cutout')
 
     def test_inside_to_crowd_rays(self):
         # Reconstruct every scene transform, then intersect transverse rays with

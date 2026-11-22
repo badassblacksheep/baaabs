@@ -46,6 +46,7 @@ jobs:
           python3 tools/build-animated-eyes.py
           python3 -m unittest discover -s tests -p 'test_animated_eyes.py'
           python3 -m unittest discover -s tests -p 'test_dj_booth.py'
+          python3 -m unittest discover -s tests -p 'test_panel_coverage.py'
           python3 tools/build-dj-register.py --check
           node --test tests/dj-workshop.test.mjs tests/home-dj.test.mjs
       - name: Check structural report and workshop revision

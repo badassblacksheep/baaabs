@@ -59,7 +59,7 @@ test('homepage and driving meshes include the revised sheet boundaries', () => {
     }
     return false;
   }
-  for (const sheet of plan.pieces) for (const face of sheet.faces) for (const [x,y,z] of face.vertices_m ?? []) {
+  for (const sheet of plan.pieces) for (const face of sheet.faces) for (const [x,y,z] of [...face.vertices_m ?? [], ...(face.holes_m ?? []).flat()]) {
     const pt = [x,z,-y].map(v => Math.round(1000*v));
     assert.ok(near(surface,...pt), sheet.id+' absent from homepage at '+pt);
     assert.ok(near(driving,...pt), sheet.id+' absent from game at '+pt);

@@ -82,9 +82,9 @@ def populate_scene(source):
         "BAAABS animated eyes and DJ booth\n\n"
         "Select the crowd or DJ camera to compare the audience and performer sightlines. "
         "The eye-study camera still frames the two shallow spherical caps. "
-        "The booth opening crosses the former B-D-047, 048, 050 and 071 facets. The seven "
-        "retained pieces are B-D-047, 048, 050, 071, 073, 074 and 081. "
-        "Its six sides are centered on the midpoint between the two speaker arrays. "
+        "The booth opening crosses the former B-D-047, 048, 050 and 071 facets. "
+        "The removable blanks follow the convex outlines in the panel workshop. "
+        "The six-sided opening is centered between the two speaker arrays. "
         "Earl's original window frames and sash remain. "
         "Check standing eye height, face visibility and exit clearance on Earl before fabrication.\n\n"
         "Play frames 1–384 at 24 fps for the active Ovine Sauron cycle. "
@@ -129,9 +129,11 @@ def verify(destination, doc):
     # Intersect each individual clipped skin in object space with broadside rays.
     # Importers may duplicate vertices; this checks the saved surface directly.
     checked = set()
-    ids = {node["extras"]["panel_id"] for node in doc["nodes"]
-           if node.get("extras", {}).get("dj_booth_revision") and "panel_id" in node["extras"]}
-    assert {"B-D-047", "B-D-048", "B-D-050", "B-D-071"} <= ids
+    rim_sheets = [node["extras"] for node in doc["nodes"]
+                  if node.get("extras", {}).get("dj_booth_revision") and "panel_id" in node["extras"]]
+    ids = {sheet["panel_id"] for sheet in rim_sheets}
+    sources = {source for sheet in rim_sheets for source in sheet["source_panels"]}
+    assert {"B-D-047", "B-D-048", "B-D-050", "B-D-071"} <= sources
     for obj in scene.objects:
         if obj.type != "MESH" or obj.get("panel_id") not in ids:
             continue

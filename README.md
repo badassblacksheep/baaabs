@@ -40,7 +40,9 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Exterior skin mass study
 
-The DJ booth and skin revision has **206 separate detachable panels** and **194.4826 m² (2,093.39 ft²)** of net sheet. Each developed pattern fits one 60 × 120 in sheet. The heaviest bare perforated-steel skin is 26.8 lb. Allowing 0.50 lb/ft of edging and 2 lb of fittings gives 41.0 lb for the heaviest trial assembly. Original fold lines are shown on the developed patterns where neighboring faces share a sheet. Check finished assemblies, grips, transport clearance and egress on Earl. [Inspect the booth and cut geometry](https://baaabs.org/the_build.html#dj-booth). [View materials and the two-person handling study](https://baaabs.org/panels.html).
+Earl’s 206 detachable panels cover 194.4826 m² (2,093.39 ft²). The cut register contains 102 triangles, 88 quadrilaterals, 11 pentagons and 5 hexagons. Each outer perimeter is convex. The six original hoof plates, two eye sockets, passenger-side circular opening and six-sided DJ window retain their geometry. Two flat pentagons flank the window. Seams follow its corners, and 32 panels have a marked crease to follow the underlying surface. The largest bend is 19.73° from flat.
+
+Every cut pattern fits one 60 × 120 in sheet with at least 0.86 in of margin per side when centered in its listed orientation. The heaviest 20-gauge perforated-steel skin is 27.4 lb. Allowing 0.50 lb/ft of edging and 2 lb of fittings gives a maximum trial assembly of 41.0 lb. Finished weight, grips and clearance still need a full-size check. [Inspect the two bevels and DJ window](https://baaabs.org/the_build.html#dj-booth). [View panel materials and handling estimates](https://baaabs.org/panels.html).
 
 ## Contributions
 

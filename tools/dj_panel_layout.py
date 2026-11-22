@@ -86,11 +86,47 @@ def triangulate(points):
     return np.array(faces+[ix])
 
 
+def triangulate_surface(outer, holes):
+    """Triangulate a convex blank, preserving the orbital aperture as an interior boundary."""
+    if not holes:
+        return outer, triangulate(outer)
+    if len(holes) != 1:
+        raise ValueError('An orbital sheet must have exactly one eye opening')
+    inner = holes[0]
+    normal = np.cross(outer,np.roll(outer,-1,axis=0)).sum(axis=0)
+    normal_axis = int(np.argmax(abs(normal)))
+    poly = np.delete(outer,normal_axis,axis=1)
+    aperture = np.delete(inner,normal_axis,axis=1)
+    if np.sign(signed_area(poly)) != np.sign(signed_area(aperture)):
+        inner = inner[::-1]
+        aperture = aperture[::-1]
+    # The leftmost vertices of two nested convex contours see each other, as
+    # do their rightmost vertices. Those two nonintersecting bridges cut the
+    # annulus into simple polygons, with no extra vertices on the physical rim.
+    axis = int(np.argmax(np.ptp(aperture,axis=0)))
+    left, right = int(np.argmin(poly[:,axis])), int(np.argmax(poly[:,axis]))
+    eye_left, eye_right = int(np.argmin(aperture[:,axis])), int(np.argmax(aperture[:,axis]))
+    def arc(start, end, length):
+        return (np.arange((end-start) % length + 1) + start) % length
+    coords = np.vstack((outer,inner))
+    triangles = []
+    for a,b,i,j in [(left,right,eye_left,eye_right),(right,left,eye_right,eye_left)]:
+        boundary = np.concatenate((arc(a,b,len(outer)),len(outer)+arc(i,j,len(inner))[::-1]))
+        triangles.extend(boundary[triangulate(coords[boundary])])
+    return coords, np.asarray(triangles)
+
+
+def perforation_uv(material):
+    texture = material['pbrMetallicRoughness']['baseColorTexture']
+    return 'TEXCOORD_' + str(texture.get('texCoord',0))
+
+
 def uv_map(model, source, outline):
     """Interpolate the original perforation UVs on the registered outer face."""
     prim = source['prim']
     coords = transform_points(read_accessor(model,prim['attributes']['POSITION']),source['world'])
-    uvs = read_accessor(model,prim['attributes']['TEXCOORD_0'])
+    semantic = perforation_uv(model.doc['materials'][source['material']])
+    uvs = read_accessor(model,prim['attributes'][semantic])
     tri = read_accessor(model,prim['indices']).reshape(-1,3)
     normal = np.cross(outline,np.roll(outline,-1,axis=0)).sum(axis=0)
     normal /= np.linalg.norm(normal)
@@ -187,6 +223,14 @@ def repack_panels(model):
     with (ASSETS/'earl-symmetric-panel-register.csv').open(newline='') as stream:
         old = {r['Panel ID']:json.loads(r['Vertices (world meters)']) for r in csv.DictReader(stream)}
     sources = sheet_sources(model)
+    # Some historical split sheets inherited their donor's second UV channel
+    # number, though the exported primitive contains the perforation map in UV0.
+    for src in sources.values():
+        material = doc['materials'][src['material']]
+        attrs = src['prim']['attributes']
+        for tex in (material['pbrMetallicRoughness'].get('baseColorTexture'),material.get('normalTexture')):
+            if tex and 'TEXCOORD_' + str(tex.get('texCoord',0)) not in attrs and 'TEXCOORD_0' in attrs:
+                tex['texCoord'] = 0
     pieces = {p['id']:p for p in layout['pieces']}
     if len(pieces)!=206 or set(old)!=set(sources):
         raise ValueError('Panel layout and source model IDs do not match')
@@ -236,7 +280,8 @@ def repack_panels(model):
             area_vector = np.cross(points,np.roll(points,-1,axis=0)).sum(axis=0)
             if np.dot(area_vector,outward)<0:
                 points = points[::-1]
-            triangles = triangulate(points)
+            holes = [gltf_coordinates(hole) for hole in f.get('holes_m',[])]
+            points, triangles = triangulate_surface(points, holes)
             crosses = np.cross(points[triangles[:,1]]-points[triangles[:,0]],points[triangles[:,2]]-points[triangles[:,0]])
             net_area += float(np.linalg.norm(crosses,axis=1).sum()/2)
             local_normal = world[:3,:3].T @ outward
@@ -247,11 +292,19 @@ def repack_panels(model):
         normal = (normal / np.linalg.norm(normal,axis=1)[:,None]).tolist()
         name = pid+' | '+piece['name']
         mesh = len(doc['meshes'])
+        uv_index = model.accessor(uv,2)
+        attributes = {'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normal,3),'TEXCOORD_0':uv_index}
+        attributes[perforation_uv(doc['materials'][material])] = uv_index
         doc['meshes'].append({'name':name,'primitives':[{
-            'attributes':{'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normal,3),'TEXCOORD_0':model.accessor(uv,2)},
+            'attributes':attributes,
             'indices':model.accessor(indices,1,True),'material':material}]})
         n.update(name=name, mesh=mesh, extras={**first['extras'], 'panel_id':pid, 'panel_name':piece['name'],
-            'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':1})
+            'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':2})
+        extras = n['extras']
+        if 'surface_points' in extras:
+            extras['source_surface_points'] = extras.pop('surface_points')
+        if 'empty_eye_opening' in extras:
+            extras['empty_eye_opening'] = any(f.get('holes_m') for f in face_defs)
         if any(f['source'] in PANEL_IDS for f in face_defs):
             n['extras']['dj_booth_revision'] = 1
     for retired in set(sources)-set(pieces):
@@ -294,7 +347,7 @@ def apply_sheet_spec(doc):
         if node.get('extras', {}).get('panel_id') and 'mesh' in node:
             live_meshes.add(node['mesh'])
             update(node, {**spec, 'skin_material': material_name,
-                          'schedule_revision': 'Earl DJ booth · 206 detachable panels'})
+                          'schedule_revision': 'Earl convex shell · 206 detachable panels'})
     for i in live_meshes:
         mesh = doc['meshes'][i]
         update(mesh, spec)
