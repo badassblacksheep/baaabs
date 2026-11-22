@@ -17,3 +17,8 @@
 .itch .fire-story .prose{max-width:62ch;margin-inline:auto}.itch .fire-photos{display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;gap:clamp(5px,1vw,16px);margin:2.5rem 0}
 .itch .fire-story>.signature{text-align:center}
 @media(max-width:740px){.itch .opening,.itch .chapter{grid-template-columns:1fr;gap:1.4rem}.itch .opening img{max-height:58vh}.itch .opening-copy{padding-bottom:0}.itch .lead{margin-top:.8em}.itch .fire-photos{grid-template-columns:1fr 1fr}.itch .fire-photos img:nth-child(2){grid-column:1/-1;grid-row:1}.itch .fire-photos img{align-self:start}}
+
+.itch .performance-gallery{margin:2.5rem 0}
+.itch .performance-gallery .fire-photos{margin:0}
+.itch .performance-gallery figcaption{max-width:58ch;margin:1rem auto;text-align:center}
+@media(min-width:761px){.itch .fire-history{grid-template-columns:repeat(3,minmax(0,1fr))}}

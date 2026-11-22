@@ -4,13 +4,16 @@
 <title>BAAABS — Where even black sheep belong</title>
 <meta name="description" content="A black sheep. A rooftop dance floor. A very big dream. Buy a patch and help build BAAABS.">
 <link rel="canonical" href="https://baaabs.org/"><meta property="og:title" content="BAAABS — Where even black sheep belong"><meta property="og:description" content="Wear a little sheep. Help build a big one."><meta property="og:image" content="https://baaabs.org/assets/earl-front-x-hero.jpg"><meta property="og:url" content="https://baaabs.org/"><meta property="og:type" content="website"><meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="assets/launch.css?v=word-art"><script src="assets/launch.js?v=eye-controls-5" defer></script>
-<script type="module" src="assets/vendor/model-viewer-4.1.0.min.js"></script><script defer src="assets/structural-preview-06.js?v=1"></script><script src="assets/patch-config.js?v=patch-10-us" defer></script><script src="assets/patch.js?v=stripe-live-20261104" defer></script><script async src="https://js.stripe.com/v3/buy-button.js"></script>
+<link rel="preload" as="image" href="assets/home-model/poster.jpg" fetchpriority="high">
+<link rel="preload" as="fetch" href="assets/home-model/shell.mesh" crossorigin>
+<script type="module" src="assets/home-model/viewer.js"></script>
+<link rel="stylesheet" href="assets/launch.css?v=word-art"><script src="assets/launch.js?v=home-orbit" defer></script>
+<script src="assets/patch-config.js?v=patch-10-us" defer></script><script src="assets/patch.js?v=stripe-live-20261104" defer></script><script async src="https://js.stripe.com/v3/buy-button.js"></script>
 <link rel="stylesheet" href="assets/flock-nav.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Modak&amp;display=swap">
-<link rel="stylesheet" href="assets/animated-eyes.css?v=5"><script defer src="assets/animated-eyes.js?v=5.1"></script></head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Modak&amp;display=swap" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="assets/animated-eyes.css?v=5"></head>
 <body data-storefront="baaabs"><a class="skip" href="#main">Skip to content</a>
 <header class="flock-header"><a class="flock-home" href="./" aria-label="BAAABS home"><img src="assets/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>
 <nav aria-label="Main navigation"><a href="patch.html">The Patch</a><a href="pitch.html">The Pitch</a><a href="the_build.html">The Build</a><a href="itch.html">The Itch</a><a href="https://www.instagram.com/b_a_a_a_b_s/" target="_blank" rel="noopener">The Gram</a></nav></header>
@@ -18,16 +21,19 @@
 <div class="hero-top"><p class="eyebrow">Seattle → Black Rock City</p><p class="micro">A mutant vehicle in the making.</p></div>
 <div class="model-stage" id="model">
 <div class="model-viewport">
-  <model-viewer data-animated-eyes id="earl" data-rear-frame-src="assets/models/earl-animated-eyes.glb?v=5"
-    alt="Earl, the matte-black sheep art bus with angular hooves, a rooftop dance deck and rear stairs"
-    camera-controls touch-action="pan-y" interaction-prompt="none"
-    camera-orbit="-28deg 76deg 83%" rotation-per-second="14deg" auto-rotate-delay="1400"
-    environment-image="assets/disco/earl-studio.hdr" exposure="1.35" shadow-intensity="0.6"
-    loading="eager" poster="assets/earl-front-x-hero.jpg"></model-viewer>
+  <div class="home-orbit">
+    <canvas id="home-sheep" tabindex="0" aria-label="Revolving baaabs with Ovine Sauron eyes. Drag or use arrow keys to orbit. Use plus and minus to zoom."></canvas>
+    <img id="home-poster" src="assets/home-model/poster.jpg" alt="baaabs with fiery eyes and a rooftop dance floor" fetchpriority="high">
+  </div>
 <section class="acronym-play" aria-label="BAAABS word art">
 <style>
 #earl-soundtrack{position:absolute;right:2vw;top:58px;z-index:2;width:min(320px,92%);padding:5px;background:#100d1a;border-radius:8px}#earl-soundtrack[hidden]{display:none}#earl-soundtrack iframe{display:block;width:100%;height:200px;border:0}#earl-soundtrack a{display:block;padding:4px 8px;font-size:12px}#push-it{white-space:nowrap}
-#earl:not(:defined){background-image:url("assets/earl-front-x-hero.jpg")}
+ .home-orbit{position:relative;width:100%;height:min(65vw,64vh);min-height:300px;background:radial-gradient(ellipse at 30% 60%,#302139,transparent 55%),radial-gradient(ellipse at 78% 65%,#152e36,#100d1a 75%)}
+.home-orbit canvas,.home-orbit img{display:block;width:100%;height:100%}
+.home-orbit canvas{touch-action:pan-y;cursor:grab}.home-orbit canvas:active{cursor:grabbing}
+.home-orbit img{position:absolute;inset:0;object-fit:contain;background:#0d0b16;pointer-events:none}
+.home-orbit img[hidden]{display:none}
+@media(max-width:760px){.home-orbit{height:56vw;min-height:245px}}
 .model-stage #hero-title{position:absolute;inset-inline:0;bottom:clamp(8px,2vw,28px);margin:0;text-align:center;white-space:nowrap;font-family:"Modak",Arial,sans-serif;font-weight:400;letter-spacing:0;font-size:clamp(12px,4.8vw,68px);line-height:1.2;text-shadow:0 2px 12px #080710;pointer-events:none}
 .model-stage #hero-title span{color:#939cff;--phase:-2s}
 .disco-hero{padding-bottom:0}
@@ -157,12 +163,11 @@ setTimeout(advance,3400);
   <h1 id="hero-title">Where even <span>black sheep</span> belong.</h1>
 </div>
   <div class="model-controls" data-eye-controls="earl" role="group" aria-label="Model controls">
-    <label class="model-eye-label">Eyes <select data-eye-select disabled aria-label="Eye animation"></select></label>
     <button data-eye-pause class="quiet" type="button" disabled>Pause eyes</button>
     <button id="rotation-toggle" class="quiet" type="button" hidden>Pause rotation</button>
     <button id="push-it" class="quiet" type="button" aria-controls="earl-soundtrack" aria-label="Play Push It">▶ Push It</button>
-    <a href="eyes.html" data-eye-link class="model-eye-link">Eye close-up ↗</a>
-    <span id="model-hint" class="micro">Drag to orbit Earl</span>
+    <a href="eyes.html?eyes=ovine" data-eye-link class="model-eye-link">Eye close-up ↗</a>
+    <span id="model-hint" class="micro">Drag to orbit baaabs</span>
   </div>
   <div id="earl-soundtrack" hidden><div id="track-screen"></div><a href="https://www.youtube.com/watch?v=xzxx3iW8DiQ" target="_blank" rel="noopener">Push It · Watch on YouTube ↗</a></div>
 </div>
