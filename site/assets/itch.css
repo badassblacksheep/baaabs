@@ -22,3 +22,10 @@
 .itch .performance-gallery .fire-photos{margin:0}
 .itch .performance-gallery figcaption{max-width:58ch;margin:1rem auto;text-align:center}
 @media(min-width:761px){.itch .fire-history{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+@media (min-width: 741px) {
+  .itch .fire-story > .prose,
+  .itch .fire-story > .prose p {
+    max-width: none;
+  }
+}
