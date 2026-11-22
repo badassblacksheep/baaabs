@@ -325,11 +325,11 @@ def apply_dj_booth(model):
     if found != set(PANEL_IDS):
         raise ValueError(f'DJ opening requires {PANEL_IDS}, found {found}')
     from dj_panel_layout import apply_sheet_spec, repack_panels
-    repack_panels(model)
-    apply_sheet_spec(doc)
+    panel_count = repack_panels(model)
+    apply_sheet_spec(doc,panel_count)
     add_mesh(model, 'DJ port / folded matte perimeter', rim_faces, rim, 'dj_rim')
     open_donor_glass(model, glass)
     add_interior(model)
     doc['asset'].setdefault('extras', {})['dj_booth_revision'] = 1
     doc['scenes'][doc.get('scene', 0)].setdefault('extras', {}).update(
-        panel_count=206, dj_booth_layout='Party-side DJ, opposite lounge and under-seat prop bay; verify on Earl.')
+        panel_count=panel_count, dj_booth_layout='Party-side DJ, opposite lounge and under-seat prop bay; verify on Earl.')

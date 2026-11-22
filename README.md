@@ -40,9 +40,12 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Exterior skin mass study
 
-Earl’s 206 detachable panels cover 194.4826 m² (2,093.39 ft²). The cut register contains 102 triangles, 88 quadrilaterals, 11 pentagons and 5 hexagons. Each outer perimeter is convex. The six original hoof plates, two eye sockets, passenger-side circular opening and six-sided DJ window retain their geometry. Two flat pentagons flank the window. Seams follow its corners, and 32 panels have a marked crease to follow the underlying surface. The largest bend is 19.73° from flat.
+Earl’s 206 detachable panels store flat. Each installed surface and its cut pattern are convex, with 139 triangles, 58 quadrilaterals, 7 pentagons and 2 hexagons. The six hoof plates and all three circular cutouts retain their original geometry. B-D-031 replaces the narrow upper-flank fan above the DJ window. B-D-085 is a separate tapered strip beside the original opening. [Inspect the upper flank](https://baaabs.org/the_build.html#B-D-031) or [the window strip](https://baaabs.org/the_build.html#B-D-085).
 
-Every cut pattern fits one 60 × 120 in sheet with at least 0.86 in of margin per side when centered in its listed orientation. The heaviest 20-gauge perforated-steel skin is 27.4 lb. Allowing 0.50 lb/ft of edging and 2 lb of fittings gives a maximum trial assembly of 41.0 lb. Finished weight, grips and clearance still need a full-size check. [Inspect the two bevels and DJ window](https://baaabs.org/the_build.html#dj-booth). [View panel materials and handling estimates](https://baaabs.org/panels.html).
+To keep the count at 206, the body has open skin at roof crowns 01, 02, 04, 05 and 07 on each side. These ten skins cover 11.11 m² in the previous revision. The fitted shell contains 183.33 m² (1,973.33 ft²) of sheet. The fabrication register records every sheet in its own plane. The largest modeled joint adjustment is 8.4 mm. Redrawing the passenger-side B-P-060/070 diagonal changes the interior of that facet pair by roughly 43 mm while retaining the outer boundary of the pair before the joint fit.
+
+Every pattern fits one 60 × 120 in sheet with at least 0.86 in of margin per side when centered in its listed orientation. The heaviest 20-gauge steel skin is 26.9 lb. Allowing 0.50 lb/ft of edging and 2 lb of fittings gives a peak estimated assembly weight of 41.0 lb. Check finished handling on Earl. [Panel materials and handling estimates](https://baaabs.org/panels.html).
+
 
 ## Contributions
 

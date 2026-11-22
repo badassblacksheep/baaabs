@@ -1,6 +1,6 @@
 // Run after bake-structural06.mjs to refresh the checked-in driving mesh.
 import {readFileSync,writeFileSync} from 'node:fs';
-import {gzipSync} from 'node:zlib';
+import {gunzipSync,gzipSync} from 'node:zlib';
 import {Geometry,rgb,add,mul,cross} from '../site/assets/models/playa/geometry.js';
 function transform(p,n){
   if(n.matrix){const m=n.matrix;return [0,1,2].map(i=>m[i]*p[0]+m[i+4]*p[1]+m[i+8]*p[2]+m[i+12]);}
@@ -49,8 +49,23 @@ function bakeVehicle(data){
   return {model,outlets};
 }
 
-const source=readFileSync(new URL('../site/assets/models/baaabs-earl-iteration06-six-shores.glb',import.meta.url));
+const check = process.argv[2] === '--check';
+const source = readFileSync(check && process.argv[3] ? process.argv[3] :
+  new URL('../site/assets/models/baaabs-earl-iteration06-six-shores.glb',import.meta.url));
 const {model,outlets}=bakeVehicle(source.buffer.slice(source.byteOffset,source.byteOffset+source.byteLength));
 if(outlets.length!==2)throw Error('Expected two mast outlets');
 const vertices=Float32Array.from([...outlets.flat(),...model.vertices],v=>Math.round(v*10000)/10000);
-writeFileSync(new URL('../site/test-drive/drive-model.mesh',import.meta.url),gzipSync(Buffer.from(vertices.buffer),{level:9}));
+const asset = new URL('../site/test-drive/drive-model.mesh',import.meta.url);
+if (check) {
+  const packed = gunzipSync(readFileSync(asset));
+  if (packed.byteLength !== vertices.byteLength) throw Error('Driving mesh vertex count differs from the current model');
+  // Both meshes store a float per 0.1 mm position or 0.0001 color increment.
+  for (let i=0; i<vertices.length; i++) {
+    if (Math.abs(packed.readFloatLE(4*i)-vertices[i]) > .000101) {
+      throw Error('Driving mesh differs from the detailed model at packed float '+i);
+    }
+  }
+  console.log('Verified complete driving mesh against the current six-shore model');
+} else {
+  writeFileSync(asset,gzipSync(Buffer.from(vertices.buffer),{level:9}));
+}

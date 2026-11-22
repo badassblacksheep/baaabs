@@ -1,8 +1,9 @@
 """Projection, panel accounting and closed-window visibility regressions."""
-import csv
 import json
+import gzip
+import struct
 import pathlib
-from collections import defaultdict
+from collections import Counter, defaultdict
 import runpy
 import sys
 import unittest
@@ -11,7 +12,7 @@ import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-from dj_booth import APERTURE, CENTER_X, PANEL_IDS, apply_dj_booth, panel_loops, read_accessor, signed_area
+from dj_booth import APERTURE, CENTER_X, PANEL_IDS, apply_dj_booth, cross2, difference, edges as polygon_edges, panel_loops, read_accessor, signed_area
 from dj_panel_layout import gltf_coordinates, sheet_sources, transform_points
 from glb_bounds import transform
 
@@ -26,14 +27,6 @@ class BoothTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.model = Model(ROOT/'site/assets/models/earl-roof-attachment-study.glb')
-        cls.original = {}
-        for n in cls.model.doc['nodes']:
-            pid = n.get('extras', {}).get('panel_id')
-            if pid in PANEL_IDS:
-                p = cls.model.doc['meshes'][n['mesh']]['primitives'][0]
-                positions = read_accessor(cls.model, p['attributes']['POSITION'])[:, [0, 2, 1]]
-                positions[:, 1] *= -1
-                cls.original[pid] = positions.astype(float)
         apply_dj_booth(cls.model)
         cls.doc = cls.model.doc
 
@@ -58,24 +51,64 @@ class BoothTests(unittest.TestCase):
                 self.assertAlmostEqual(e['perforation_open_area_nominal'], .40)
                 self.assertIn('illustrative', e['visual_approximation'])
 
-    def test_original_aperture_area_is_preserved(self):
-        layout = json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())
-        old = sum(abs(signed_area(self.original[pid][:, [0,2]])) for pid in PANEL_IDS)
-        remaining = sum(abs(signed_area(np.asarray(face['vertices_m'])[:, [0,2]]))
-                        for p in layout['pieces'] for face in p['faces'] if face['source'] in PANEL_IDS)
-        self.assertAlmostEqual(old-remaining, abs(signed_area(APERTURE)), places=5)
+    def test_projected_dj_aperture_is_open_and_bounded_by_all_six_edges(self):
+        # Check the actual installed skin. Every millimetre of each of the six
+        # old rim segments meets a sheet, and no triangle covers any of the port.
+        survey = json.loads((ROOT/'reference/panels/earl-before-dj.json').read_text())
+        rim = [[] for _ in APERTURE]
+        for old in (p for p in survey['panels'] if p['id'] in PANEL_IDS):
+            for loop in panel_loops(old['vertices_m']):
+                for p,q in polygon_edges(gltf_coordinates(loop)):
+                    for k,(a,b) in enumerate(polygon_edges(APERTURE)):
+                        edge = b-a
+                        if max(abs(cross2(edge,p[:2]-a)),abs(cross2(edge,q[:2]-a)))>1e-8:
+                            continue
+                        ends = sorted([(((v[:2]-a)@edge)/(edge@edge),v[2]) for v in (p,q)])
+                        rim[k].append(np.array(ends))
+        covered = [[] for _ in APERTURE]
+        for pid,source in sheet_sources(self.model).items():
+            prim = source['prim']
+            vertices = transform_points(read_accessor(self.model,prim['attributes']['POSITION']),source['world'])
+            if np.max(vertices[:,2]) < .72:
+                continue
+            for indices in read_accessor(self.model,prim['indices']).reshape(-1,3):
+                tri = vertices[indices,:2]
+                if np.any(tri.min(axis=0)>APERTURE.max(axis=0)) or np.any(tri.max(axis=0)<APERTURE.min(axis=0)):
+                    continue
+                _, interior = difference(tri,APERTURE)
+                if interior is not None:
+                    self.assertLess(abs(signed_area(interior)),3e-7,pid+' covers part of the DJ port')
+                for k,(a,b) in enumerate(polygon_edges(APERTURE)):
+                    edge = b-a
+                    for p,q in polygon_edges(vertices[indices]):
+                        if max(abs(cross2(edge,p[:2]-a)),abs(cross2(edge,q[:2]-a)))/np.linalg.norm(edge)>2e-6:
+                            continue
+                        ends = np.array(sorted([(((v[:2]-a)@edge)/(edge@edge),v[2]) for v in (p,q)]))
+                        lo,hi = max(0.,ends[0,0]),min(1.,ends[1,0])
+                        if hi<=lo:
+                            continue
+                        covered[k].append((lo,hi))
+                        for original in rim[k]:
+                            samples = [max(lo,original[0,0]),min(hi,original[1,0])]
+                            if samples[1] <= samples[0]+1e-7:
+                                continue
+                            depth = np.interp(samples,ends[:,0],ends[:,1])
+                            ref = np.interp(samples,original[:,0],original[:,1])
+                            self.assertLess(max(abs(depth-ref)),3e-6,pid+' moved off the physical rim')
+        for k,parts in enumerate(covered):
+            last = 0.
+            for lo,hi in sorted(parts):
+                self.assertLessEqual(lo,last+5e-6,f'unframed DJ edge {k}')
+                last = max(last,hi)
+            self.assertGreater(last,1-5e-6,f'unframed DJ edge {k}')
 
     def test_each_register_entry_is_one_connected_pickable_sheet(self):
         layout = json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())
         pieces = {p['id']:p for p in layout['pieces']}
-        with (ROOT/'site/assets/earl-symmetric-panel-register.csv').open(newline='') as f:
-            original = {r['Panel ID']:json.loads(r['Vertices (world meters)']) for r in csv.DictReader(f)}
         sources = sheet_sources(self.model)
         self.assertEqual(set(sources), set(pieces))
-        self.assertEqual(len(sources), 206)
-        covered = defaultdict(float)
-        reference = json.loads((ROOT/'reference/panels/earl-before-dj.json').read_text())
-        reference_holes = {p['id']:p['holes_m'] for p in reference['panels']}
+        self.assertEqual(len(sources),layout['panel_count'])
+        self.assertEqual(self.doc['scenes'][self.doc.get('scene',0)]['extras']['panel_count'],len(sources))
         for pid, source in sources.items():
             n = self.doc['nodes'][source['node']]
             self.assertEqual(n['extras']['panel_id'], pid)
@@ -84,8 +117,7 @@ class BoothTests(unittest.TestCase):
             edges = defaultdict(set)
             triangles = read_accessor(self.model, prim['indices']).reshape(-1, 3)
             for i, tri in enumerate(triangles):
-                # New sheets use a literally welded index edge through every
-                # fold. Older GLB sheets can split vertices for UV/normal seams.
+                # The six original hoof meshes may split vertices at UV seams.
                 points = tri if n['extras'].get('sheet_layout_revision') else [
                     tuple(v) for v in np.round(coords[tri],5)]
                 points = list(points)
@@ -102,18 +134,49 @@ class BoothTests(unittest.TestCase):
                 reached.add(i)
                 todo.update(links[i]-reached)
             self.assertEqual(len(reached), len(triangles), pid+' has detached pieces')
-            if n['extras'].get('sheet_layout_revision'):
-                areas = 0
-                for f in pieces[pid]['faces']:
-                    loop = np.asarray(f.get('vertices_m',original[f['source']]))
-                    area = polygon_area(loop) - sum(polygon_area(h) for h in f.get('holes_m',[]))
-                    areas += area
-                    covered[f['source']] += area
-                self.assertAlmostEqual(n['extras']['net_area_m2'], areas, delta=.002, msg=pid)
-        for pid, area in covered.items():
-            loops = panel_loops(original[pid]) if pid in PANEL_IDS else [original[pid]]
-            expected = sum(polygon_area(loop) for loop in loops) - sum(polygon_area(h) for h in reference_holes[pid])
-            self.assertAlmostEqual(expected, area, delta=.0003, msg=pid+' lost or gained skin area')
+            # Check the actual serialized glTF mesh against the registered face.
+            piece = pieces[pid]
+            outer = gltf_coordinates(piece['vertices_m'])
+            holes = [gltf_coordinates(hole) for hole in piece['holes_m']]
+            expected = np.vstack([outer,*holes])
+            distances = np.linalg.norm(coords[:,None,:]-expected[None,:,:],axis=2)
+            self.assertLess(distances.min(axis=0).max(),2e-6,pid+' outline or cutout drifted')
+            self.assertLess(distances.min(axis=1).max(),2e-6,pid+' has unregistered geometry')
+            plane = np.linalg.svd(coords-coords.mean(axis=0))[2][-1]
+            self.assertLess(np.max(abs((coords-coords.mean(axis=0)) @ plane)),2e-6,pid+' is bent')
+            actual_area = sum(polygon_area(coords[tri]) for tri in triangles)
+            expected_area = polygon_area(outer)-sum(polygon_area(hole) for hole in holes)
+            self.assertAlmostEqual(actual_area,expected_area,delta=3e-6,msg=pid)
+
+    def test_homepage_contains_exactly_the_registered_sheet_triangles(self):
+        # The homepage carries no picking IDs. Compare its actual triangles
+        # with the detailed model, including multiplicity, at its mm resolution.
+        def triangle_key(pts):
+            return tuple(sorted(tuple(v) for v in pts))
+        expected = Counter()
+        for source in sheet_sources(self.model).values():
+            prim = source['prim']
+            pos = transform_points(read_accessor(self.model,prim['attributes']['POSITION']),source['world'])
+            pts = np.rint(pos*1000).astype(int)
+            for tri in read_accessor(self.model,prim['indices']).reshape(-1,3):
+                a,b,c = pos[tri]
+                if np.linalg.norm(np.cross(b-a,c-a))>1e-8:
+                    expected[triangle_key(pts[tri])] += 1
+        actual = Counter()
+        for group in ('shell','details'):
+            raw = gzip.decompress((ROOT/f'site/assets/home-model/{group}.mesh').read_bytes())
+            offset = 0
+            while offset < len(raw):
+                count, size = struct.unpack_from('<II',raw,offset)
+                offset += 8
+                xyz = np.ndarray((count,3),dtype='<i2',buffer=raw,offset=offset,strides=(14,2))
+                mode = np.ndarray((count,),dtype='u1',buffer=raw,offset=offset+9,strides=(14,))
+                offset += count*14
+                indices = np.frombuffer(raw,dtype='<u2',count=size,offset=offset).reshape(-1,3)
+                offset += size*2
+                for tri in indices[np.all(mode[indices]==5,axis=1)]:
+                    actual[triangle_key(xyz[tri])] += 1
+        self.assertEqual(actual,expected)
 
     def test_revised_orbital_sheets_have_both_original_eye_holes(self):
         # Each existing rim segment must be an actual exposed mesh edge, even

@@ -50,7 +50,7 @@ test('homepage and driving meshes include the revised sheet boundaries', () => {
     driving.add([0,4,8].map(k => Math.round(1000*vehicle.readFloatLE(pos+k))).join(','));
   }
   const plan = JSON.parse(resource('earl-panel-layout.json'));
-  assert.equal(plan.pieces.length,206);
+  assert.equal(plan.pieces.length,plan.panel_count);
   let verified = 0;
   function near(set,x,y,z) {
     // Web and game use independent quantization steps of 1 mm and 0.1 mm.
@@ -59,7 +59,7 @@ test('homepage and driving meshes include the revised sheet boundaries', () => {
     }
     return false;
   }
-  for (const sheet of plan.pieces) for (const face of sheet.faces) for (const [x,y,z] of [...face.vertices_m ?? [], ...(face.holes_m ?? []).flat()]) {
+  for (const sheet of plan.pieces) for (const [x,y,z] of [...sheet.vertices_m, ...sheet.holes_m.flat()]) {
     const pt = [x,z,-y].map(v => Math.round(1000*v));
     assert.ok(near(surface,...pt), sheet.id+' absent from homepage at '+pt);
     assert.ok(near(driving,...pt), sheet.id+' absent from game at '+pt);

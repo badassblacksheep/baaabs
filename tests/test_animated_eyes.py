@@ -53,7 +53,7 @@ class Eyes(unittest.TestCase):
         picks = {m['name'].split('_')[1] for m in self.doc['materials'] if m['name'].startswith('Panel_')}
         panel_nodes = [n['extras']['panel_id'] for n in self.doc['nodes'] if n.get('extras', {}).get('panel_id')]
         self.assertEqual(picks, ids)
-        self.assertEqual(len(ids), 206)
+        self.assertEqual(len(ids), layout['panel_count'])
         self.assertCountEqual(panel_nodes, sorted(ids))
 
     def test_all_six_hoof_meshes_and_placements_are_unchanged(self):

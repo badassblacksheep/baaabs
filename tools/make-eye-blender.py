@@ -10,6 +10,7 @@ import re
 import sys
 
 import bpy
+import numpy as np
 from mathutils import Vector
 
 
@@ -83,7 +84,7 @@ def populate_scene(source):
         "Select the crowd or DJ camera to compare the audience and performer sightlines. "
         "The eye-study camera still frames the two shallow spherical caps. "
         "The booth opening crosses the former B-D-047, 048, 050 and 071 facets. "
-        "The removable blanks follow the convex outlines in the panel workshop. "
+        "Each removable panel is one flat plate, with the installed perimeter shown in the panel workshop. "
         "The six-sided opening is centered between the two speaker arrays. "
         "Earl's original window frames and sash remain. "
         "Check standing eye height, face visibility and exit clearance on Earl before fabrication.\n\n"
@@ -113,12 +114,30 @@ def verify(destination, doc):
     assert scene.camera.name == "DJ / crowd-side elevation"
     assert "DJ / through Earl's closed window" in scene.objects
     assert "Eyes / front close-up" in scene.objects
-    # The rear hoof plates use the picking IDs on their materials.
-    panel_ids = {match.group(1) for obj in scene.objects if obj.type == "MESH"
-                 for mat in obj.data.materials if mat
+    # Measure the reopened meshes in world coordinates. Count the actual objects
+    # as well as their IDs so a duplicated plate cannot mask an omitted one.
+    layout_file = Path(__file__).resolve().parents[1] / 'site/assets/earl-panel-layout.json'
+    layout = json.loads(layout_file.read_text())
+    expected_ids = {p['id'] for p in layout['pieces']}
+    panel_ids = set()
+    max_deviation = 0.
+    for obj in scene.objects:
+        if obj.type != "MESH":
+            continue
+        names = {match.group(1) for mat in obj.data.materials if mat
                  if (match := re.match(r"^Panel_([A-Z]-[A-Z]-\d{3})(?:_|$)", mat.name))}
-    assert len(panel_ids) == 206, len(panel_ids)
-
+        if not names:
+            continue
+        panel_id, = names
+        assert panel_id not in panel_ids, ('duplicate panel',panel_id)
+        panel_ids.add(panel_id)
+        world = np.array([tuple(obj.matrix_world @ v.co) for v in obj.data.vertices])
+        centered = world-world.mean(axis=0)
+        normal = np.linalg.svd(centered,full_matrices=False)[2][-1]
+        deviation = float(np.max(abs(centered @ normal)))
+        assert deviation < 3e-6,(panel_id,deviation)
+        max_deviation = max(max_deviation,deviation)
+    assert panel_ids == expected_ids and len(panel_ids) == layout['panel_count']
     for tick in (0, 127, 255, 383):
         scene.frame_set(tick + 1)
         for side, phase in (("L", 0), ("R", 16)):
@@ -167,7 +186,8 @@ def verify(destination, doc):
     image_files = [image for image in bpy.data.images if image.source == "FILE"]
     assert all(image.packed_file for image in image_files), "Found unpacked model textures"
     print(f"Verified reopened booth model: {len(panel_ids)} panels, {len(tracks)} eye clips, "
-          f"{len(new_objects)} DJ meshes and {len(image_files)} packed textures")
+          f"{len(new_objects)} DJ meshes, {len(image_files)} packed textures, "
+          f"maximum sheet-plane residual {max_deviation*1e6:.3f} micrometres")
 
 
 if __name__ == "__main__":

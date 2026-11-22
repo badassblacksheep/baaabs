@@ -1,8 +1,4 @@
-"""Build selectable, continuous sheets from the developed panel register.
-
-The register supplies each surviving facet boundary in the original Blender
-world coordinates. Joined faces retain their individual planes and UV mapping.
-"""
+"""Build one selectable planar glTF mesh per installed sheet in the cut register."""
 import copy
 import csv
 import json
@@ -58,7 +54,7 @@ def sheet_sources(model):
 
 
 def triangulate(points):
-    """Ear clip a simple contour; keep intermediate points on shared fold lines."""
+    """Ear-clip a simple contour, preserving its boundary edges."""
     p = np.asarray(points)
     normal = np.cross(p,np.roll(p,-1,axis=0)).sum(axis=0)
     axis = int(np.argmax(abs(normal)))
@@ -87,11 +83,11 @@ def triangulate(points):
 
 
 def triangulate_surface(outer, holes):
-    """Triangulate a convex blank, preserving the orbital aperture as an interior boundary."""
+    """Triangulate a convex blank with an optional interior aperture."""
     if not holes:
         return outer, triangulate(outer)
     if len(holes) != 1:
-        raise ValueError('An orbital sheet must have exactly one eye opening')
+        raise ValueError('A sheet supports at most one interior aperture')
     inner = holes[0]
     normal = np.cross(outer,np.roll(outer,-1,axis=0)).sum(axis=0)
     normal_axis = int(np.argmax(abs(normal)))
@@ -153,70 +149,6 @@ def uv_map(model, source, outline):
     return interpolate, orientation
 
 
-def align_crease_vertices(faces):
-    """Snap coincident source endpoints and split an edge at any shared endpoint."""
-    vertices = []
-    drafts = []
-    for face in faces:
-        arr = []
-        for p in face:
-            match = next((q for q in vertices if np.linalg.norm(q-p) < .00015),None)
-            if match is None:
-                match = np.asarray(p)
-                vertices.append(match)
-            arr.append(match)
-        drafts.append(np.asarray(arr))
-    result = []
-    for face in drafts:
-        filled = []
-        for a,b in zip(face,np.roll(face,-1,axis=0)):
-            filled.append(a)
-            ab = b-a
-            distances = []
-            for p in vertices:
-                t = np.dot(p-a,ab)/np.dot(ab,ab)
-                if 1.e-6 < t < 1-1.e-6 and np.linalg.norm(a+t*ab-p) < .00015:
-                    distances.append((t,p))
-            filled.extend(p for t,p in sorted(distances,key=lambda v:v[0]))
-        result.append(np.asarray(filled))
-    return result
-
-
-def join_facet(points, face_uv, face_normal, faces, pos, normals, uv, indices, lookup):
-    """Use a single indexed edge and a continuous repeat pattern at the fold."""
-    keys = [tuple(np.round(p, 8)) for p in points]
-    shared = [j for j,k in enumerate(keys) if k in lookup]
-    if shared:
-        if len(shared) < 2:
-            raise ValueError('Merged faces touch at a point instead of sharing a fold')
-        # Align the existing perforation grids across the common edge. Reflect
-        # one UV basis if necessary so the two faces develop onto opposite sides.
-        a,b = max(((a,b) for a in shared for b in shared),key=lambda ab:
-                  np.linalg.norm(points[ab[1]]-points[ab[0]]))
-        target_a,target_b = np.asarray(uv[lookup[keys[a]]]), np.asarray(uv[lookup[keys[b]]])
-        base = face_uv[b]-face_uv[a]
-        target = target_b-target_a
-        delta = face_uv-face_uv[a]
-        along = delta @ base / np.dot(base,base)
-        across = (base[0]*delta[:,1]-base[1]*delta[:,0]) / np.dot(base,base)
-        prev_side = cross2(target,np.mean(uv,axis=0)-target_a)
-        handed = -1 if prev_side*across.mean()>0 else 1
-        perpendicular = handed * np.array([-target[1],target[0]])
-        face_uv = target_a + np.outer(along,target) + np.outer(across,perpendicular)
-    ids = []
-    for key,point,texture in zip(keys,points,face_uv):
-        if key in lookup:
-            i = lookup[key]
-            normals[i] += face_normal
-        else:
-            i = lookup[key] = len(pos)
-            pos.append(point.tolist())
-            normals.append(face_normal.copy())
-            uv.append(texture.tolist())
-        ids.append(i)
-    indices.extend(np.asarray(ids)[faces].ravel().tolist())
-
-
 def repack_panels(model):
     doc = model.doc
     layout = json.loads((ASSETS/'earl-panel-layout.json').read_text())
@@ -232,13 +164,13 @@ def repack_panels(model):
             if tex and 'TEXCOORD_' + str(tex.get('texCoord',0)) not in attrs and 'TEXCOORD_0' in attrs:
                 tex['texCoord'] = 0
     pieces = {p['id']:p for p in layout['pieces']}
-    if len(pieces)!=206 or set(old)!=set(sources):
+    if len(pieces)!=len(layout['pieces']) or len(pieces)!=layout['panel_count'] or set(old)!=set(sources):
         raise ValueError('Panel layout and source model IDs do not match')
     for pid, piece in pieces.items():
         face_defs = piece['faces']
         first = sources[face_defs[0]['source']]
         original = sources.get(pid)
-        if len(face_defs) == 1 and face_defs[0]['source'] == pid and 'vertices_m' not in face_defs[0]:
+        if pid.startswith('K-'):
             # Fix the two historical aft-hoof nodes, picked only by their materials.
             n = doc['nodes'][first['node']]
             if n.get('extras',{}).get('panel_id') != pid:
@@ -261,50 +193,42 @@ def repack_panels(model):
             n = doc['nodes'][original['node']]
             material = original['material']
             world = original['world']
-        pos, normal, uv, indices, lookup = [], [], [], [], {}
-        net_area = 0.
-        inverse = np.linalg.inv(world)
-        outlines = [gltf_coordinates(f.get('vertices_m',old[f['source']])) for f in face_defs]
-        # A clipping line may pass through an existing corner exactly.
-        outlines = [o[np.linalg.norm(o-np.roll(o,1,axis=0),axis=1)>1.e-7] for o in outlines]
-        if len(outlines)>1:
-            outlines = align_crease_vertices(outlines)
-        reference_normal = None
-        for f,points in zip(face_defs,outlines):
-            src = f['source']
-            interpolate, outward = uv_map(model,sources[src],gltf_coordinates(old[src]))
-            if reference_normal is None:
-                reference_normal = outward
-            elif np.dot(reference_normal,outward)<0:
-                outward = -outward
-            area_vector = np.cross(points,np.roll(points,-1,axis=0)).sum(axis=0)
-            if np.dot(area_vector,outward)<0:
-                points = points[::-1]
-            holes = [gltf_coordinates(hole) for hole in f.get('holes_m',[])]
-            points, triangles = triangulate_surface(points, holes)
-            crosses = np.cross(points[triangles[:,1]]-points[triangles[:,0]],points[triangles[:,2]]-points[triangles[:,0]])
-            net_area += float(np.linalg.norm(crosses,axis=1).sum()/2)
-            local_normal = world[:3,:3].T @ outward
-            local_normal /= np.linalg.norm(local_normal)
-            join_facet(transform_points(points,inverse), interpolate(points), local_normal, triangles,
-                       pos, normal, uv, indices, lookup)
-        normal = np.asarray(normal)
-        normal = (normal / np.linalg.norm(normal,axis=1)[:,None]).tolist()
+        # Source facets provide placement and the original perforation map. Only
+        # the installed cut polygon supplies geometry, including across old seams.
+        outline = gltf_coordinates(piece['vertices_m'])
+        holes = [gltf_coordinates(hole) for hole in piece['holes_m']]
+        interpolate, outward = uv_map(model,first,gltf_coordinates(old[face_defs[0]['source']]))
+        direction = np.cross(outline,np.roll(outline,-1,axis=0)).sum(axis=0)
+        direction /= np.linalg.norm(direction)
+        if np.dot(direction,outward)<0:
+            outline = outline[::-1]
+            direction = -direction
+        points, triangles = triangulate_surface(outline,holes)
+        deviation = np.max(abs((points-outline[0]) @ direction))
+        if deviation > 2.e-6:
+            raise ValueError(f'{pid} surface deviates {deviation*1000:.4f} mm from its plane')
+        crosses = np.cross(points[triangles[:,1]]-points[triangles[:,0]],points[triangles[:,2]]-points[triangles[:,0]])
+        net_area = float(np.linalg.norm(crosses,axis=1).sum()/2)
+        local_normal = world[:3,:3].T @ direction
+        local_normal /= np.linalg.norm(local_normal)
+        pos = transform_points(points,np.linalg.inv(world)).tolist()
+        normals = np.repeat(local_normal[None,:],len(pos),axis=0).tolist()
+        indices = triangles.ravel().tolist()
         name = pid+' | '+piece['name']
         mesh = len(doc['meshes'])
-        uv_index = model.accessor(uv,2)
-        attributes = {'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normal,3),'TEXCOORD_0':uv_index}
+        uv_index = model.accessor(interpolate(points).tolist(),2)
+        attributes = {'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normals,3),'TEXCOORD_0':uv_index}
         attributes[perforation_uv(doc['materials'][material])] = uv_index
         doc['meshes'].append({'name':name,'primitives':[{
             'attributes':attributes,
             'indices':model.accessor(indices,1,True),'material':material}]})
         n.update(name=name, mesh=mesh, extras={**first['extras'], 'panel_id':pid, 'panel_name':piece['name'],
-            'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':2})
+            'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':3})
         extras = n['extras']
         if 'surface_points' in extras:
             extras['source_surface_points'] = extras.pop('surface_points')
         if 'empty_eye_opening' in extras:
-            extras['empty_eye_opening'] = any(f.get('holes_m') for f in face_defs)
+            extras['empty_eye_opening'] = bool(holes)
         if any(f['source'] in PANEL_IDS for f in face_defs):
             n['extras']['dj_booth_revision'] = 1
     for retired in set(sources)-set(pieces):
@@ -316,10 +240,11 @@ def repack_panels(model):
         # Keep source mesh/material indices stable for the historical GLB.
         mat = doc['materials'][source['material']]
         mat['name'] = 'Retired_'+mat['name']
+    return len(pieces)
 
 
 
-def apply_sheet_spec(doc):
+def apply_sheet_spec(doc, panel_count):
     """Describe provisional fabrication stock independently of the existing artwork."""
     material_name = 'Provisional McNICHOLS perforated mild steel'
     spec = {
@@ -347,7 +272,7 @@ def apply_sheet_spec(doc):
         if node.get('extras', {}).get('panel_id') and 'mesh' in node:
             live_meshes.add(node['mesh'])
             update(node, {**spec, 'skin_material': material_name,
-                          'schedule_revision': 'Earl convex shell · 206 detachable panels'})
+                          'schedule_revision': f'Earl flat shell · {panel_count} detachable panels'})
     for i in live_meshes:
         mesh = doc['meshes'][i]
         update(mesh, spec)

@@ -39,15 +39,17 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Panel pages and mass baseline
 
-The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The current DJ-booth register contains 206 panel IDs and 206 detachable sheet pieces, with 194.482602 m² net area. At 40% open, estimated bare skin is 1,111 lb for 0.063-in aluminum and 1,841 lb for 20-ga steel. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The current DJ-booth register contains 206 panel IDs and 206 detachable sheet pieces, with 183.328712 m² net area. At 40% open, estimated bare skin is 1,048 lb for 0.063-in aluminum and 1,736 lb for 20-ga steel. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
 
 ### DJ booth and driver-side skin
 
 The six-sided opening is centered between the party-side speaker arrays. Its side projection measures 1.72 × 0.59 m (about 68 × 23 in). Leave the closed factory windows and side exit in place. Check DJ eye height, adjacent window posts and exit swing on Earl before fabrication. B-D-033 sits above the glass.
 
-Keep exactly **206 detachable panels**. Each outer cut perimeter must be a convex polygon with three or four corners, or five or six where the surrounding geometry calls for them. Count corners along the physical perimeter. Record interior creases separately. Preserve all six original hoof plates, the DJ aperture, and the existing passenger-side circular opening and both eye openings. Route seams outward from the window corners so individual cut patterns never wrap around the glass.
+Flat storage and convexity are hard requirements for every detachable skin panel. Each panel uses one plane through its entire installed surface and its cut pattern. Count three or four physical perimeter corners in the usual case and five or six where needed. Keep all six original hoof plates, the six-sided DJ aperture, the passenger-side circular opening and the two eye sockets. The original marked bends are seams between separate sheets wherever both sides are retained.
 
-Keep each developed pattern inside the 119 × 59 in working envelope on 120 × 60 in stock. Keep the installed facet coordinates and record any required bend inside the blank. The register gives bare skin weight and both trial edging weights. Check actual finished assemblies, grips, bend allowances and clearance on Earl.
+Aim for 206 physical panels. First simplify seams between coplanar pieces and redistribute oversized patterns. Where count pressure persists, favor omitting matching pairs of top-facing crown skins with low crowd visibility. The count may change if necessary to preserve flat storage and convexity. Keep the 119 × 59 in working envelope on 120 × 60 in stock and publish the estimates with edging and fittings. Confirm finished handling on Earl.
+
+In the current 206-panel layout, both sides omit body roof crowns 01, 02, 04, 05 and 07. Keep the roof deck and frame independent of that removable skin. B-D-031 absorbs the former upper fan, including B-D-089. B-D-085 is the flat tapered strip beside the window. The final result records 139 triangles, 58 quadrilaterals, 7 pentagons and 2 hexagons.
 
 Use `reference/panels/earl-before-dj.json` as the immutable source for the pre-booth panels. The aperture definition is in `tools/dj_booth.py` and the 206-piece seam plan is `tools/earl-panel-seams.json`. Run `python3 tools/build-dj-register.py` to regenerate the model layout, cut register, workshop and handling totals. Verify with `--check`. Publish the physical register and operator/crowd views at [the panel workshop](https://baaabs.org/the_build.html#dj-booth). The structural reports retain the loads assumed for each analysis.
 

@@ -59,8 +59,15 @@ class PanelCoverageTests(unittest.TestCase):
             for face in panel['faces']:
                 pid = face['source']
                 actual[pid].append(face.get('vertices_m', baseline[pid]['vertices_m']))
-        self.assertEqual(actual.keys(), baseline.keys())
-        for pid, original in baseline.items():
+        omitted = {row['id'] for row in layout['omitted']}
+        self.assertFalse(omitted & actual.keys())
+        self.assertEqual(set(actual) | omitted, set(baseline))
+        for pid in omitted:
+            panel = baseline[pid]
+            self.assertIn('crown', panel['name'].lower())
+            self.assertGreater(panel['normal'][2], 0.8)
+        for pid in actual:
+            original = baseline[pid]
             with self.subTest(source=pid):
                 vertices = original['vertices_m']
                 target = panel_loops(vertices) if pid in PANEL_IDS else [vertices]
@@ -79,6 +86,36 @@ class PanelCoverageTests(unittest.TestCase):
                         excess += change
                         if next_y - y > 2e-5:
                             self.assertEqual(excess, 0, f'{pid}: gap/overlap at ({x}, {y})')
+
+    def test_former_bends_are_physical_boundaries(self):
+        before = json.loads((ROOT / 'reference/panels/earl-former-bends.json').read_text())
+        layout = json.loads((ROOT / 'site/assets/earl-panel-layout.json').read_text())
+        self.assertEqual(len(before), 32)
+        former_creases = {frozenset(row['sources']) for row in before}
+        for panel in layout['pieces']:
+            sources = {face['source'] for face in panel['faces']}
+            for crease in former_creases:
+                self.assertFalse(crease <= sources, f"{panel['id']} spans the former bend {crease}")
+
+        omitted = {row['id'] for row in layout['omitted']}
+        for bend in before:
+            start, end = np.array(bend['edge_m'])
+            for pid in set(bend['sources']) - omitted:
+                perimeters = [np.asarray(p['vertices_m']) for p in layout['pieces']
+                              if any(f['source'] == pid for f in p['faces'])]
+                edges = np.vstack([np.stack([v, np.roll(v, -1, axis=0)], axis=1)
+                                   for v in perimeters])
+                origin = edges[:, 0]
+                direction = edges[:, 1] - origin
+                length_squared = (direction ** 2).sum(axis=1)
+                # Both retained sides have a physical perimeter along the old crease.
+                # Allow a millimetre for local adjustment to shared corner positions.
+                for location in np.linspace(start, end, 51):
+                    fraction = np.clip(((location - origin) * direction).sum(axis=1) /
+                                       length_squared, 0, 1)
+                    nearest = origin + fraction[:, None] * direction
+                    gap = np.linalg.norm(nearest - location, axis=1).min()
+                    self.assertLess(gap, .001, f"{bend['old_panel']} lost its seam on {pid}")
 
     def test_three_original_cutouts_stay_inside_single_panels(self):
         source = json.loads((ROOT / 'reference/panels/earl-before-dj.json').read_text())

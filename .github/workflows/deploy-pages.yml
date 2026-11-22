@@ -63,7 +63,9 @@ jobs:
         run: |
           python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb pages-dist/assets/models/baaabs-earl-x-braced-workshop.glb
       - name: Bake the current six-shore model
-        run: node tools/bake-structural06.mjs pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
+        run: |
+          node tools/bake-structural06.mjs pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
+          node tools/bake-drive-model.mjs --check pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'

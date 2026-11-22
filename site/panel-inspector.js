@@ -48,10 +48,6 @@
   const holes=p.flat_holes_m??p.holes_m.map(loop=>loop.map(v=>{const d=sub(v,p.origin_m);return[dot(d,p.u_axis),dot(d,p.v_axis)]}));
   const d=[pts,...holes].map(loop=>loop.map((v,i)=>(i?'L':'M')+map(v).join(',')).join(' ')+'Z').join(' ');
   svg.append(svgEl('path',{d,fill:'#35243e','fill-rule':'evenodd',stroke:color,'stroke-width':2}));
-  for(const fold of p.folds_flat_m||[]){
-   const [a,b]=fold.map(map);
-   svg.append(svgEl('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#7ef3ca','stroke-width':3,'stroke-dasharray':'9 6','aria-label':'Formed crease'}));
-  }
   const a=map(pts[index]),b=map(pts[nextVertex(p,index)]);svg.append(svgEl('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,'stroke-width':7}));
   pts.forEach((v,i)=>{const xy=map(v),label=svgEl('text',{x:xy[0]+8,y:xy[1]-8,fill:color,'font-size':20});label.textContent=prefix+(i+1);svg.append(label)});
  }

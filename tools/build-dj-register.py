@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a physical panel register and developed patterns from the original surface."""
+"""Build the fabrication register from the flat, removable exterior panels."""
 import argparse
 import csv
 import io
@@ -11,12 +11,15 @@ import re
 import numpy as np
 
 from convex_panel_layout import redesign
+from dj_booth import PANEL_IDS, panel_loops
+from flat_panels import use_stored_fit
 from panel_patterns import adjacent, area, flat, piece, points, validate_outline, value
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / 'site'
 BASE = ROOT / 'reference/panels/earl-before-dj.json'
 SEAMS = ROOT / 'tools/earl-panel-seams.json'
+FITTED = ROOT / 'reference/panels/earl-flat-seam-fit.json'
 REGISTER = SITE / 'assets/earl-dj-panel-register.csv'
 LAYOUT = SITE / 'assets/earl-panel-layout.json'
 WORKSHOP = SITE / 'the_build.html'
@@ -72,7 +75,6 @@ def finish(panel):
     old_axes=np.array([panel['u_axis'],panel['v_axis']])
     axes=rot.T@old_axes
     holes=[points(flat(panel,np.array(loop))@rot-shift) for loop in panel['holes_m']]
-    folds=[points(np.array(loop)@rot-shift) for loop in panel['folds_flat_m']]
     xyz=np.asarray(panel['vertices_m'])
     centered=xyz-xyz.mean(axis=0)
     _,_,face_axes=np.linalg.svd(centered,full_matrices=False)
@@ -85,7 +87,7 @@ def finish(panel):
     perimeter=sum(distances)+sum(np.linalg.norm(a-b) for h in panel['holes_m'] for a,b in adjacent(np.array(h)))
     panel.update(origin_m=points([np.array(panel['origin_m'])+shift@axes])[0],
                  u_axis=points(axes)[0],v_axis=points(axes)[1],
-                 flat_vertices_m=points(uv@rot-shift),flat_holes_m=holes,folds_flat_m=folds,
+                 flat_vertices_m=points(uv@rot-shift),flat_holes_m=holes,
                  length_m=value(dims[0]),width_m=value(dims[1]),
                  edge_lengths_m=[value(x) for x in distances],cut_perimeter_m=value(perimeter),
                  bare_steel_lb=value(panel['net_area_m2']*STEEL),
@@ -98,47 +100,79 @@ def finish(panel):
         panel['vertex_average_m']=points([xyz.mean(axis=0)])[0]
 
 
-def build():
+def build(refit=False):
     original=json.loads(BASE.read_text())
     parts={p['id']:piece(p) for p in original['panels']}
-    splits=redesign(parts,json.loads(SEAMS.read_text()))
+    seams=json.loads(SEAMS.read_text())
+    splits=redesign(parts,seams)
+    use_stored_fit(parts,FITTED,refit)
+    if 'max_seam_fit_mm' in seams:
+        for panel in parts.values():
+            if panel['seam_fit_adjustment_mm']>seams['max_seam_fit_mm']:
+                raise ValueError(f"{panel['id']} exceeds the seam fit allowance")
     layout=[];panels=[]
     for k in sorted(parts):
         p=parts[k]
         finish(p)
         faces=p.pop('source_faces')
-        layout.append(dict(id=k,name=p['name'],faces=faces))
+        layout.append(dict(id=k,name=p['name'],vertices_m=p['vertices_m'],holes_m=p['holes_m'],faces=faces))
         panels.append(p)
-    assert len(parts)==206, len(parts)
-    layout=dict(pieces=layout,splits=splits)
-    return dict(revision='Earl · convex shell · 206 detachable panels',panel_count=206,panels=panels),layout,original
+    assert len(parts)==seams.get('panel_count',206), len(parts)
+    sources={f['source'] for record in layout for f in record['faces']}
+    omitted=[]
+    for p in original['panels']:
+        if p['id'] in sources:
+            continue
+        center=np.mean(p['vertices_m'],axis=0)
+        nearby=min((q for q in panels if q['side']==p['side']),
+                   key=lambda q:np.linalg.norm(q['vertex_average_m']-center))
+        omitted.append(dict(id=p['id'],name=p['name'],area_m2=p['net_area_m2'],
+                            center_m=points([center])[0],neighbor=nearby['id'],
+                            aliases=p.get('merged_from_ids',[])))
+    if {p['id'] for p in omitted}!=set(seams.get('omit',[])):
+        raise ValueError('Missing source facets do not match the approved crown omissions')
+    aliases=seams.get('aliases',{})
+    for retired,survivor in aliases.items():
+        if retired in parts or survivor not in parts:
+            raise ValueError(f'Invalid historical panel link {retired} → {survivor}')
+        parts[survivor].setdefault('prior_ids',[]).append(retired)
+    layout=dict(panel_count=len(parts),pieces=layout,splits=splits,omitted=omitted,aliases=aliases)
+    return dict(revision='Earl · flat exterior panels',panel_count=len(parts),panels=panels,omitted=omitted,aliases=aliases),layout,original
 
 
-def regenerated():
+def regenerated(refit=False):
     html=WORKSHOP.read_text()
     block=DATA_BLOCK.search(html)
-    data,layout,original=build()
+    data,layout,original=build(refit)
     panels=data['panels']
     csv_text=io.StringIO(newline='')
     writer=csv.writer(csv_text,lineterminator='\n')
     writer.writerow(['Panel ID','Name','Length (in)','Width (in)','Area (sq ft)','Vertices (world meters)',
                      'Material (provisional)','Thickness (in)','Open area fraction','Bare steel (lb)','With 0.5 lb/ft edging + 2 lb fittings (lb)','With 1 lb/ft edging + 2 lb fittings (lb)','Tip span (in)','Stock margin per side (in)','Flat outline (meters)',
-                     'Flat holes (meters)','Fold lines (flat meters)','Bend from flat (deg)','Source faces','Exterior sides'])
+                     'Flat holes (meters)','Modeled plane error (mm)','Source faces','Exterior sides'])
     for p,item in zip(panels,layout['pieces']):
         writer.writerow([p['id'],p['name'],f"{p['length_m']/INCH:.3f}",f"{p['width_m']/INCH:.3f}",
                          f"{p['net_area_m2']/SQFT:.3f}",json.dumps(p['vertices_m']),p['material'],p['thickness_in'],p['open_area_fraction'],f"{p['bare_steel_lb']:.2f}",
                          f"{p['handling_half_lb']:.2f}",f"{p['handling_one_lb']:.2f}",f"{p['tip_span_m']/INCH:.2f}",f"{p['stock_margin_in']:.3f}",json.dumps(p['flat_vertices_m']),
-                         json.dumps(p['flat_holes_m']),json.dumps(p['folds_flat_m']),p.get('formed_angle_deg',0),
+                         json.dumps(p['flat_holes_m']),f"{p['planarity_error_mm']:.6f}",
                          ', '.join(f['source'] for f in item['faces']),len(p['vertices_m'])])
     total=sum(p['net_area_m2'] for p in panels)
-    removed=sum(p['net_area_m2'] for p in original['panels'])-total
-    assert 0 < removed < 1
+    # Aperture area is measured on the original four flank facets; crown
+    # omissions are independent of the DJ glazing and accounted separately.
+    removed=0.
+    for panel in original['panels']:
+        if panel['id'] in PANEL_IDS:
+            loops=panel_loops(panel['vertices_m'])
+            removed+=panel['net_area_m2']-sum(area(flat(panel,np.asarray(loop))) for loop in loops)
+    omitted=layout['omitted']
+    omission_text=(f"The register omits {len(omitted)} top-facing crown panels "
+                   f"({sum(p['area_m2'] for p in omitted)/SQFT:,.2f} ft²)." if omitted else '')
     values={'area':f'{total:,.2f} m² ({total/SQFT:,.2f} ft²)',
             'removed':f'{removed/SQFT:.2f} ft²','pieces':str(len(panels)),
             'aluminum':f'{total*ALUMINUM:,.0f} lb','steel':f'{total*STEEL:,.0f} lb',
             'heaviest':f"{max(p['bare_steel_lb'] for p in panels):.1f} lb",
             'span':f"{max(p['tip_span_m'] for p in panels)/INCH:.1f} in",
-            'folds':str(sum(bool(p['folds_m']) for p in panels))}
+            'omission':omission_text}
     values.update(stockLong=f"{max(p['length_m'] for p in panels)/INCH:.2f} in",
                   stockShort=f"{max(p['width_m'] for p in panels)/INCH:.2f} in",
                   clearance=f"{min(p['stock_margin_in'] for p in panels):.2f} in",
@@ -151,18 +185,23 @@ def regenerated():
     for key,val in values.items():
         materials,n=re.subn(rf'(<span data-skin="{key}">).*?(</span>)',lambda m:m[1]+val+m[2],materials)
         assert n==1,key
-    print(f'{len(panels)} contiguous sheets, {total:.6f} m², {values["heaviest"]} peak steel skin, {values["span"]} maximum tip span, {values["folds"]} formed blanks')
+    print(f'{len(panels)} separate flat sheets, {total:.6f} m², {values["heaviest"]} peak steel skin, {values["span"]} maximum tip span')
     payload=json.dumps(data,separators=(',',':'),ensure_ascii=False)
-    return {WORKSHOP:(html[:block.start()]+payload+html[block.end():]).encode(),
+    workshop=html[:block.start()]+payload+html[block.end():]
+    workshop=re.sub(r'(<span data-panel-count>).*?(</span>)',lambda m:m[1]+str(len(panels))+m[2],workshop)
+    workshop=re.sub(r'(<span data-panel-omission>).*?(</span>)',lambda m:m[1]+omission_text+m[2],workshop)
+    return {WORKSHOP:workshop.encode(),
             REGISTER:csv_text.getvalue().encode(),MATERIALS:materials.encode(),
             LAYOUT:(json.dumps(layout,separators=(',',':'),ensure_ascii=False)+'\n').encode()}
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--check',action='store_true',help='report out-of-date outputs')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--check',action='store_true',help='report out-of-date outputs')
+    mode.add_argument('--refit',action='store_true',help='solve and store new flat corner positions after a seam change')
     args=parser.parse_args()
-    for path,output in regenerated().items():
+    for path,output in regenerated(args.refit).items():
         if args.check:
             if not path.is_file() or path.read_bytes()!=output:
                 raise SystemExit(f'Run {Path(__file__).name} to update {path.name}')

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const site = new URL('../site/', import.meta.url);
 const html = fs.readFileSync(new URL('the_build.html', site), 'utf8');
-const {panels} = JSON.parse(html.match(/const DATA=(.*);\n/)[1]);
+const {panels, panel_count, omitted} = JSON.parse(html.match(/const DATA=(.*);\n/)[1]);
 const script = html.match(/<script>\s*(const DATA=[\s\S]*?)<\/script>/)[1];
 
 class Element {
@@ -60,9 +60,9 @@ test('booth deep link and interior button set opposite sightlines at the same ta
   assert.ok(html.includes('assets/models/BAAABS-Animated-Eyes.blend'));
 });
 
-test('every detachable piece occupies a single developed sheet inside 5 × 10 ft stock', () => {
-  assert.equal(panels.length,206);
-  assert.equal(new Set(panels.map(p=>p.id)).size,206);
+test('every detachable piece occupies one flat sheet inside 5 × 10 ft stock', () => {
+  assert.equal(panels.length,panel_count);
+  assert.equal(new Set(panels.map(p=>p.id)).size,panel_count);
   for(const p of panels){
     const v=p.vertices_m;
     assert.equal(new Set(v.map(point=>point.join(','))).size,v.length,p.id);
@@ -82,6 +82,26 @@ test('every detachable piece occupies a single developed sheet inside 5 × 10 ft
   }
   // Bound the handling assumptions used by the preceding workshop release.
   assert.ok(panels.every(p=>p.handling_half_lb <= 41.01 && p.handling_one_lb <= 53.23));
+});
+
+test('the installed vertices and openings reconstruct from each registered flat cut pattern', () => {
+  const layout=JSON.parse(fs.readFileSync(new URL('assets/earl-panel-layout.json',site),'utf8'));
+  assert.equal(layout.panel_count,panel_count);
+  const modeled=new Map(layout.pieces.map(p=>[p.id,p]));
+  for(const p of panels){
+    const model=modeled.get(p.id);
+    assert.deepEqual(model.vertices_m,p.vertices_m);
+    assert.deepEqual(model.holes_m,p.holes_m);
+    assert.equal(p.folds_m?.length||0,0,p.id);
+    assert.equal(p.formed_angle_deg||0,0,p.id);
+    const world=[p.vertices_m,...p.holes_m];
+    const cut=[p.flat_vertices_m,...p.flat_holes_m];
+    for(let i=0;i<world.length;i++)for(let j=0;j<world[i].length;j++){
+      const [u,v]=cut[i][j];
+      const residual=world[i][j].map((x,axis)=>x-p.origin_m[axis]-u*p.u_axis[axis]-v*p.v_axis[axis]);
+      assert.ok(Math.hypot(...residual)<=1e-6,p.id+' misses its cutting plane');
+    }
+  }
 });
 
 test('all exterior blanks are strictly convex simple polygons with three to six corners', () => {
@@ -113,11 +133,9 @@ test('hoof perimeters and circular openings match the donor register', () => {
   assert.deepEqual(openings(panels),openings(original));
 });
 
-test('inspector displays each window piece and respects interior holes and formed creases', () => {
+test('inspector displays each flat window piece and its interior holes', () => {
   const {q,window,location}=workshop();
   const inspection=panels.filter(p=>p.dj_booth || p.holes_m.length);
-  const folded=panels.find(p=>p.folds_m.length);
-  if(folded)inspection.push(folded);
   for(const id of ['B-D-048','B-D-050']){
     assert.ok(inspection.some(p=>p.id===id),id);
   }
@@ -130,7 +148,7 @@ test('inspector displays each window piece and respects interior holes and forme
     const edges=q('#edge-a').children.map(el=>el.textContent);
     assert.equal(edges.length,p.vertices_m.length);
     assert.equal(edges.at(-1),edges.length+'–1');
-    assert.equal(svg.children.filter(el=>el['stroke-dasharray']).length,p.folds_m.length);
+    assert.equal(svg.children.filter(el=>el['stroke-dasharray']).length,0);
   }
 });
 
@@ -143,4 +161,28 @@ test('a retired seam ID links to its surviving sheet', () => {
   location.hash='#'+retired;
   window.emit('hashchange');
   assert.match(q('#title').textContent,new RegExp(combined.id));
+});
+
+
+test('omitted crown links show their location and identify a neighboring live sheet', () => {
+  const {q,window,location}=workshop();
+  for(const opening of omitted){
+    assert.ok(!panels.some(p=>p.id===opening.id));
+    location.hash='#'+opening.id;
+    window.emit('hashchange');
+    assert.match(q('#title').textContent,new RegExp(opening.neighbor));
+    assert.match(q('#viewer-status').textContent,new RegExp(opening.id+'.*open crown'));
+  }
+});
+
+test('the two requested window revisions remain directly inspectable by their previous IDs', () => {
+  const {q,window,location}=workshop();
+  for(const id of ['B-D-085','B-D-089']){
+    location.hash='#'+id;
+    window.emit('hashchange');
+    const active=panels.find(p=>p.id===id||p.prior_ids?.includes(id));
+    assert.ok(active,id);
+    assert.match(q('#title').textContent,new RegExp(active.id));
+    if(active.id!==id)assert.match(q('#viewer-status').textContent,new RegExp(id+'.*'+active.id));
+  }
 });
