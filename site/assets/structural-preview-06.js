@@ -307,6 +307,16 @@
     for(const node of doc.nodes)if((node.name||'').includes('Front transverse sill'))node.extras={...(node.extras||{}),nominal_wall_in:.25,structural_revision:'06'};
     doc.scenes[doc.scene??0].nodes.push(doc.nodes.length);
     doc.nodes.push({name:'Iteration 06 | full truss with six body shores',children,extras:{component:'structure'}});
+    for(const scene of doc.scenes){
+      const metadata = scene.extras ??= {};
+      metadata['Deck concept'] = '38 × 8 ft modeled deck. Support details and capacity await survey and engineering review.';
+      metadata['Attachment study'] = 'Full-height perimeter trusses, three pairs of short body shores and no cabin uprights.';
+      if(doc.asset.extras?.dj_booth_revision){
+        metadata.model = 'BAAABS on Earl with party-side DJ booth';
+        metadata.panel_schedule = 'earl-dj-panel-register.csv';
+        metadata.fit_revision = 'See the current panel register for individual cut boundaries.';
+      }
+    }
     doc.asset.extras={...(doc.asset.extras||{}),structural_iteration:'06',structural_variant:variant.id,concept_shoring_revision:'06',concept_shore_positions_m:variant.shorePositions,cabin_uprights:0,roof_wall_nominal_in:variant.roofWallNominalIn,portal_sill_wall_nominal_in:.25,
       structural_note:'Concept only. Coincident joints are analytical idealizations, not fabrication details. Body landing capacity and cabin protection require engineering verification.'};
   }

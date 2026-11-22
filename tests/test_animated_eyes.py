@@ -27,14 +27,34 @@ class Eyes(unittest.TestCase):
         flat=struct.unpack_from('<'+'f'*a['count']*width,self.binary,v.get('byteOffset',0)+a.get('byteOffset',0))
         return [flat[i:i+width] for i in range(0,len(flat),width)]
 
-    def test_body_and_panel_geometry_preserved(self):
-        for old,new in zip(self.before['nodes'],self.doc['nodes']):
-            if old['name']=='SHEEP_HEAD' or old['name'].startswith('Eye_'):continue
-            self.assertEqual(old,new)
-        self.assertEqual(self.before['meshes'],self.doc['meshes'][:len(self.before['meshes'])])
-        self.assertEqual(self.before['materials'],self.doc['materials'][:len(self.before['materials'])])
-        panels=lambda doc:[n for n in doc['nodes'] if n.get('extras',{}).get('panel_id')]
-        self.assertEqual(panels(self.before),panels(self.doc))
+    def test_non_panel_geometry_and_all_live_pick_ids(self):
+        layout = json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())
+        ids = {piece['id'] for piece in layout['pieces']}
+        expected_nodes = {n['name'] for n in self.before['nodes']
+                          if n['name'] == 'SHEEP_HEAD' or n['name'].startswith('Eye_')}
+        # The three donor photo surfaces get real translucent window panes.
+        expected_nodes.update(f'Bus__Driver glazing band {i:02}' for i in (5, 6, 7))
+        for old, new in zip(self.before['nodes'], self.doc['nodes']):
+            if old['name'] in expected_nodes:
+                continue
+            if 'mesh' in old:
+                prim = self.before['meshes'][old['mesh']]['primitives'][0]
+                if self.before['materials'][prim['material']]['name'].startswith('Panel_'):
+                    continue
+            # New sheets attach to the same assembly as their original facets.
+            common = lambda n: {k:v for k,v in n.items() if k != 'children'}
+            self.assertEqual(common(old), common(new))
+            old_children = old.get('children', [])
+            self.assertEqual(old_children, new.get('children', [])[:len(old_children)])
+        for old, new in zip(self.before['meshes'], self.doc['meshes']):
+            # Live mesh extras now describe the current steel stock estimate.
+            self.assertEqual({k:v for k,v in old.items() if k != 'extras'},
+                             {k:v for k,v in new.items() if k != 'extras'})
+        picks = {m['name'].split('_')[1] for m in self.doc['materials'] if m['name'].startswith('Panel_')}
+        panel_nodes = [n['extras']['panel_id'] for n in self.doc['nodes'] if n.get('extras', {}).get('panel_id')]
+        self.assertEqual(picks, ids)
+        self.assertEqual(len(ids), 206)
+        self.assertCountEqual(panel_nodes, sorted(ids))
 
     def test_old_flame_placeholders_disconnected(self):
         visited=set()

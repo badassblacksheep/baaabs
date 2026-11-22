@@ -20,7 +20,7 @@
  function neighbors(p){
   if(!neighborCache.has(p.id))neighborCache.set(p.id,DATA.panels.filter(other=>other.id!==p.id&&(
    auditNeighbors.some(pair=>(pair.a===p.id&&pair.b===other.id)||(pair.b===p.id&&pair.a===other.id))||
-   p.vertices_m.some((a,i)=>other.vertices_m.some((b,j)=>segmentDistance(a,p.vertices_m[(i+1)%p.vertices_m.length],b,other.vertices_m[(j+1)%other.vertices_m.length])<=neighborTolerance))
+   p.vertices_m.some((a,i)=>other.vertices_m.some((b,j)=>segmentDistance(a,p.vertices_m[nextVertex(p,i)],b,other.vertices_m[nextVertex(other,j)])<=neighborTolerance))
   )));
   return neighborCache.get(p.id);
  }
@@ -31,9 +31,10 @@
   choose.disabled=!nearby.length;
  }
 
- const edge=(p,i)=>sub(p.vertices_m[(i+1)%p.vertices_m.length],p.vertices_m[i]);
+ const nextVertex=(p,i)=>(i+1)%p.vertices_m.length;
+ const edge=(p,i)=>sub(p.vertices_m[nextVertex(p,i)],p.vertices_m[i]);
  const angle=(a,b)=>length(a)<1e-10||length(b)<1e-10?null:degrees(Math.acos(Math.min(1,Math.max(0,Math.abs(dot(a,b)/(length(a)*length(b)))))));
- const num=n=>n.toFixed(2),inches=n=>num(n/.0254),edgeName=(p,i)=>`${i+1}–${(i+1)%p.vertices_m.length+1}`;
+ const num=n=>n.toFixed(2),inches=n=>num(n/.0254),edgeName=(p,i)=>`${i+1}–${nextVertex(p,i)+1}`;
  const text=(tag,value)=>{const el=document.createElement(tag);el.textContent=value;return el};
  const svgEl=(tag,attrs)=>{const el=document.createElementNS(NS,tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);return el};
  function normal(p){const n=[...p.normal];if((p.side==='Passenger'&&n[1]<0)||(p.side==='Driver'&&n[1]>0))for(let i=0;i<3;i++)n[i]*=-1;return n}
@@ -44,10 +45,14 @@
   const pts=p.flat_vertices_m,xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),lo=[Math.min(...xs),Math.min(...ys)],hi=[Math.max(...xs),Math.max(...ys)];
   const scale=Math.min(500/Math.max(hi[0]-lo[0],.001),240/Math.max(hi[1]-lo[1],.001));
   const map=v=>[300+(v[0]-(lo[0]+hi[0])/2)*scale,165-(v[1]-(lo[1]+hi[1])/2)*scale];
-  const holes=p.holes_m.map(loop=>loop.map(v=>{const d=sub(v,p.origin_m);return[dot(d,p.u_axis),dot(d,p.v_axis)]}));
+  const holes=p.flat_holes_m??p.holes_m.map(loop=>loop.map(v=>{const d=sub(v,p.origin_m);return[dot(d,p.u_axis),dot(d,p.v_axis)]}));
   const d=[pts,...holes].map(loop=>loop.map((v,i)=>(i?'L':'M')+map(v).join(',')).join(' ')+'Z').join(' ');
   svg.append(svgEl('path',{d,fill:'#35243e','fill-rule':'evenodd',stroke:color,'stroke-width':2}));
-  const a=map(pts[index]),b=map(pts[(index+1)%pts.length]);svg.append(svgEl('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,'stroke-width':7}));
+  for(const fold of p.folds_flat_m||[]){
+   const [a,b]=fold.map(map);
+   svg.append(svgEl('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'#7ef3ca','stroke-width':3,'stroke-dasharray':'9 6','aria-label':'Formed crease'}));
+  }
+  const a=map(pts[index]),b=map(pts[nextVertex(p,index)]);svg.append(svgEl('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:color,'stroke-width':7}));
   pts.forEach((v,i)=>{const xy=map(v),label=svgEl('text',{x:xy[0]+8,y:xy[1]-8,fill:color,'font-size':20});label.textContent=prefix+(i+1);svg.append(label)});
  }
  function readings(){
@@ -66,7 +71,7 @@
   const box=viewer.getBoundingClientRect();overlay.setAttribute('viewBox',`0 0 ${box.width} ${box.height}`);
   for(const [p,prefix,index,color]of [[selected,'A',state.edgeA,'#ffbc64'],[ref(),'B',state.edgeB,'#67dcf4']]){
    if(!p)continue;const points=p.vertices_m.map((_,i)=>viewer.queryHotspot?.(`hotspot-inspect-${prefix}-${i}`)?.canvasPosition);
-   for(let i=0;i<points.length;i++){const a=points[i],b=points[(i+1)%points.length];if(!a||!b||Math.abs(a.z)>1||Math.abs(b.z)>1)continue;
+   for(let i=0;i<points.length;i++){const a=points[i],b=points[nextVertex(p,i)];if(!a||!b||Math.abs(a.z)>1||Math.abs(b.z)>1)continue;
     overlay.append(svgEl('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:color,'stroke-width':i===index?5:1.5,opacity:i===index?1:.65}));
    }
   }

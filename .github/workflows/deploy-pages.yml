@@ -45,6 +45,9 @@ jobs:
           python3 -m pip install "numpy>=2.0,<3"
           python3 tools/build-animated-eyes.py
           python3 -m unittest discover -s tests -p 'test_animated_eyes.py'
+          python3 -m unittest discover -s tests -p 'test_dj_booth.py'
+          python3 tools/build-dj-register.py --check
+          node --test tests/dj-workshop.test.mjs tests/home-dj.test.mjs
       - name: Check structural report and workshop revision
         run: node --test tests/structural-report.test.mjs tests/structural05.test.mjs tests/structural05a.test.mjs tests/structural06.test.mjs
       - name: Configure GitHub Pages
@@ -60,6 +63,20 @@ jobs:
           python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb pages-dist/assets/models/baaabs-earl-x-braced-workshop.glb
       - name: Bake the current six-shore model
         run: node tools/bake-structural06.mjs pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/make-eye-blender.py
+      - name: Export and reopen the editable Blender assembly
+        run: |
+          python -m pip install 'bpy==5.2.2'
+          python tools/make-eye-blender.py -- pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb pages-dist/assets/models/BAAABS-Animated-Eyes.blend
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baaabs-dj-blender
+          path: pages-dist/assets/models/BAAABS-Animated-Eyes.blend
+          compression-level: 0
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
         with:

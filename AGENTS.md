@@ -39,7 +39,15 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Panel pages and mass baseline
 
-The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The 206-panel register has 195.304257 m² net area. At 40% open, estimated bare skins: 0.063-in aluminum ~1,116 lb; 20-ga steel ~1,849 lb. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material/weight/procurement study is `site/panels.html` (public /panels.html). Keep navigation consistent. The current DJ-booth register contains 206 panel IDs and 206 detachable sheet pieces, with 194.482602 m² net area. At 40% open, estimated bare skin is 1,111 lb for 0.063-in aluminum and 1,841 lb for 20-ga steel. Do not describe 20-ga steel as lighter than the prior aluminum assumption. Material is provisional.
+
+### DJ booth and driver-side skin
+
+The six-sided opening is centered between the party-side speaker arrays. Its side projection measures 1.72 × 0.59 m (about 68 × 23 in). Leave the closed factory windows and side exit in place. Check DJ eye height, adjacent window posts and exit swing on Earl before fabrication. B-D-033 sits above the glass.
+
+Keep exactly **206 identifiable detachable sheet panels**. Each ID maps to one continuous developed blank; use its XYZ perimeter, flattened perimeter and fold lines together. B-D-073 and B-D-074 are the upper booth returns. A further 22 cuts and 24 seam removals retain panel count and bring every developed pattern inside a nominal 119 × 59 in working envelope on 120 × 60 in stock. Cut lines retain the installed facets. A crease shown within a lifted panel is formed in that sheet. Raw steel sheet mass, hypothetical perimeter weights and actual finished lift weight are separate. Validate handling, mounting, bend allowances and transport clearance on the full-size build.
+
+Use `reference/panels/earl-before-dj.json` as the immutable source for the pre-booth panels. The aperture definition is in `tools/dj_booth.py` and the 206-piece seam plan is `tools/earl-panel-seams.json`. Run `python3 tools/build-dj-register.py` to regenerate the model layout, cut register, workshop and handling totals. Verify with `--check`. Publish the physical register and operator/crowd views at [the panel workshop](https://baaabs.org/the_build.html#dj-booth). The structural reports retain the loads assumed for each analysis.
 
 ## Future BAAABS launch-party fundraiser (planning only)
 

@@ -1,6 +1,7 @@
 const canvas = document.querySelector('#home-sheep');
 const poster = document.querySelector('#home-poster');
 const rotateButton = document.querySelector('#rotation-toggle');
+const skinButton = document.querySelector('#skin-toggle');
 const eyeButton = document.querySelector('[data-eye-pause]');
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
 const base = new URL('.', import.meta.url);
@@ -9,6 +10,7 @@ let angle = -.49, tilt = .24, zoom = 1, eyeTime = 0;
 let lastTime = 0, lastDrag = -Infinity, frame = 0, visible = true;
 let gl, program, uniforms, attributes, atlas, atlasReady = false, generation = 0;
 let batches = [];
+let showSkin = true;
 let flameMap, flameQuad, fireReady=false, showTime=0;
 const pointers = new Map();
 
@@ -27,7 +29,7 @@ varying float eyeSide;
 void main(){
   vec3 p = pos * .001;
   float s = sin(orbit.x), c = cos(orbit.x);
-  if(eye > 2.5){
+  if(eye == 3.){
     float rise = smoothstep(0.,.32,age);
     float lift = smoothstep(.44,1.,age);
     float width = (.3+.9*rise+.65*lift);
@@ -50,14 +52,19 @@ precision mediump float;
 varying vec3 paint;
 varying vec2 eyeUV;
 varying float eyeSide;
-uniform sampler2D atlas, flameMap;
+uniform sampler2D atlas, flameMap, busPhoto;
+uniform bool showSkin;
 uniform mediump float age;
 uniform float seed;
 uniform float tile;
 uniform bool textured;
 void main(){
   vec3 rgb = paint;
-  if(eyeSide > 2.5){
+  if(eyeSide > 4.5 && !showSkin)discard;
+  if(eyeSide > 3.5 && eyeSide < 4.5){
+    gl_FragColor = vec4(texture2D(busPhoto,eyeUV).rgb,1.);return;
+  }
+  if(eyeSide > 2.5 && eyeSide < 3.5){
     vec2 q=eyeUV;
     float h=q.y, phase=age*12.+seed;
     // Warp a real flame photograph. The neck stays pinned while the crown rolls and sheds wisps.
@@ -74,7 +81,7 @@ void main(){
     radiance=mix(radiance,vec3(.36,.60,1.),blue*.9);
     gl_FragColor=vec4(radiance,opacity);return;
   }
-  if(eyeSide > .5){
+  if(eyeSide > .5 && eyeSide < 2.5){
     if(textured){
       float index = mod(tile + (eyeSide > 1.5 ? 8. : 0.),192.);
       vec2 cell = vec2(mod(index,16.),floor(index/16.));
@@ -118,12 +125,13 @@ function draw(now){
   gl.uniform2f(uniforms.viewport,w,h);gl.uniform2f(uniforms.orbit,angle,tilt);
   gl.uniform1f(uniforms.zoom,zoom);gl.uniform1f(uniforms.tile,Math.floor(eyeTime*12));
   gl.uniform1i(uniforms.textured,atlasReady);
+  gl.uniform1i(uniforms.showSkin,showSkin);
   for(const b of batches){
     gl.bindBuffer(gl.ARRAY_BUFFER,b.vertices);
-    gl.vertexAttribPointer(attributes.pos,3,gl.SHORT,false,12,0);
-    gl.vertexAttribPointer(attributes.color,3,gl.UNSIGNED_BYTE,true,12,6);
-    gl.vertexAttribPointer(attributes.uv,2,gl.UNSIGNED_BYTE,true,12,9);
-    gl.vertexAttribPointer(attributes.eye,1,gl.UNSIGNED_BYTE,false,12,11);
+    gl.vertexAttribPointer(attributes.pos,3,gl.SHORT,false,14,0);
+    gl.vertexAttribPointer(attributes.color,3,gl.UNSIGNED_BYTE,true,14,6);
+    gl.vertexAttribPointer(attributes.uv,2,gl.UNSIGNED_SHORT,true,14,10);
+    gl.vertexAttribPointer(attributes.eye,1,gl.UNSIGNED_BYTE,false,14,9);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.indices);
     gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);
   }
@@ -161,7 +169,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name,base));
+  const response=await fetch(new URL(name + "?v=dj-booth-1",base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;
@@ -173,11 +181,32 @@ async function loadMesh(name,version){
   for(let offset=0;offset<data.byteLength;){
     const vertices=view.getUint32(offset,true), count=view.getUint32(offset+4,true);
     offset+=8;
-    const v=buffer(gl.ARRAY_BUFFER,offset,vertices*12);offset+=vertices*12;
+    const v=buffer(gl.ARRAY_BUFFER,offset,vertices*14);offset+=vertices*14;
     const i=buffer(gl.ELEMENT_ARRAY_BUFFER,offset,count*2);offset+=count*2;
     batches.push({vertices:v,indices:i,count});
   }
   schedule();
+}
+function loadBusPhoto(version){
+  const photo = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D,photo);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([100,101,98]));
+  gl.uniform1i(uniforms.busPhoto,2);
+  gl.activeTexture(gl.TEXTURE0);
+  const image = new Image();
+  image.onload = () => {
+    if(version!==generation)return;
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D,photo);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,image);
+    gl.activeTexture(gl.TEXTURE0);
+    schedule();
+  };
+  image.src = new URL('earl-photo.jpg?v=dj-booth-1',base);
 }
 function loadAtlas(version){
   const image=new Image();
@@ -200,7 +229,7 @@ async function start(){
     gl=canvas.getContext('webgl',{alpha:true,antialias:true});
     if(!gl)throw Error('WebGL unavailable');
     program=initProgram();gl.enable(gl.DEPTH_TEST);
-    uniforms=Object.fromEntries(['viewport','orbit','zoom','tile','textured','age','seed','outlet','flameMap'].map(k=>[k,gl.getUniformLocation(program,k)]));
+    uniforms=Object.fromEntries(['viewport','orbit','zoom','tile','textured','age','seed','outlet','flameMap','busPhoto','showSkin'].map(k=>[k,gl.getUniformLocation(program,k)]));
     attributes=Object.fromEntries(['pos','color','uv','eye'].map(k=>[k,gl.getAttribLocation(program,k)]));
     for(const id of Object.values(attributes))gl.enableVertexAttribArray(id);
     atlas=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,atlas);
@@ -214,13 +243,19 @@ async function start(){
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0]));
     gl.uniform1i(uniforms.flameMap,1);gl.activeTexture(gl.TEXTURE0);
+    loadBusPhoto(version);
     await loadMesh('shell.mesh',version);
     if(version!==generation)return;
     buttons();rotateButton.hidden=false;eyeButton.disabled=false;
     loadAtlas(version);loadFire(version);
-    loadMesh('details.mesh',version).catch(console.warn);
+    loadMesh('details.mesh',version).then(()=>{if(version===generation)skinButton.hidden=false;}).catch(console.warn);
   }catch(err){console.warn('Homepage model:',err);document.querySelector('#model-hint').textContent='3D preview unavailable';}
 }
+skinButton.onclick=()=>{
+  showSkin=!showSkin;
+  skinButton.textContent=showSkin?'Hide sheep panels':'Show sheep panels';
+  schedule();
+};
 rotateButton.onclick=()=>{rotate=!rotate;buttons();schedule();};
 eyeButton.onclick=()=>{animateEyes=!animateEyes;buttons();schedule();};
 motion.addEventListener('change',()=>{rotate=animateEyes=!motion.matches;buttons();schedule();});
@@ -255,7 +290,7 @@ new ResizeObserver(schedule).observe(canvas);
 new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;lastTime=0;schedule();}).observe(canvas);
 document.addEventListener('visibilitychange',()=>{lastTime=0;schedule();});
 canvas.addEventListener('webglcontextlost',e=>{
-  e.preventDefault();generation++;batches=[];atlasReady=fireReady=false;poster.hidden=false;
+  e.preventDefault();generation++;batches=[];atlasReady=fireReady=false;poster.hidden=false;skinButton.hidden=true;
   rotateButton.hidden=true;eyeButton.disabled=true;cancelAnimationFrame(frame);frame=0;
 });
 canvas.addEventListener('webglcontextrestored',start);

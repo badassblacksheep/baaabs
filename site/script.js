@@ -36,6 +36,7 @@ if (modelButton && modelStage) {
       viewer = document.createElement('model-viewer');
       viewer.setAttribute('alt', 'Earl, the Morton Thomas HDX in BAAABS bodywork. Rotate to inspect the sheep head, faceted body, rooftop dance floor, stairs and twin poofer masts.');
       viewer.setAttribute('camera-controls', '');
+      viewer.setAttribute('animation-name', 'BAAABS | Ovine');
       viewer.setAttribute('touch-action', 'pan-y');
       viewer.setAttribute('camera-orbit', '-36deg 68deg 85%');
       viewer.setAttribute('shadow-intensity', '1');
@@ -48,7 +49,7 @@ if (modelButton && modelStage) {
         viewer.addEventListener('load', () => { clearTimeout(timer); resolve(); }, {once:true});
         viewer.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Model unavailable')); }, {once:true});
       });
-      viewer.setAttribute('src', 'assets/models/baaabs-earl-symmetric.glb');
+      viewer.setAttribute('src', 'assets/models/baaabs-earl-iteration06-six-shores.glb?v=dj-booth-1');
       modelStage.append(viewer);
       await loaded;
       modelStage.classList.add('is-loaded');

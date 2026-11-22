@@ -60,6 +60,9 @@ def build():
         return np.frombuffer(view(a['bufferView']),dtype=types[a['componentType']],
                              offset=a.get('byteOffset',0),count=a['count']*width).reshape(-1,width)
 
+    bus_image = next(i for i, image in enumerate(doc['images']) if image.get('name') == 'Earl-atlas')
+    assert doc['images'][bus_image]['mimeType'] == 'image/jpeg'
+    (DEST / 'earl-photo.jpg').write_bytes(view(doc['images'][bus_image]['bufferView']))
     atlas = []
     for i in range(0,384,STEP):
         img = next(im for im in doc['images'] if im.get('name') == f'Ovine_fire_{i:03d}')
@@ -85,6 +88,10 @@ def build():
         if 'mesh' in n and (component!='eye_effect' or textured) and abs(np.linalg.det(world[:3,:3]))>1e-9:
             group = groups['shell' if component in ('shell','head','hooves','poofer','deck','rails','eye_effect') or name.startswith('K-') else 'details']
             for p in doc['meshes'][n['mesh']]['primitives']:
+                mat = doc['materials'][p['material']]
+                # The lightweight shader draws opaque triangles; retain the window frame and clear the glass.
+                if mat['name'] == 'Workshop_bus_DJ_Glazing':
+                    continue
                 pos = read(p['attributes']['POSITION']) @ world[:3,:3].T + world[:3,3]
                 indices = read(p['indices']).reshape(-1,3)
                 if textured:
@@ -99,29 +106,39 @@ def build():
                 tri,indices,normals = tri[keep],indices[keep],normals[keep]/lengths[keep,None]
                 if not len(tri):
                     continue
-                mat = doc['materials'][p['material']]
                 color = np.array(mat.get('pbrMetallicRoughness',{}).get('baseColorFactor',[.45,.45,.45,1])[:3])
                 if mat['name'].startswith('Panel_'):
                     color = np.array([.033,.030,.038])
                 light = .39 + .52*np.abs(normals@sun) + .22*np.maximum(normals[:,1],0)
                 rgb = np.clip(255*color**.45*light[:,None],0,255).round().astype('u1')
-                verts = np.zeros((len(tri)*3,12),dtype='u1')
+                # 14-byte vertex: mm position, RGB, surface ID, two normalized 16-bit UVs.
+                verts = np.zeros((len(tri)*3,14),dtype='u1')
                 verts[:,:6] = (tri.reshape(-1,3)*1000).round().astype('<i2').view('u1').reshape(-1,6)
                 verts[:,6:9] = rgb.repeat(3,axis=0)
-                if textured:
-                    verts[:,9:11] = (255*read(p['attributes']['TEXCOORD_0'])[indices].reshape(-1,2)).round().astype('u1')
-                    verts[:,11] = 1 if '_L_' in name else 2
+                texture = mat.get('pbrMetallicRoughness', {}).get('baseColorTexture', {})
+                bus_photo = 'index' in texture and doc['textures'][texture['index']]['source'] == bus_image
+                if textured or bus_photo:
+                    uv_key = 'TEXCOORD_' + str(texture.get('texCoord', 0))
+                    uv = read(p['attributes'][uv_key])[indices].reshape(-1, 2)
+                    verts[:,10:14] = (65535 * uv.clip(0,1)).round().astype('<u2').view('u1').reshape(-1,4)
+                    if bus_photo:
+                        verts[:,9] = 4
+                        verts[:,6:9] = 255  # Earl's photographs already include daylight and shadows.
+                    else:
+                        verts[:,9] = 1 if '_L_' in name else 2
+                elif n.get('extras',{}).get('panel_id') or mat['name'].startswith('Panel_'):
+                    verts[:,9] = 5
                 group.append(verts)
         for child in n.get('children',[]):
             visit(child,world)
     for root in doc['scenes'][doc['scene']]['nodes']:
         visit(root,np.eye(4))
     for name,parts in groups.items():
-        triangles = np.concatenate(parts).reshape(-1,3,12)
+        triangles = np.concatenate(parts).reshape(-1,3,14)
         mesh = bytearray()
         # Each batch fits 16-bit indices even when every triangle has distinct vertices.
         for start in range(0,len(triangles),21000):
-            vertices,indices = np.unique(triangles[start:start+21000].reshape(-1,12),axis=0,return_inverse=True)
+            vertices,indices = np.unique(triangles[start:start+21000].reshape(-1,14),axis=0,return_inverse=True)
             mesh.extend(struct.pack('<II',len(vertices),indices.size))
             mesh.extend(vertices.tobytes())
             mesh.extend(indices.astype('<u2').tobytes())

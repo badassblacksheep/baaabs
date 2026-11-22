@@ -40,7 +40,7 @@ Use this as the **working estimate for all 206 nonstructural exterior panels**, 
 
 ## Exterior skin mass study
 
-The 206 modeled panels sum to **195.3043 m² (2,102.24 ft²)** net surface area. At 40% open area, the previous 0.063-in perforated aluminum skin is approximately **1,116 lb**, while the proposed McNICHOLS 20-ga perforated steel is **1,849 lb** (~733 lb heavier). All values exclude frames, hardware, coatings and nesting waste. Track material decisions at <https://baaabs.org/panels.html>; use <https://baaabs.org/the_build.html> for the interactive panel workshop.
+The DJ booth and skin revision has **206 separate detachable panels** and **194.4826 m² (2,093.39 ft²)** of net sheet. Each developed pattern fits one 60 × 120 in sheet. The heaviest bare perforated-steel skin is 26.8 lb. Allowing 0.50 lb/ft of edging and 2 lb of fittings gives 41.0 lb for the heaviest trial assembly. Original fold lines are shown on the developed patterns where neighboring faces share a sheet. Check finished assemblies, grips, transport clearance and egress on Earl. [Inspect the booth and cut geometry](https://baaabs.org/the_build.html#dj-booth). [View materials and the two-person handling study](https://baaabs.org/panels.html).
 
 ## Contributions
 

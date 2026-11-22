@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Add portable, textured dome eyes and native glTF animation to Earl.
 
-Requires NumPy for the reproducible fire bake. Body and panel geometry are untouched.
+Requires NumPy for the reproducible fire bake. The source study is retained; the party-side DJ opening is generated before the eyes.
 Run before bake-structural06.mjs. Textures, meshes and clips are embedded in the GLB.
 """
 import colorsys
@@ -10,6 +10,7 @@ import math
 import pathlib
 import struct
 import zlib
+from dj_booth import apply_dj_booth
 from hypnotoad_eyes import HYPNO_FRAMES, HYPNO_SIZE, HYPNO_RIGHT_PHASE, hypnotoad_pixels
 from infernal_eyes import (FIRE_FRAMES,FIRE_FPS,FIRE_SECONDS,FIRE_SIZE,SHELL_RADIUS,
                           PUPILS,OVINE_TILT_DEGREES,FIRE_HOLD,STANDARD_HOLD,
@@ -244,6 +245,7 @@ def star(cx,cy,r,n=4,inner=.28):
 def main():
     model=Model(ROOT/'site/assets/models/earl-roof-attachment-study.glb');d=model.doc
     if d.get('asset',{}).get('extras',{}).get('eye_revision'): raise ValueError('Use the unmodified source GLB')
+    apply_dj_booth(model)
     old={i for i,n in enumerate(d['nodes']) if n.get('name','').startswith('Eye_')}
     for n in d['nodes']:
         if 'children' in n:n['children']=[i for i in n['children'] if i not in old]

@@ -1,143 +1,390 @@
-"""CPU-only turntable of the Earl assembly OBJ. No Blender process or GPU needed.
+"""Render public posters and the disco loop from the current baked GLB.
 
-Uses NumPy and pycairo. Run from the repository: python3 tools/disco/render.py.
-The master model is read-only. Dancers/lights/flames are presentation effects.
+Run python3 tools/disco/render.py after baking the current six-shore model.
+Requires NumPy, pycairo, ffmpeg and a C compiler. All rendering runs on the CPU.
 """
+
+import argparse
+import ctypes
+import hashlib
+import json
+import math
 from pathlib import Path
-import math, json, argparse
-import numpy as np
+import subprocess
+import sys
+import tempfile
+
 import cairo
+import numpy as np
+
+from glb_scene import Scene
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT.parent / 'outputs/earl-geodesic/baaabs-earl-geodesic.obj'
-OUT = ROOT / 'site/assets/disco/earl-geodesic'
-OUT.mkdir(parents=True, exist_ok=True)
-parser = argparse.ArgumentParser()
-parser.add_argument('--frames', type=int, default=192)
-parser.add_argument('--width', type=int, default=1280)
-parser.add_argument('--poster-only', action='store_true')
-args = parser.parse_args()
-W, H = args.width, round(args.width * 9 / 16)
-vertices, faces, materials, names = [], [], [], []
-material, name = '', ''
-for line in SOURCE.read_text().splitlines():
-    if line.startswith('v '): vertices.append(list(map(float, line.split()[1:])))
-    elif line.startswith('o '): name = line[2:]
-    elif line.startswith('usemtl '): material = line[7:]
-    elif line.startswith('f '):
-        ix = [int(v.split('/')[0])-1 for v in line.split()[1:]]
-        for j in range(1,len(ix)-1):
-            faces.append([ix[0],ix[j],ix[j+1]])
-            materials.append(material); names.append(name)
-V = np.array(vertices); F = np.array(faces)
-T = V[F]; center = T.mean(axis=1)
-N = np.cross(T[:,1]-T[:,0], T[:,2]-T[:,0])
-N /= np.maximum(np.linalg.norm(N,axis=1)[:,None], 1e-10)
-base = np.tile([.12,.125,.15], (len(F),1))
-for i,m in enumerate(materials):
-    if m.startswith('Panel_'): base[i] = [.14,.145,.17]
-    if 'Hooves' in m: base[i] = [.15,.155,.18]
-    if 'Earl' in m: base[i] = [.72,.39,.025]
-    if any(s in m.lower() for s in ['rails','metal','tank']): base[i] = [.40,.43,.49]
-    if any(s in m.lower() for s in ['rubber','speaker']): base[i] = [.045,.045,.055]
-    if 'glass' in m: base[i] = [.07,.1,.16]
-    if 'generator' in m: base[i] = [.055,.13,.09]
+ASSETS = ROOT / "site/assets"
+SOURCE = ASSETS / "models/baaabs-earl-iteration06-six-shores.glb"
+FRAMES = 192
+FPS = 24
 
-def unit(x):
-    x=np.asarray(x,dtype=float);return x / np.linalg.norm(x)
 
-def frame(k):
-    phase=k/args.frames*2*math.pi
-    theta=-2.22 + phase
-    camera=np.array([30*math.cos(theta),18,30*math.sin(theta)])
-    target=np.array([-.1,4.5,0]); backward=unit(camera-target)
-    right=unit(np.cross([0,1,0],backward)); up=np.cross(backward,right)
-    matrix=np.array([right,up,backward]).T
-    scale=W/28
-    def project(p):
-        q=(np.array(p)-target)@matrix
-        return np.stack([W*.5+q[...,0]*scale,H*.52-q[...,1]*scale],axis=-1)
-    surface=cairo.ImageSurface(cairo.FORMAT_RGB24,W,H)
-    c=cairo.Context(surface)
-    bg=cairo.LinearGradient(0,0,0,H);bg.add_color_stop_rgb(0,.025,.016,.065);bg.add_color_stop_rgb(1,.012,.013,.022)
-    c.set_source(bg);c.paint()
-    # Soft, slowly sweeping nightclub beams, without strobing.
-    for j,col in enumerate([(1,.06,.43),(.15,.23,1),(.04,.8,.68)]):
-        x=W*(.2+j*.3); end=x+W*.22*math.sin(phase+j*2)
-        g=cairo.LinearGradient(x,0,end,H*.85)
-        g.add_color_stop_rgba(0,*col,.14);g.add_color_stop_rgba(1,*col,0)
-        c.move_to(x-12,0);c.line_to(x+12,0);c.line_to(end+W*.24,H*.88);c.line_to(end-W*.24,H*.88);c.close_path();c.set_source(g);c.fill()
-    # Ground grid establishes perspective and rotation.
-    for z in np.arange(-18,19,2):
-        p=project([[-22,-.05,z],[22,-.05,z]])
-        c.move_to(*p[0]);c.line_to(*p[1]);c.set_source_rgba(.35,.15,.65,.20);c.set_line_width(.7);c.stroke()
-    for x in np.arange(-22,23,2):
-        p=project([[x,-.05,-18],[x,-.05,18]])
-        c.move_to(*p[0]);c.line_to(*p[1]);c.set_source_rgba(.15,.37,.50,.16);c.stroke()
-    lights=[(unit([math.cos(phase)*.8,1,math.sin(phase)*.8]),np.array([.85,.22,.62])),(unit([-1,.6,-1]),np.array([.18,.45,1])),(unit([1,.9,1]),np.array([.15,.85,.65]))]
-    illumination=np.tile([.30,.30,.36],(len(F),1))
-    for direction,color in lights:
-        illumination += np.maximum(0,N@direction)[:,None]*color*.95
-    color=np.minimum(1,base*illumination*1.75)
-    points=project(V);depth=(center-target)@backward
-    # Painter-order polygons retain the source faces and exterior silhouette.
-    # Presentation rig is depth-sorted with the model to keep dancers behind rails.
-    drawlist=[(depth[i],'face',i) for i in range(len(F))]
-    dancers=[]
-    for j,(x,z) in enumerate([(-4.1,-.55),(-2.5,.6),(-.9,-.45),(.7,.6),(2.3,-.55)]):
-        p=phase*4+j*1.3; bounce=.065*(1+math.sin(p*2))
-        hip=np.array([x+.13*math.sin(p),4.133325+bounce,z]);neck=hip+[.10*math.sin(p),.62,0]
-        head=neck+[0,.27,0]
-        joints=[([x-.24,3.363325,z],hip+[-.15,-.35,.03],hip),([x+.23,3.363325,z],hip+[.2,-.38,-.04],hip),(hip,neck),(neck,neck+[-.35,.15+.23*math.sin(p),.05],neck+[-.53,.55+.25*math.sin(p),.08]),(neck,neck+[.32,.12-.2*math.sin(p),-.05],neck+[.5,.5-.25*math.sin(p),-.06])]
-        dancers.append((j,joints,head))
-        drawlist.append((float((hip-target)@backward),'dancer',len(dancers)-1))
-    for _,kind,i in sorted(drawlist,key=lambda x:x[0]):
-        if kind=='face':
-            p=points[F[i]]
-            # Degenerate projected faces can be skipped.
-            a,b=p[1]-p[0],p[2]-p[0]
-            area=a[0]*b[1]-a[1]*b[0]
-            if abs(float(area))<.09:continue
-            c.move_to(*p[0]);c.line_to(*p[1]);c.line_to(*p[2]);c.close_path()
-            c.set_source_rgb(*color[i]);c.fill()
+def unit(v):
+    return np.array(v) / np.linalg.norm(v)
+
+
+def dancer_mesh(phase, deck):
+    """Five rooftop dancers and a booth DJ as animated presentation figures."""
+    triangles, colors = [], []
+    palette = (
+        (1, 0.24, 0.57),
+        (0.25, 0.8, 1),
+        (0.95, 0.8, 0.26),
+        (0.33, 1, 0.64),
+        (0.8, 0.4, 1),
+        (0.73, 0.80, 1),
+    )
+    for j, (x, z) in enumerate(
+        [(-4.1, -0.55), (-2.5, 0.6), (-0.9, -0.45), (0.7, 0.6), (2.3, -0.55), (-1.11, 0.43)]
+    ):
+        p = phase * 4 + j * 1.3
+        hip = np.array([x + 0.13 * math.sin(p), deck + 0.77 + 0.065 * (1 + math.sin(p * 2)), z])
+        neck = hip + [0.10 * math.sin(p), 0.62, 0]
+        joints = [
+            ([x - 0.24, deck, z], hip + [-0.15, -0.35, 0.03], hip),
+            ([x + 0.23, deck, z], hip + [0.2, -0.38, -0.04], hip),
+            (hip, neck),
+            (
+                neck,
+                neck + [-0.35, 0.15 + 0.23 * math.sin(p), 0.05],
+                neck + [-0.53, 0.55 + 0.25 * math.sin(p), 0.08],
+            ),
+            (
+                neck,
+                neck + [0.32, 0.12 - 0.2 * math.sin(p), -0.05],
+                neck + [0.5, 0.5 - 0.25 * math.sin(p), -0.06],
+            ),
+        ]
+        if j == 5:
+            # Face the glazing, with hands just above the modeled players.
+            hip = np.array([x, 1.71, z])
+            neck = hip + [0.04 * math.sin(p), 0.53, 0.04]
+            joints = [
+                ([x - 0.13, 1.06, z], hip),
+                ([x + 0.13, 1.06, z], hip),
+                (hip, neck),
+                (neck, neck + [-0.24, -0.12, 0.09], [x - 0.20, 1.93, z + 0.33]),
+                (neck, neck + [0.24, -0.13, 0.08], [x + 0.17 + 0.04 * math.sin(p), 1.93, z + 0.33]),
+            ]
+        start = len(triangles)
+        for limb in joints:
+            for a, b in zip(limb, limb[1:]):
+                axis = unit(np.array(b) - a)
+                u = unit(np.cross(axis, [0, 0, 1]))
+                v = np.cross(axis, u)
+                ring = [
+                    0.053 * (u * math.cos(k * math.tau / 6) + v * math.sin(k * math.tau / 6))
+                    for k in range(6)
+                ]
+                for k, r in enumerate(ring):
+                    s = ring[(k + 1) % 6]
+                    triangles.extend([[a + r, a + s, b + r], [a + s, b + s, b + r]])
+        head = neck + [0, 0.21, 0]
+        for k in range(10):
+            ring = [
+                np.array([math.cos(i * math.tau / 10), 0, math.sin(i * math.tau / 10)]) * 0.135
+                for i in [k, k + 1]
+            ]
+            for sign in [-1, 1]:
+                triangles.append([head + ring[0], head + ring[1], head + [0, 0.17 * sign, 0]])
+        colors.extend([(*palette[j], 1)] * (len(triangles) - start))
+    return np.asarray(triangles), np.asarray(colors)
+
+
+class Renderer:
+    def __init__(self, source, work):
+        self.scene = Scene(source)
+        library = work / ("raster.dylib" if sys.platform == "darwin" else "raster.so")
+        subprocess.run(
+            [
+                "cc",
+                "-shared",
+                "-fPIC",
+                "-O3",
+                str(Path(__file__).with_name("raster.c")),
+                "-o",
+                str(library),
+                "-lm",
+            ],
+            check=True,
+        )
+        self.raster = ctypes.CDLL(str(library)).raster
+        self.raster.argtypes = [
+            ctypes.c_int,
+            ctypes.c_int,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+            ctypes.c_int,
+        ] + [ctypes.c_void_p] * 6
+        self.raster.restype = None
+
+    def frame(self, k, width, height, look):
+        scene = self.scene
+        disco = look == "disco"
+        phase = math.tau * k / FRAMES
+        theta = 1.71 + phase if disco else 1.87
+        # Dip toward a crowd-height sightline as the orbit reaches the DJ side.
+        elevation = 0.22 - 0.255 * ((1 + math.sin(theta)) * 0.5) ** 2 if disco else 0.17
+        camera = unit([math.cos(theta), elevation, math.sin(theta)])
+        right = unit(np.cross([0, 1, 0], camera))
+        up = np.cross(camera, right)
+        basis = np.array([right, up, camera]).T
+        target = np.array([0.15, 4.12, 0])
+        scale = width / (22.9 if disco else 19.55)
+
+        def project(points):
+            q = (np.asarray(points) - target) @ basis
+            q[..., 0] = width * 0.5 + q[..., 0] * scale
+            q[..., 1] = height * (0.57 if disco else 0.52) - q[..., 1] * scale
+            return q
+
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, width, height)
+        c = cairo.Context(surface)
+        if look == "pitch":
+            c.set_source_rgb(0.62, 0.64, 0.65)
         else:
-            j,joints,head=dancers[i]
-            col=[(1,.24,.57),(.25,.8,1),(.95,.8,.26),(.33,1,.64),(.8,.4,1)][j]
-            c.set_line_cap(cairo.LINE_CAP_ROUND);c.set_line_join(cairo.LINE_JOIN_ROUND)
-            for limb in joints:
-                p=project(limb);c.move_to(*p[0])
-                for q in p[1:]:c.line_to(*q)
-                c.set_source_rgb(*col);c.set_line_width(scale*.11);c.stroke()
-            q=project(head);c.arc(*q,scale*.14,0,math.tau);c.set_source_rgb(*col);c.fill()
-    # Twin animated gas flame shapes originate at the actual modeled mast tips.
-    pulse=max(0,math.sin(phase*3-.2))**1.4
-    for j,z in enumerate([-1.25,1.25]):
-        tip=np.array([7.31254,8.313325,z]);power=pulse*(.9+.1*math.sin(k*.7+j))
-        if power<.025:continue
-        tip2=tip+np.array([.63*power,2.7*power,0])
-        q=project(tip);q2=project(tip2)
-        glow=cairo.RadialGradient(*q,0,*q,scale*1.8*power)
-        glow.add_color_stop_rgba(0,1,.25,.03,.35);glow.add_color_stop_rgba(1,1,.08,0,0)
-        c.set_source(glow);c.arc(*q,scale*1.8*power,0,math.tau);c.fill()
-        for layer,(col,width) in enumerate([((1,.19,.015),.53),((1,.58,.025),.33),((1,.93,.55),.14)]):
-            axis=q2-q;norm=np.array([-axis[1],axis[0]])/max(np.linalg.norm(axis),1)
-            w=scale*width*power
-            top=q+axis*(1-layer*.16)
-            c.move_to(*q);c.curve_to(*(q+axis*.15+norm*w),*(top+norm*w*.55),*top)
-            c.curve_to(*(top-norm*w*.45),*(q+axis*.25-norm*w),*q)
-            c.set_source_rgb(*col);c.fill()
-    # Small mirrorball and rotating facets, away from the vehicle.
-    bx,by=W*.5,H*.085
-    c.set_source_rgba(.6,.68,.9,.7);c.set_line_width(.6);c.move_to(bx,0);c.line_to(bx,by-13);c.stroke()
-    for row in range(-3,4):
-        for col in range(-3,4):
-            if row*row+col*col>10:continue
-            brightness=.35+.45*max(0,math.sin(col+phase*2+row*.5))
-            c.rectangle(bx+col*4,by+row*4,3.3,3.3);c.set_source_rgb(brightness*.7,brightness*.8,brightness);c.fill()
-    surface.write_to_png(str(OUT/f'frame-{k:04}.png'))
-    if k==min(24,args.frames-1):surface.write_to_png(str(OUT/'poster.png'))
+            c.set_source_rgb(0.052, 0.044, 0.083)
+        c.paint()
+        if disco:
+            self.stage(c, project, width, height, phase)
+            scene.animate_eyes(k)
+        direction = unit([-0.58, 1, 0.48])
+        light = 0.52 + 1.00 * np.abs(scene.normals @ direction) + 0.22 * np.abs(scene.normals[:, 1])
+        rgb = scene.rgb.copy()
+        rgb[:, :3] *= light[:, None]
+        if disco:
+            for direction, color in [
+                (unit([math.cos(phase), 0.7, math.sin(phase)]), (0.42, 0.05, 0.34)),
+                (unit([0.4, 0.7, -1]), (0.03, 0.29, 0.34)),
+            ]:
+                rgb[:, :3] += (
+                    scene.rgb[:, :3] * np.maximum(0, scene.normals @ direction)[:, None] * color
+                )
+            dancers, dancer_colors = dancer_mesh(phase, scene.deck)
+            triangles = np.concatenate((scene.tri, dancers))
+            rgb = np.concatenate((rgb, dancer_colors))
+            uv = np.concatenate((scene.uv, np.zeros((len(dancers), 3, 2))))
+            tex = np.concatenate((scene.tex, np.full(len(dancers), -1, np.int32)))
+        else:
+            triangles = scene.tri
+            uv = scene.uv
+            tex = scene.tex
+        # Emissive Ovine eye textures and Earl's bus photos carry their own light.
+        textured = scene.tex >= 0
+        rgb[: len(textured), :3][textured] = scene.rgb[textured, :3]
+        surface.flush()
+        bgra = np.frombuffer(surface.get_data(), np.uint8)
+        depth = np.full((height, width), -np.inf, np.float32)
+        arrays = [
+            np.ascontiguousarray(project(triangles), np.float32),
+            np.ascontiguousarray(rgb, np.float32),
+            np.ascontiguousarray(uv, np.float32),
+            tex,
+            scene.pixels,
+            scene.tiles,
+        ]
+        self.raster(
+            width,
+            height,
+            bgra.ctypes.data,
+            depth.ctypes.data,
+            len(triangles),
+            *(array.ctypes.data for array in arrays),
+        )
+        surface.mark_dirty()
+        if disco:
+            self.show(c, project, scene.outlets, scale, width, height, k, phase)
+        return surface
 
-for k in ([0] if args.poster_only else range(args.frames)):
-    frame(k)
-    if k%24==0:print(f'frame {k}/{args.frames}',flush=True)
-(OUT/'provenance.json').write_text(json.dumps({'source':str(SOURCE.relative_to(ROOT.parent)), 'source_vertices':len(V),'rendered_triangles':len(F),'frames':args.frames,'fps':24,'presentation_only':['orbit camera','five animated stylized dancers','disco lighting','two mast-tip flame effects'],'geometry_modified':False,'renderer':'CPU NumPy + Cairo; painter ordered mesh projection'},indent=2))
+    @staticmethod
+    def stage(c, project, W, H, phase):
+        bg = cairo.LinearGradient(0, 0, 0, H)
+        bg.add_color_stop_rgb(0, 0.025, 0.016, 0.065)
+        bg.add_color_stop_rgb(1, 0.012, 0.013, 0.022)
+        c.set_source(bg)
+        c.paint()
+        for j, col in enumerate([(1, 0.06, 0.43), (0.15, 0.23, 1), (0.04, 0.8, 0.68)]):
+            x = W * (0.2 + j * 0.3)
+            end = x + W * 0.22 * math.sin(phase + j * 2)
+            g = cairo.LinearGradient(x, 0, end, H * 0.85)
+            g.add_color_stop_rgba(0, *col, 0.14)
+            g.add_color_stop_rgba(1, *col, 0)
+            c.move_to(x - 12, 0)
+            c.line_to(x + 12, 0)
+            c.line_to(end + W * 0.24, H * 0.88)
+            c.line_to(end - W * 0.24, H * 0.88)
+            c.close_path()
+            c.set_source(g)
+            c.fill()
+        for v in range(-22, 23, 2):
+            for a, b, col in [
+                ([-22, -0.05, v], [22, -0.05, v], (0.35, 0.15, 0.65, 0.20)),
+                ([v, -0.05, -22], [v, -0.05, 22], (0.15, 0.37, 0.50, 0.16)),
+            ]:
+                q = project([a, b])
+                c.move_to(*q[0, :2])
+                c.line_to(*q[1, :2])
+                c.set_source_rgba(*col)
+                c.set_line_width(0.7)
+                c.stroke()
+
+    @staticmethod
+    def show(c, project, outlets, scale, W, H, k, phase):
+        pulse = max(0, math.sin(phase * 3 - 0.2)) ** 1.4
+        for j, tip in enumerate(outlets):
+            power = pulse * (0.9 + 0.1 * math.sin(k * 0.7 + j))
+            if power < 0.025:
+                continue
+            q, q2 = project([tip, tip + np.array([0.63 * power, 2.7 * power, 0])])[:, :2]
+            glow = cairo.RadialGradient(*q, 0, *q, scale * 1.8 * power)
+            glow.add_color_stop_rgba(0, 1, 0.25, 0.03, 0.35)
+            glow.add_color_stop_rgba(1, 1, 0.08, 0, 0)
+            c.set_source(glow)
+            c.arc(*q, scale * 1.8 * power, 0, math.tau)
+            c.fill()
+            for layer, (col, w) in enumerate(
+                [((1, 0.19, 0.015), 0.53), ((1, 0.58, 0.025), 0.33), ((1, 0.93, 0.55), 0.14)]
+            ):
+                axis = q2 - q
+                norm = np.array([-axis[1], axis[0]]) / max(np.linalg.norm(axis), 1)
+                radius = scale * w * power
+                top = q + axis * (1 - layer * 0.16)
+                c.move_to(*q)
+                c.curve_to(*(q + axis * 0.15 + norm * radius), *(top + norm * radius * 0.55), *top)
+                c.curve_to(*(top - norm * radius * 0.45), *(q + axis * 0.25 - norm * radius), *q)
+                c.set_source_rgb(*col)
+                c.fill()
+        bx, by = W * 0.5, H * 0.085
+        c.set_source_rgba(0.6, 0.68, 0.9, 0.7)
+        c.set_line_width(0.6)
+        c.move_to(bx, 0)
+        c.line_to(bx, by - 13)
+        c.stroke()
+        for row in range(-3, 4):
+            for col in range(-3, 4):
+                if row * row + col * col > 10:
+                    continue
+                v = 0.35 + 0.45 * max(0, math.sin(col + phase * 2 + row * 0.5))
+                c.rectangle(bx + col * 4, by + row * 4, 3.3, 3.3)
+                c.set_source_rgb(v * 0.7, v * 0.8, v)
+                c.fill()
+
+
+def jpeg(surface, path, width):
+    surface.flush()
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "rawvideo",
+            "-pix_fmt",
+            "bgra",
+            "-s",
+            f"{surface.get_width()}x{surface.get_height()}",
+            "-i",
+            "pipe:0",
+            "-vf",
+            f"scale={width}:-1:flags=lanczos",
+            "-frames:v",
+            "1",
+            "-q:v",
+            "3",
+            str(path),
+        ],
+        input=surface.get_data(),
+        check=True,
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source", type=Path, default=SOURCE)
+    parser.add_argument("--assets", type=Path, default=ASSETS)
+    parser.add_argument("--stills-only", action="store_true")
+    args = parser.parse_args()
+    out = args.assets / "disco/earl-geodesic"
+    out.mkdir(parents=True, exist_ok=True)
+    (args.assets / "home-model").mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        renderer = Renderer(args.source, Path(tmp))
+        studio = renderer.frame(0, 1800, 1014, "studio")
+        jpeg(studio, args.assets / "earl-front-x-hero.jpg", 1350)
+        jpeg(studio, args.assets / "home-model/poster.jpg", 520)
+        pitch = renderer.frame(0, 1640, 950, "pitch")
+        jpeg(pitch, args.assets / "earl-symmetric.jpg", 820)
+        renderer.frame(0, 1280, 720, "disco").write_to_png(str(out / "poster.png"))
+        if args.stills_only:
+            return
+        video = out / "baaabs-disco.mp4"
+        with subprocess.Popen(
+            [
+                "ffmpeg",
+                "-loglevel",
+                "error",
+                "-y",
+                "-f",
+                "rawvideo",
+                "-pix_fmt",
+                "bgra",
+                "-s",
+                "1280x720",
+                "-framerate",
+                str(FPS),
+                "-i",
+                "pipe:0",
+                "-an",
+                "-c:v",
+                "libx264",
+                "-threads",
+                "3",
+                "-pix_fmt",
+                "yuv420p",
+                "-crf",
+                "22",
+                "-movflags",
+                "+faststart",
+                str(video),
+            ],
+            stdin=subprocess.PIPE,
+        ) as encoder:
+            for k in range(FRAMES):
+                frame = renderer.frame(k, 1280, 720, "disco")
+                encoder.stdin.write(frame.get_data())
+            encoder.stdin.close()
+            if encoder.wait():
+                raise RuntimeError("Turntable encode failed")
+        (out / "provenance.json").write_text(
+            json.dumps(
+                {
+                    "source": "site/assets/models/" + args.source.name,
+                    "source_sha256": hashlib.sha256(args.source.read_bytes()).hexdigest(),
+                    "frames": FRAMES,
+                    "fps": FPS,
+                    "eye_clip": "First 8 seconds of the authored Ovine Sauron show at 24 fps",
+                    "renderer": "tools/disco/render.py",
+                    "presentation": [
+                        "orbit camera",
+                        "five rooftop dancers",
+                        "DJ at the booth",
+                        "disco lighting",
+                        "two mast-tip flame effects",
+                    ],
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+
+
+if __name__ == "__main__":
+    main()

@@ -24,6 +24,7 @@ function bakeVehicle(data){
       // Frame zero can be hidden by an animation scale. Bake both caps at full size.
       const transforms=eye?chain.map(node=>node.scale?.every(v=>v===0)?{...node,scale:[1,1,1]}:node):chain;
       const pos=accessor(prim.attributes.POSITION), idx=accessor(prim.indices), mat=doc.materials[prim.material];
+      if(mat.name==='Workshop_bus_DJ_Glazing')continue; // See through the windows in this opaque-only renderer.
       const points=[];
       for(let i=0;i<pos.length;i+=3)points.push(transforms.reduce(transform,Array.from(pos.subarray(i,i+3))));
       const component=n.extras?.component, panel=mat.name.startsWith('Panel_');
