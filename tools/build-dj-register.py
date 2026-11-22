@@ -117,27 +117,19 @@ def build(refit=False):
         faces=p.pop('source_faces')
         layout.append(dict(id=k,name=p['name'],vertices_m=p['vertices_m'],holes_m=p['holes_m'],faces=faces))
         panels.append(p)
-    assert len(parts)==seams.get('panel_count',206), len(parts)
+    if 'panel_count' in seams and len(parts)!=seams['panel_count']:
+        raise ValueError(f"Expected {seams['panel_count']} physical sheets, found {len(parts)}")
     sources={f['source'] for record in layout for f in record['faces']}
-    omitted=[]
-    for p in original['panels']:
-        if p['id'] in sources:
-            continue
-        center=np.mean(p['vertices_m'],axis=0)
-        nearby=min((q for q in panels if q['side']==p['side']),
-                   key=lambda q:np.linalg.norm(q['vertex_average_m']-center))
-        omitted.append(dict(id=p['id'],name=p['name'],area_m2=p['net_area_m2'],
-                            center_m=points([center])[0],neighbor=nearby['id'],
-                            aliases=p.get('merged_from_ids',[])))
-    if {p['id'] for p in omitted}!=set(seams.get('omit',[])):
-        raise ValueError('Missing source facets do not match the approved crown omissions')
+    original_ids={p['id'] for p in original['panels']}
+    if sources!=original_ids:
+        raise ValueError(f'Unmapped source facets: {sorted(sources^original_ids)}')
     aliases=seams.get('aliases',{})
     for retired,survivor in aliases.items():
         if retired in parts or survivor not in parts:
             raise ValueError(f'Invalid historical panel link {retired} → {survivor}')
         parts[survivor].setdefault('prior_ids',[]).append(retired)
-    layout=dict(panel_count=len(parts),pieces=layout,splits=splits,omitted=omitted,aliases=aliases)
-    return dict(revision='Earl · flat exterior panels',panel_count=len(parts),panels=panels,omitted=omitted,aliases=aliases),layout,original
+    layout=dict(panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
+    return dict(revision='Earl · restored crown and triangular DJ window header',panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
 
 
 def regenerated(refit=False):
@@ -157,22 +149,17 @@ def regenerated(refit=False):
                          json.dumps(p['flat_holes_m']),f"{p['planarity_error_mm']:.6f}",
                          ', '.join(f['source'] for f in item['faces']),len(p['vertices_m'])])
     total=sum(p['net_area_m2'] for p in panels)
-    # Aperture area is measured on the original four flank facets; crown
-    # omissions are independent of the DJ glazing and accounted separately.
+    # Measure the glazing aperture on its four original driver-side facets.
     removed=0.
     for panel in original['panels']:
         if panel['id'] in PANEL_IDS:
             loops=panel_loops(panel['vertices_m'])
             removed+=panel['net_area_m2']-sum(area(flat(panel,np.asarray(loop))) for loop in loops)
-    omitted=layout['omitted']
-    omission_text=(f"The register omits {len(omitted)} top-facing crown panels "
-                   f"({sum(p['area_m2'] for p in omitted)/SQFT:,.2f} ft²)." if omitted else '')
     values={'area':f'{total:,.2f} m² ({total/SQFT:,.2f} ft²)',
             'removed':f'{removed/SQFT:.2f} ft²','pieces':str(len(panels)),
             'aluminum':f'{total*ALUMINUM:,.0f} lb','steel':f'{total*STEEL:,.0f} lb',
             'heaviest':f"{max(p['bare_steel_lb'] for p in panels):.1f} lb",
-            'span':f"{max(p['tip_span_m'] for p in panels)/INCH:.1f} in",
-            'omission':omission_text}
+            'span':f"{max(p['tip_span_m'] for p in panels)/INCH:.1f} in"}
     values.update(stockLong=f"{max(p['length_m'] for p in panels)/INCH:.2f} in",
                   stockShort=f"{max(p['width_m'] for p in panels)/INCH:.2f} in",
                   clearance=f"{min(p['stock_margin_in'] for p in panels):.2f} in",
@@ -189,7 +176,6 @@ def regenerated(refit=False):
     payload=json.dumps(data,separators=(',',':'),ensure_ascii=False)
     workshop=html[:block.start()]+payload+html[block.end():]
     workshop=re.sub(r'(<span data-panel-count>).*?(</span>)',lambda m:m[1]+str(len(panels))+m[2],workshop)
-    workshop=re.sub(r'(<span data-panel-omission>).*?(</span>)',lambda m:m[1]+omission_text+m[2],workshop)
     return {WORKSHOP:workshop.encode(),
             REGISTER:csv_text.getvalue().encode(),MATERIALS:materials.encode(),
             LAYOUT:(json.dumps(layout,separators=(',',':'),ensure_ascii=False)+'\n').encode()}

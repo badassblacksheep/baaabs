@@ -131,6 +131,8 @@ def verify(destination, doc):
         panel_id, = names
         assert panel_id not in panel_ids, ('duplicate panel',panel_id)
         panel_ids.add(panel_id)
+        if panel_id == 'B-D-074':
+            assert len(obj.data.polygons) == 1 and len(obj.data.polygons[0].vertices) == 3, 'DJ header is subdivided'
         world = np.array([tuple(obj.matrix_world @ v.co) for v in obj.data.vertices])
         centered = world-world.mean(axis=0)
         normal = np.linalg.svd(centered,full_matrices=False)[2][-1]

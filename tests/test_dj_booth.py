@@ -12,7 +12,7 @@ import numpy as np
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
-from dj_booth import APERTURE, CENTER_X, PANEL_IDS, apply_dj_booth, cross2, difference, edges as polygon_edges, panel_loops, read_accessor, signed_area
+from dj_booth import APERTURE, CENTER_X, PANEL_IDS, apply_dj_booth, cross2, difference, edges as polygon_edges, outer_border, panel_loops, read_accessor, signed_area
 from dj_panel_layout import gltf_coordinates, sheet_sources, transform_points
 from glb_bounds import transform
 
@@ -65,7 +65,14 @@ class BoothTests(unittest.TestCase):
                             continue
                         ends = sorted([(((v[:2]-a)@edge)/(edge@edge),v[2]) for v in (p,q)])
                         rim[k].append(np.array(ends))
+        # The new flat sill and header replace the old depth kinks with straight
+        # chords. The reference at each end is the original 3D window corner.
+        chords = []
+        for segments in rim:
+            points = np.vstack(segments)
+            chords.append(points[[np.argmin(points[:,0]),np.argmax(points[:,0])]])
         covered = [[] for _ in APERTURE]
+        header = []
         for pid,source in sheet_sources(self.model).items():
             prim = source['prim']
             vertices = transform_points(read_accessor(self.model,prim['attributes']['POSITION']),source['world'])
@@ -88,19 +95,67 @@ class BoothTests(unittest.TestCase):
                         if hi<=lo:
                             continue
                         covered[k].append((lo,hi))
-                        for original in rim[k]:
-                            samples = [max(lo,original[0,0]),min(hi,original[1,0])]
-                            if samples[1] <= samples[0]+1e-7:
-                                continue
-                            depth = np.interp(samples,ends[:,0],ends[:,1])
-                            ref = np.interp(samples,original[:,0],original[:,1])
-                            self.assertLess(max(abs(depth-ref)),3e-6,pid+' moved off the physical rim')
+                        if a[1]==b[1]==APERTURE[:,1].max() and lo<2e-6 and hi>1-2e-6:
+                            header.append((pid,len(vertices),len(read_accessor(self.model,prim['indices']))))
+                        samples = [lo,hi]
+                        depth = np.interp(samples,ends[:,0],ends[:,1])
+                        chord = np.interp(samples,chords[k][:,0],chords[k][:,1])
+                        self.assertLess(max(abs(depth-chord)),.003,pid+' moved off the window chord')
+        self.assertEqual(header,[('B-D-074',3,3)],'the whole window header must be a single triangle')
         for k,parts in enumerate(covered):
             last = 0.
             for lo,hi in sorted(parts):
                 self.assertLessEqual(lo,last+5e-6,f'unframed DJ edge {k}')
                 last = max(last,hi)
             self.assertGreater(last,1-5e-6,f'unframed DJ edge {k}')
+
+    def test_installed_mitered_trim_sits_on_the_skin_for_its_full_width(self):
+        outer = outer_border(.025)
+        skin = []
+        for source in sheet_sources(self.model).values():
+            prim = source['prim']
+            points = transform_points(read_accessor(self.model,prim['attributes']['POSITION']),source['world'])
+            if np.max(points[:,2]) < .72:
+                continue
+            for tri in points[read_accessor(self.model,prim['indices']).reshape(-1,3)]:
+                xy = tri[:,:2]
+                if np.any(xy.min(axis=0)>outer.max(axis=0)) or np.any(xy.max(axis=0)<outer.min(axis=0)):
+                    continue
+                if abs(signed_area(xy))<1e-8:
+                    continue
+                if signed_area(xy)<0:
+                    xy = xy[::-1]
+                depth = np.linalg.solve(np.column_stack((tri[:,:2],np.ones(3))),tri[:,2])
+                skin.append((xy,depth))
+        rim, = (n for n in self.doc['nodes'] if n.get('extras',{}).get('component')=='dj_rim')
+        prim, = self.doc['meshes'][rim['mesh']]['primitives']
+        points = read_accessor(self.model,prim['attributes']['POSITION']).astype(float)
+        total = 0.
+        for tri in points[read_accessor(self.model,prim['indices']).reshape(-1,3)]:
+            xy = tri[:,:2]
+            area = abs(signed_area(xy))
+            self.assertGreater(area,1e-10)
+            _, covered_outer = difference(xy,outer)
+            self.assertIsNotNone(covered_outer)
+            self.assertAlmostEqual(abs(signed_area(covered_outer)),area,delta=1e-7)
+            _, covered_port = difference(xy,APERTURE)
+            if covered_port is not None:
+                self.assertLess(abs(signed_area(covered_port)),1e-7)
+            contact = 0.
+            depth = np.linalg.solve(np.column_stack((xy,np.ones(3))),tri[:,2])
+            for sheet,sheet_depth in skin:
+                _, overlap = difference(xy,sheet)
+                if overlap is None:
+                    continue
+                overlap_area = abs(signed_area(overlap))
+                if overlap_area < 1e-8:
+                    continue
+                contact += overlap_area
+                xy1 = np.column_stack((overlap,np.ones(len(overlap))))
+                self.assertLess(np.max(abs(xy1@(depth-sheet_depth)-.004)),3e-6)
+            self.assertAlmostEqual(contact,area,delta=2e-7)
+            total += area
+        self.assertAlmostEqual(total,abs(signed_area(outer))-abs(signed_area(APERTURE)),delta=2e-6)
 
     def test_each_register_entry_is_one_connected_pickable_sheet(self):
         layout = json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())

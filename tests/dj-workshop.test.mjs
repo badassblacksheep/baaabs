@@ -164,25 +164,51 @@ test('a retired seam ID links to its surviving sheet', () => {
 });
 
 
-test('omitted crown links show their location and identify a neighboring live sheet', () => {
+test('the complete original crown is visible and selectable in the workshop', () => {
+  const original=JSON.parse(fs.readFileSync(new URL('../reference/panels/earl-before-dj.json',site),'utf8')).panels;
+  const crowns=original.filter(p=>p.id.startsWith('B-')&&p.name.includes(' Crown '));
+  assert.equal(crowns.length,16);
+  assert.deepEqual(omitted,[]);
   const {q,window,location}=workshop();
-  for(const opening of omitted){
-    assert.ok(!panels.some(p=>p.id===opening.id));
-    location.hash='#'+opening.id;
+  for(const crown of crowns){
+    location.hash='#'+crown.id;
     window.emit('hashchange');
-    assert.match(q('#title').textContent,new RegExp(opening.neighbor));
-    assert.match(q('#viewer-status').textContent,new RegExp(opening.id+'.*open crown'));
+    const active=panels.find(p=>p.id===crown.id)||panels.find(p=>p.prior_ids?.includes(crown.id)||p.merged_from_ids?.includes(crown.id));
+    assert.ok(active,crown.id);
+    assert.match(q('#title').textContent,new RegExp(active.id));
   }
 });
 
-test('the two requested window revisions remain directly inspectable by their previous IDs', () => {
-  const {q,window,location}=workshop();
-  for(const id of ['B-D-085','B-D-089']){
+test('one flat triangle spans the entire top of the DJ opening', () => {
+  const {q,location,window}=workshop();
+  const header=panels.find(p=>p.id==='B-D-074');
+  assert.equal(header.vertices_m.length,3);
+  assert.ok(header.dj_booth);
+  const base=header.vertices_m.filter(v=>Math.abs(v[2]-2.55)<1e-6).sort((a,b)=>a[0]-b[0]);
+  assert.equal(base.length,2);
+  assert.ok(Math.abs(base[0][0]+1.55)<1e-6 && Math.abs(base[1][0]+.67)<1e-6);
+  const apex=header.vertices_m.find(v=>v[2]>2.55);
+  assert.ok(apex);
+  const neighbors=panels.filter(p=>p.id!==header.id).flatMap(p=>p.vertices_m.map((v,i)=>[v,p.vertices_m[(i+1)%p.vertices_m.length]]));
+  function edgeDistance(point,[a,b]){
+    const edge=b.map((x,i)=>x-a[i]);
+    const offset=point.map((x,i)=>x-a[i]);
+    const t=Math.max(0,Math.min(1,edge.reduce((sum,x,i)=>sum+x*offset[i],0)/edge.reduce((sum,x)=>sum+x*x,0)));
+    return Math.hypot(...offset.map((x,i)=>x-t*edge[i]));
+  }
+  for(const corner of base)for(const t of [.1,.5,.9]){
+    const sample=apex.map((x,i)=>x+t*(corner[i]-x));
+    assert.ok(neighbors.some(edge=>edgeDistance(sample,edge)<2e-6),'open joint along header');
+  }
+  for(const [id,replacement] of Object.entries({
+    'B-D-073':'B-D-074','B-D-086':'B-D-074','B-D-090':'B-D-074',
+    'B-D-085':'B-D-031','B-D-089':'B-D-031',
+  })){
+    assert.ok(!panels.some(p=>p.id===id),id);
     location.hash='#'+id;
     window.emit('hashchange');
-    const active=panels.find(p=>p.id===id||p.prior_ids?.includes(id));
-    assert.ok(active,id);
-    assert.match(q('#title').textContent,new RegExp(active.id));
-    if(active.id!==id)assert.match(q('#viewer-status').textContent,new RegExp(id+'.*'+active.id));
+    assert.match(q('#title').textContent,new RegExp(replacement));
+    assert.match(q('#viewer-status').textContent,new RegExp(id+'.*'+replacement));
+    if(replacement===header.id)assert.equal(q('#edge-a').children.length,3);
   }
 });

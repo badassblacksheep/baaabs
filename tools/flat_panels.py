@@ -5,7 +5,6 @@ import json
 
 import numpy as np
 
-from dj_booth import APERTURE
 from panel_patterns import area, points, value
 
 
@@ -25,14 +24,6 @@ def segment_fraction(point, a, b):
     return t, np.linalg.norm(point-a-t*edge)
 
 
-def touches_rim(point):
-    for a, b in zip(APERTURE, np.roll(APERTURE, -1, axis=0)):
-        t, distance = segment_fraction(point[[0,2]], a, b)
-        if -JOIN_TOL <= t <= 1+JOIN_TOL and distance <= JOIN_TOL:
-            return True
-    return False
-
-
 def corners(parts):
     """Assign each shared corner one displacement, preserving its input coordinate."""
     positions, cells, indices, fixed = [], {}, {}, set()
@@ -50,7 +41,8 @@ def corners(parts):
                 positions.append(point)
                 cells.setdefault(tuple(cell), []).append(idx)
             ids.append(idx)
-            if panel['region']=='Hoof' or (panel.get('dj_booth') and touches_rim(point)):
+            # The window surround is already planar and defines the trim interface.
+            if panel['region']=='Hoof' or panel.get('dj_booth'):
                 fixed.add(idx)
         indices[pid] = np.asarray(ids)
     return np.asarray(positions), indices, fixed
@@ -83,8 +75,6 @@ def fit_flat_panels(parts):
     delta = np.zeros_like(positions)
     seams = junctions(positions, indices)
     holes = {pid:plane(np.vstack(panel['holes_m'])) for pid,panel in parts.items() if panel['holes_m']}
-    dj_corners={i for pid,panel in parts.items() if panel.get('dj_booth') for i in indices[pid]}
-    weights=np.repeat([10. if i in dj_corners else 1. for i in free],3)
     for iteration in range(32):
         rows, residual = [], []
         for pid,panel in parts.items():
@@ -134,10 +124,10 @@ def fit_flat_panels(parts):
         if iteration>=10 and max(np.abs(residual),default=0.) <= MODEL_TOL/4:
             break
         equations = np.asarray(rows)
-        # Find the lowest-displacement total fit, with a higher positional
-        # weight near the DJ. Near-parallel constraints are rank deficient.
+        # Find the lowest-displacement total fit in the free vertices.
+        # Near-parallel constraints are rank deficient.
         target=equations@delta[free].ravel()-np.asarray(residual)
-        solution=np.linalg.lstsq(equations/weights,target,rcond=1e-6)[0]/weights
+        solution=np.linalg.lstsq(equations,target,rcond=1e-6)[0]
         delta[free]=.5*(delta[free]+solution.reshape((-1,3)))
     else:
         raise ValueError(f'Could not preserve panel planes and shared seams ({max(np.abs(residual))*1000:.6f} mm)')

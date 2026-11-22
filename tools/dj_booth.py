@@ -1,7 +1,7 @@
 """Build the party-side window and interior DJ layout in Earl's design model.
 
-The cut is a projection along Blender Y. Each plate and trim segment stays on
-its own tilted facet. The donor glazing is a photo on an opaque surface, so
+The cut is a projection along Blender Y. The narrow trim follows the installed
+plate surfaces around the opening. The donor glazing is a photo on an opaque surface, so
 only the photographed glass is replaced, leaving the original frames and sash.
 """
 import math
@@ -250,19 +250,40 @@ def outer_border(width):
     return np.array(result)
 
 
-def rim_for_sheet(model, node, rim_faces):
-    triangles, _ = unpack_surface(model, node)
-    triangle, = triangles
-    subject = triangle[:, :2]
-    if signed_area(subject) < 0:
-        subject = subject[::-1]
-    outer = outer_border(.025)
-    plane = np.linalg.solve(np.column_stack((triangle[:, :2], np.ones(3))), triangle[:, 2])
-    for i, (p, q) in enumerate(edges(APERTURE)):
-        quad = np.array([q, p, outer[i], outer[(i+1) % len(outer)]])
-        _, band = difference(quad, subject)
-        if band is not None:
-            rim_faces.append([(x, -float(plane[0]*x+plane[1]*z+plane[2])-.004, z) for x, z in band])
+def fitted_rim(pieces, width=.025, stand_off=.004):
+    """Miter a trim band in elevation and fit its depth to each installed sheet."""
+    outer = outer_border(width)
+    sectors = [np.array([q,p,outer[i],outer[(i+1) % len(outer)]]) for i,(p,q) in enumerate(edges(APERTURE))]
+    faces = []
+    area = 0.
+    for panel in pieces:
+        world = np.asarray(panel['vertices_m'])
+        outline = world[:,[0,2]]
+        if (world[:,1].min() >= 0 or np.any(outline.max(axis=0) < outer.min(axis=0))
+                or np.any(outline.min(axis=0) > outer.max(axis=0))):
+            continue
+        signed = signed_area(outline)
+        if abs(signed)<EPS:
+            continue
+        if signed < 0:
+            outline = outline[::-1]
+        plane = np.linalg.lstsq(np.column_stack((world[:,0],world[:,2],np.ones(len(world)))),
+                                world[:,1],rcond=None)[0]
+        for sector in sectors:
+            _, band = difference(sector,outline)
+            if band is None:
+                continue
+            # Clipping against coincident cut edges can repeat a corner.
+            band = band[np.linalg.norm(band-np.roll(band,1,axis=0),axis=1)>1e-8]
+            band = np.asarray([v for i,v in enumerate(band)
+                               if abs(cross2(v-band[i-1],band[(i+1)%len(band)]-v))>1e-12])
+            if len(band)<3:
+                continue
+            area += abs(signed_area(band))
+            faces.append([(x, float(plane[0]*x+plane[1]*z+plane[2])-stand_off, z) for x,z in band])
+    if abs(area-(abs(signed_area(outer))-abs(signed_area(APERTURE))))>2e-6:
+        raise ValueError('Installed skin does not cover the DJ trim band')
+    return faces
 
 
 def block(x0, x1, y0, y1, z0, z1):
@@ -316,18 +337,11 @@ def apply_dj_booth(model):
     doc = model.doc
     rim = add_material(model, 'Workshop_panels_DJ_Rim', [.018, .020, .024, 1], .86)
     glass = add_material(model, 'Workshop_bus_DJ_Glazing', [.47, .65, .72, .10], .2)
-    found, rim_faces = set(), []
-    for n in doc['nodes']:
-        pid = n.get('extras', {}).get('panel_id')
-        if pid in PANEL_IDS:
-            rim_for_sheet(model, n, rim_faces)
-            found.add(pid)
-    if found != set(PANEL_IDS):
-        raise ValueError(f'DJ opening requires {PANEL_IDS}, found {found}')
     from dj_panel_layout import apply_sheet_spec, repack_panels
-    panel_count = repack_panels(model)
+    pieces = repack_panels(model)
+    panel_count = len(pieces)
     apply_sheet_spec(doc,panel_count)
-    add_mesh(model, 'DJ port / folded matte perimeter', rim_faces, rim, 'dj_rim')
+    add_mesh(model, 'DJ port / folded matte perimeter', fitted_rim(pieces), rim, 'dj_rim')
     open_donor_glass(model, glass)
     add_interior(model)
     doc['asset'].setdefault('extras', {})['dj_booth_revision'] = 1

@@ -240,7 +240,7 @@ def repack_panels(model):
         # Keep source mesh/material indices stable for the historical GLB.
         mat = doc['materials'][source['material']]
         mat['name'] = 'Retired_'+mat['name']
-    return len(pieces)
+    return layout['pieces']
 
 
 

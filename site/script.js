@@ -49,7 +49,7 @@ if (modelButton && modelStage) {
         viewer.addEventListener('load', () => { clearTimeout(timer); resolve(); }, {once:true});
         viewer.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Model unavailable')); }, {once:true});
       });
-      viewer.setAttribute('src', 'assets/models/baaabs-earl-iteration06-six-shores.glb?v=flat-shell-1');
+      viewer.setAttribute('src', 'assets/models/baaabs-earl-iteration06-six-shores.glb?v=crown-header-1');
       modelStage.append(viewer);
       await loaded;
       modelStage.classList.add('is-loaded');

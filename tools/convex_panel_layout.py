@@ -2,8 +2,8 @@
 import copy
 import numpy as np
 
-from dj_booth import panel_loops
-from panel_patterns import clip, divide, joined_perimeter, points, set_contour, unit
+from dj_booth import APERTURE
+from panel_patterns import area, clip, divide, joined_perimeter, points, set_contour, unit
 
 
 def along(a, b, fraction):
@@ -27,71 +27,133 @@ def replace_face(parts, source, patterns, booth=False):
         parts[panel_id] = panel
 
 
+def at_x(a, b, x):
+    return along(a,b,(x-a[0])/(b[0]-a[0]))
+
+
+def source_coverage(boundary, donors):
+    """Clip the original elevation drawing to its source triangles for the panel history."""
+    result = []
+    for source,panel in donors.items():
+        v=np.asarray(panel['vertices_m'])
+        elevation=v[:,[0,2]]
+        polygon=np.array(boundary)[:,[0,2]]
+        center=elevation.mean(axis=0)
+        for a,b in zip(elevation,np.roll(elevation,-1,axis=0)):
+            normal=np.array([a[1]-b[1],b[0]-a[0]])
+            polygon=clip(polygon,a,normal,np.sign((center-a)@normal))
+            if len(polygon)<3:
+                break
+        if len(polygon)<3 or area(polygon)<1e-9:
+            continue
+        # Interpolate depth on the original face, independent of the installed sheet.
+        to_depth=np.linalg.solve(np.column_stack((elevation,np.ones(3))),v[:,1])
+        depth=polygon@to_depth[:2]+to_depth[2]
+        world=np.column_stack((polygon[:,0],depth,polygon[:,1]))
+        result.append((area(polygon),dict(source=source,vertices_m=points(world))))
+    return [record for _,record in sorted(result,key=lambda item:-item[0])]
+
+
 def window_surround(parts):
-    """Keep the traced rim and each original face plane. Extend seams out of its corners."""
-    def contours(panel_id):
-        return [np.array(loop) for loop in panel_loops(parts[panel_id]['vertices_m'])]
-
-    outer, small_top = contours('B-D-047')
-    toe, lip, corner, sill, base = outer
-    foot = along(toe, base, .60)
-    replace_face(parts, 'B-D-047', [
-        ('B-D-047', 'Driver skirt · forward sill', [corner, sill, base, foot]),
-        ('B-D-081', 'Driver skirt · forward lower bevel', [foot, toe, lip, corner]),
-        ('B-D-073', 'Driver skirt · upper return', small_top),
-    ], booth=True)
-
-    outer, = contours('B-D-048')
-    toe, shoulder, crown, rim_end, upper, left, lip = outer
-    # The intact flank above this shoulder is one panel. Short seams from the
-    # window corners terminate at the original flank boundary.
-    rim_direction = upper-left
-    shoulder_edge = crown-shoulder
-    def square_end(corner):
-        t = np.dot(corner-shoulder,rim_direction)/np.dot(shoulder_edge,rim_direction)
-        return along(shoulder,crown,t)
-    # Carry the window's lower-left bevel straight through the left corner
-    # to the old flank seam. That corner is a T-junction on the broad skirt.
-    edge_coordinates = np.column_stack((shoulder_edge,lip-left))[[0,2]]
-    extension = np.linalg.solve(edge_coordinates,(left-shoulder)[[0,2]])[0]
-    start, end = along(shoulder,crown,extension),square_end(upper)
-    replace_face(parts, 'B-D-048', [
-        ('B-D-048', 'Driver skirt · forward window bevel', [toe, shoulder, start, lip]),
-        ('B-D-085', 'Driver window · flat forward reveal', [start, end, upper, left]),
-        ('B-D-086', 'Driver window · forward crown', [end, crown, rim_end, upper]),
-    ], booth=True)
-    outer, = contours('B-D-050')
-    apex, hip, lower, lip, side, upper, rim_end = outer
-    top_seam = along(apex, hip, .12)
-    side_seam = along(hip, lower, .5)
-    replace_face(parts, 'B-D-050', [
-        ('B-D-050', 'Driver skirt · aft window bevel', [top_seam, hip, side_seam, side, upper]),
-        ('B-D-090', 'Driver window · aft crown', [upper, rim_end, apex, top_seam]),
-        ('B-D-091', 'Driver skirt · aft lower bevel', [side_seam, lower, lip, side]),
-    ], booth=True)
-
-    small_top, outer = contours('B-D-071')
-    lip, upper_toe, toe, sill, corner = outer
-    end = along(upper_toe, toe, .25)
-    replace_face(parts, 'B-D-071', [
-        ('B-D-071', 'Driver skirt · aft sill', [end, toe, sill, corner]),
-        ('B-D-074', 'Driver window · aft upper return', small_top),
-        ('B-D-092', 'Driver skirt · aft sill return', [corner, lip, upper_toe, end]),
-    ], booth=True)
+    """Lay six flat sheets against the six projected edges of the DJ opening."""
+    ids=['B-D-031','B-D-047','B-D-048','B-D-050','B-D-071']
+    donors={k:parts.pop(k) for k in ids}
+    original={k:np.asarray(p['vertices_m']) for k,p in donors.items()}
+    def rim(xz,k):
+        v=original[k]
+        yz=np.linalg.solve(np.column_stack((v[:,[0,2]],np.ones(3))),v[:,1])
+        return np.array([xz[0], xz@yz[:2]+yz[2], xz[1]])
+    left,lower_l,lower_r,right,upper_r,upper_l=[
+        rim(xz,k) for xz,k in zip(APERTURE,
+        ['B-D-048','B-D-047','B-D-071','B-D-050','B-D-050','B-D-048'])]
+    front_base,old_shoulder,old_apex=original['B-D-048']
+    flank_top=original['B-D-031'][0]
+    _,hip,heel=original['B-D-050']
+    toe=original['B-D-071'][2]
+    foot=along(toe,front_base,.15)
+    # Straight bevels meet in the centered apex. The left bevel sets its depth;
+    # the right upper corner moves only in depth to meet the same apex.
+    apex=at_x(left,upper_l,(upper_l[0]+upper_r[0])/2)
+    shoulder=at_x(left,upper_l,old_shoulder[0])
+    right_at_apex=at_x(right,apex,upper_r[0])
+    # Fit the lower surrounds in depth only. Each new sheet shares two
+    # consecutive corners with its neighbor; every projected station stays put.
+    def depth_on(a,b,c,p):
+        v=np.array([a,b,c])
+        coeff=np.linalg.solve(np.column_stack((v[:,[0,2]],np.ones(3))),v[:,1])
+        return np.array([p[0],np.dot(coeff,[p[0],p[2],1.]),p[2]])
+    new_base=depth_on(shoulder,left,lower_l,front_base)
+    new_foot=depth_on(shoulder,left,lower_l,foot)
+    new_heel=depth_on(lower_l,lower_r,new_foot,heel)
+    new_toe=depth_on(lower_l,lower_r,new_foot,toe)
+    new_hip=depth_on(right,lower_r,new_heel,hip)
+    # Record the same six regions on the original surface as provenance. Their
+    # outer stations follow the old flank, including its off-center apex.
+    regions=[
+        ('B-D-031','Driver flank · forward window bevel',[shoulder,flank_top,apex],
+         [old_shoulder,flank_top,old_apex,upper_l,left]),
+        ('B-D-074','Driver window · triangular header',[upper_l,apex,right_at_apex],
+         [upper_l,old_apex,upper_r]),
+        ('B-D-050','Driver flank · aft window bevel',[apex,new_hip,right],
+         [old_apex,hip,right,upper_r]),
+        ('B-D-091','Driver skirt · aft window bevel',[new_hip,new_heel,lower_r,right],
+         [hip,heel,lower_r,right]),
+        ('B-D-047','Driver skirt · window sill',[lower_l,lower_r,new_heel,new_toe,new_foot],
+         [lower_l,lower_r,heel,toe,foot]),
+        ('B-D-048','Driver skirt · forward window bevel',[new_base,shoulder,left,lower_l,new_foot],
+         [front_base,old_shoulder,left,lower_l,foot]),
+    ]
+    # Translate external seam junctions on the two moving stations and the
+    # source edges ending there. Adjacent skins consequently share one vertex.
+    shifts=[(old_shoulder,shoulder),(old_apex,apex),(front_base,new_base),
+            (heel,new_heel),(toe,new_toe),(hip,new_hip)]
+    old_edges=[(a,b) for poly in original.values() for a,b in zip(poly,np.roll(poly,-1,axis=0))]
+    for panel in parts.values():
+        updated=copy.deepcopy(panel['vertices_m'])
+        for i,p in enumerate(np.asarray(panel['vertices_m'])):
+            shift=np.zeros(3)
+            for old,new in shifts:
+                if np.linalg.norm(p-old)<1e-6:
+                    shift=new-old
+                    break
+                for a,b in old_edges:
+                    if np.linalg.norm(a-old)>1e-6 and np.linalg.norm(b-old)>1e-6:
+                        continue
+                    far=b if np.linalg.norm(a-old)<1e-6 else a
+                    edge=far-old
+                    t=(p-old)@edge/(edge@edge)
+                    if 0<t<1 and np.linalg.norm(old+t*edge-p)<1e-6:
+                        shift+=(1-t)*(new-old)
+                        break
+            if np.any(shift):
+                updated[i]=points([p+shift])[0]
+        panel['vertices_m']=updated
+    for pid,name,outline,baseline in regions:
+        faces=source_coverage(baseline,donors)
+        panel=copy.deepcopy(donors[faces[0]['source']])
+        panel.update(id=pid,name=name,object_name=f'{pid} | {name}',highlight_material='Panel_'+pid,
+                     vertices_m=points(outline),source_faces=faces,dj_booth=True,
+                     notes='Flat plate bordering the six-sided DJ window.')
+        parts[pid]=panel
 
 
 def rear_returns(parts):
-    # Match one seam on each rear surround across the centerline, from the
-    # service notch to the midpoint of the long side opposite it.
-    for side, source, new_id in [('Driver', 'B-D-059', 'B-D-093'),
-                                 ('Passenger', 'B-P-015', 'B-P-085')]:
-        outer = np.array(parts[source]['vertices_m'])
-        a,b,c,d,e = outer if side == 'Driver' else outer[::-1]
-        midpoint = along(a,b,.5)
-        replace_face(parts, source, [
-            (source, side+' rear surround · upper', [d,e,a,midpoint]),
-            (new_id, side+' rear surround · lower', [midpoint,b,c,d]),
-        ])
+    # Recut each nearly coplanar rear service surround as two quads. Start the
+    # seam at the inward corner of the service opening and run it to the lower
+    # outside corner. This removes the redundant triangular return.
+    for first, second in [('B-D-059','B-D-060'),('B-P-015','B-P-016')]:
+        side = parts[first]['side']
+        v=np.array(joined_perimeter(parts[first]['vertices_m'],parts[second]['vertices_m']))
+        notch=v[np.argmin(np.linalg.norm(v[:,[2,1]]-[3.317,(-.478 if side=='Driver' else .478)],axis=1))]
+        lower=v[np.argmin(v[:,2])]
+        direction=unit(lower-notch)
+        normal=np.linalg.svd(v-v.mean(0),full_matrices=False)[2][-1]
+        cut=unit(np.cross(direction,normal))
+        if np.dot(cut, v[np.argmax(v[:,2])]-notch)>0:
+            cut=-cut
+        field(parts,(first,second),v,[
+            (first,side+' rear surround · outer return'),
+            (second,side+' rear surround · inner return')], (notch,cut))
 
 
 def orbital_panels(parts):
@@ -108,6 +170,29 @@ def orbital_panels(parts):
             (source, panel['name'], [a,c,d,e,f,g]),
             (f'F-{side}-012', panel['side']+' orbital lower tip', [a,b,c]),
         ])
+
+
+def passenger_lower_hem(parts):
+    """Trade one stock split for a new station on the free lower edge of skirt 04."""
+    first,second='B-P-055','B-P-071'
+    a,b,c=np.asarray(parts[first]['vertices_m'])
+    _,d,_=np.asarray(parts[second]['vertices_m'])
+    station=along(c,a,.145)
+    # The hem has no adjacent plate. Keep its station and height, and set its
+    # depth on the adjoining skirt's plane. Every original outer corner stays.
+    neighbor=np.array([b,d,c])
+    coefficients=np.linalg.solve(np.column_stack((neighbor[:,[0,2]],np.ones(3))),neighbor[:,1])
+    fitted=station.copy()
+    fitted[1]=np.dot([station[0],station[2],1.],coefficients)
+    ray=(station-b)[[0,2]]
+    normal=np.array([-ray[1],0.,ray[0]])
+    if np.dot(a-b,normal)>0:
+        normal=-normal
+    field(parts,(first,second),np.array([a,b,d,c]),[
+        (first,'Passenger skirt 04 · lower hem'),
+        (second,'Passenger skirt 05 · lower hem')],(b,normal))
+    parts[first]['vertices_m']=points([a,b,fitted])
+    parts[second]['vertices_m']=points([b,d,c,fitted])
 
 
 def simple_boundary(first, second, corrections):
@@ -225,11 +310,9 @@ def move_junctions(parts, corrections):
 
 
 def redesign(parts, seams):
-    for source in seams['omit']:
-        del parts[source]
-    window_surround(parts)
     rear_returns(parts)
     orbital_panels(parts)
+    passenger_lower_hem(parts)
     corrections=[]
     for side in ('D','P'):
         head_side(parts,side,corrections)
@@ -262,5 +345,6 @@ def redesign(parts, seams):
         outline=simple_boundary(p['vertices_m'],q['vertices_m'],corrections)
         name=p['name'].split(' · ')[0]
         field(parts,(first,second),outline,[(first,name)])
+    window_surround(parts)
     move_junctions(parts,corrections)
     return seams['splits']

@@ -9,7 +9,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools'))
-from dj_booth import PANEL_IDS, panel_loops
+from dj_booth import APERTURE, PANEL_IDS, panel_loops
 
 
 def segments(loop):
@@ -59,13 +59,8 @@ class PanelCoverageTests(unittest.TestCase):
             for face in panel['faces']:
                 pid = face['source']
                 actual[pid].append(face.get('vertices_m', baseline[pid]['vertices_m']))
-        omitted = {row['id'] for row in layout['omitted']}
-        self.assertFalse(omitted & actual.keys())
-        self.assertEqual(set(actual) | omitted, set(baseline))
-        for pid in omitted:
-            panel = baseline[pid]
-            self.assertIn('crown', panel['name'].lower())
-            self.assertGreater(panel['normal'][2], 0.8)
+        self.assertEqual(layout['omitted'], [])
+        self.assertEqual(set(actual), set(baseline))
         for pid in actual:
             original = baseline[pid]
             with self.subTest(source=pid):
@@ -87,20 +82,62 @@ class PanelCoverageTests(unittest.TestCase):
                         if next_y - y > 2e-5:
                             self.assertEqual(excess, 0, f'{pid}: gap/overlap at ({x}, {y})')
 
+    def test_installed_skin_tiles_the_window_surround(self):
+        layout = json.loads((ROOT / 'site/assets/earl-panel-layout.json').read_text())
+        panels = {p['id']: np.asarray(p['vertices_m'])[:, [0, 2]]
+                  for p in layout['pieces'] if p['id'].startswith('B-D-')}
+        # Count intersections through the installed shell on every open interval
+        # in the elevation. A section must cross one sheet outside the opening
+        # and zero inside, including along the former tapered strip.
+        left, right, sill, top = -2.05, -.17, 1.89, 2.78
+        loops = [v for v in panels.values() if
+                 v[:, 0].min() < right and v[:, 0].max() > left and
+                 v[:, 1].min() < top and v[:, 1].max() > sill]
+        box = np.array([[left, sill], [right, sill], [right, top], [left, top]])
+        cuts = critical_x([*loops, APERTURE, box])
+        for lo, hi in zip(cuts, cuts[1:]):
+            x = (lo + hi) / 2
+            if hi - lo < 2e-6 or not left < x < right:
+                continue
+            events = sorted(section_events([*loops, APERTURE], x, 1) + [(sill, 0), (top, 0)])
+            count = 0
+            for (a, delta), (b, _) in zip(events, events[1:]):
+                count += delta
+                if b - a > 2e-5 and sill < (a + b) / 2 < top:
+                    self.assertEqual(count, 1, f'gap or overlap at x={x}, z={(a + b) / 2}')
+
+        header = panels['B-D-074']
+        self.assertEqual(len(header), 3)
+        base = header[np.argsort(header[:, 1])[:2]]
+        np.testing.assert_allclose(base[np.argsort(base[:, 0])],
+                                   [[-1.55, 2.55], [-.67, 2.55]], atol=1e-6)
+        np.testing.assert_allclose(header[np.argmax(header[:, 1])],
+                                   [-1.11, 2.84333333], atol=1e-6)
+        self.assertNotIn('B-D-085', panels)
+
     def test_former_bends_are_physical_boundaries(self):
         before = json.loads((ROOT / 'reference/panels/earl-former-bends.json').read_text())
         layout = json.loads((ROOT / 'site/assets/earl-panel-layout.json').read_text())
         self.assertEqual(len(before), 32)
-        former_creases = {frozenset(row['sources']) for row in before}
+        # The new header and flanks replace three historic creases with new
+        # unbent triangles. Their actual installed coverage is checked above.
+        replaced = {'B-D-074', 'B-D-085', 'B-D-086'}
+        retained = [row for row in before if row['old_panel'] not in replaced]
+        former_creases = {frozenset(row['sources']) for row in retained}
         for panel in layout['pieces']:
             sources = {face['source'] for face in panel['faces']}
             for crease in former_creases:
                 self.assertFalse(crease <= sources, f"{panel['id']} spans the former bend {crease}")
 
-        omitted = {row['id'] for row in layout['omitted']}
-        for bend in before:
+        by_id = {p['id']: p for p in layout['pieces']}
+        for bend in retained:
             start, end = np.array(bend['edge_m'])
-            for pid in set(bend['sources']) - omitted:
+            if bend['old_panel'] == 'B-D-033':
+                # Both panels still end on this shared seam. Its lower corner
+                # is the newly centered apex of the one-piece window header.
+                header = np.asarray(by_id['B-D-074']['vertices_m'])
+                start = header[np.argmax(header[:, 2])]
+            for pid in bend['sources']:
                 perimeters = [np.asarray(p['vertices_m']) for p in layout['pieces']
                               if any(f['source'] == pid for f in p['faces'])]
                 edges = np.vstack([np.stack([v, np.roll(v, -1, axis=0)], axis=1)
