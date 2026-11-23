@@ -320,8 +320,11 @@ def main():
         studio = renderer.frame(0, 1800, 1014, "studio")
         jpeg(studio, args.assets / "earl-front-x-hero.jpg", 1350)
         jpeg(studio, args.assets / "home-model/poster.jpg", 520)
-        pitch = renderer.frame(0, 1640, 950, "pitch")
+        # Supersample narrow rails and mast edges for the full-width Pitch hero.
+        pitch = renderer.frame(0, 7680, 4448, "pitch")
         jpeg(pitch, args.assets / "earl-symmetric.jpg", 820)
+        for width in (1600, 2560, 3840):
+            jpeg(pitch, args.assets / f"earl-pitch-{width}.jpg", width)
         renderer.frame(0, 1280, 720, "disco").write_to_png(str(out / "poster.png"))
         if args.stills_only:
             return
