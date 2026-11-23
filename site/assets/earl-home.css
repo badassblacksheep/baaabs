@@ -1,0 +1,40 @@
+/* Backlight the dark panel silhouette while the bus orbits. */
+.model-viewport .home-orbit {
+  background:
+    radial-gradient(ellipse at 44% 60%, #66516f 0%, transparent 56%),
+    radial-gradient(ellipse at 70% 66%, #38565d 0%, transparent 65%),
+    #12101c;
+}
+.model-tools > summary { display: none; }
+.meet-earl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(2rem, 6vw, 6rem);
+  max-width: 88rem;
+  margin-inline: auto;
+  padding: clamp(2rem, 5vw, 5rem) 5vw 1rem;
+}
+.earl-intro h2 { font-size: clamp(2.5rem, 4.6vw, 4.8rem); line-height: 1.02; letter-spacing: -.045em; }
+.earl-intro > p { max-width: 37ch; font-size: clamp(1.1rem, 1.8vw, 1.5rem); line-height: 1.4; }
+.earl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.5rem; }
+.crew-link, .story-credit { text-decoration: underline; text-underline-offset: .22em; }
+.crew-link { display: inline-flex; align-items: baseline; gap: .3em; padding-block: .7rem; color: #e2b5f3; }
+.sheep-name { font-family: "Smooth Circulars", sans-serif; }
+.earl-intro .crew-note { max-width: 45ch; font-size: 1rem; line-height: 1.5; color: #c8c0cf; }
+.earl-photo { margin: 0; }
+.earl-photo img { width: 100%; height: auto; border-radius: .75rem; }
+.photo-source { display: inline-block; padding-block: .45rem; color: #bcb4c5; font-size: .83rem; }
+.photo-source:hover { text-decoration: underline; }
+.earl-photo blockquote { margin: .55rem 0 .6rem; font: italic clamp(1.15rem, 1.8vw, 1.65rem)/1.35 Georgia, serif; }
+.story-credit { color: #e2b5f3; }
+@media (max-width: 1000px) {
+  .model-tools { border-block: 1px solid #ffffff24; background: #100d1a; }
+  .model-tools > summary { display: list-item; width: fit-content; padding: .7rem .4rem; margin-left: auto; margin-right: 5vw; color: #e2d4ed; cursor: pointer; }
+  .model-tools .model-controls { border-top: 0; }
+}
+@media (max-width: 680px) {
+  .meet-earl { grid-template-columns: 1fr; gap: 1rem; padding: 1.75rem 6vw 1rem; }
+  .earl-actions { gap: .3rem 1rem; }
+  .earl-actions .button { padding-inline: 1.25rem; }
+}

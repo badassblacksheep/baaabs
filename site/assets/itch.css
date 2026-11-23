@@ -29,3 +29,10 @@
     max-width: none;
   }
 }
+
+.itch-invite {
+  margin-top: clamp(3rem, 7vw, 6rem);
+  padding-top: 2rem;
+  border-top: 1px solid #544150;
+}
+.itch-invite p { max-width: 52ch; font-size: 1.1rem; line-height: 1.5; }

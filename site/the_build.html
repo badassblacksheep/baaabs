@@ -73,18 +73,37 @@
 .structural-callout a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 17px;border-radius:7px;background:#c8f2d4;color:#10291f;font-weight:700;text-decoration:none;text-align:center}
 @media(max-width:650px){.structural-callout{flex-direction:column;align-items:stretch}.structural-callout a{align-self:start}}
 .booth-controls{margin:12px 0;padding:9px 13px 12px;border:1px solid #655372;border-radius:10px}.booth-controls legend{font-weight:700;padding:0 5px}.booth-controls .controls{margin:3px 0 7px}.booth-controls p{margin:4px 0}.booth-panels a{display:inline-block;white-space:nowrap;margin:0 .45em .15em 0}
+.workshop-downloads { margin: 12px 0; border-block: 1px solid #49404e; }
+.workshop-downloads summary { width: fit-content; padding: 12px 2px; cursor: pointer; font-weight: 650; }
+.workshop-downloads nav { gap: 8px 22px; padding: 0 0 14px; }
+.workshop-downloads a { padding-block: 5px; }
+.sticky .structural-callout { margin: 14px 0; }
+@media (max-width: 850px) {
+  .model-stage model-viewer { display: block; height: clamp(240px, 48svh, 440px); aspect-ratio: auto; }
+}
 </style>
 <link rel="stylesheet" href="assets/flock-nav.css">
 <link rel="stylesheet" href="assets/animated-eyes.css?v=5"><script defer src="assets/animated-eyes.js?v=5.1"></script>
 <header class="flock-header"><a class="flock-home" href="./" aria-label="BAAABS home"><img src="assets/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>
 <nav aria-label="Main navigation"><a href="patch.html">The Patch</a><a href="pitch.html">The Pitch</a><a href="the_build.html" aria-current="page">The Build</a><a href="itch.html">The Itch</a><a href="https://www.instagram.com/b_a_a_a_b_s/" target="_blank" rel="noopener">The Gram</a></nav></header>
-<header><h1>The Build · Panel Workshop</h1><p>Earl · <span data-panel-count>206</span> flat, convex exterior panels · driver-side DJ booth</p><nav><a href="structural/">Roof frame survey &amp; progress</a><a href="assets/earl-dj-panel-register.csv?v=crown-header-1" download>Download Earl panel register</a><a href="assets/models/earl-animated-eyes.glb?v=crown-header-1" data-rear-frame-download download>Download current GLB</a><a href="assets/models/BAAABS-Animated-Eyes.blend?v=crown-header-1" download>Download editable Blender model</a><a href="index.html#model">Back to website</a></nav></header>
-<aside class="structural-callout" aria-label="Current structural study"><div><strong>20-person target · A clear cabin</strong><p>Iteration 06: full-height perimeter trusses, three equally spaced shore pairs and no cabin uprights. HDX-informed landing positions are provisional; body capacity and passenger protection remain unverified.</p></div><a href="structural/">Open structural study →</a></aside><main><section class="sticky"><div class="model-stage" id="dj-booth"><model-viewer data-animated-eyes id="model" data-rear-frame-src="assets/models/earl-animated-eyes.glb?v=crown-header-1" camera-controls min-camera-orbit="auto auto 0.2m" camera-orbit="0deg 75deg 24m" camera-target="0m 3.5m 0m" exposure="1.25" shadow-intensity="0" interaction-prompt="none" alt="Earl with the driver-side DJ opening above the speakers"><button class="pin" slot="hotspot-selected" data-position="0m 0m 0m" data-normal="0m 1m 0m" id="pin">Panel</button></model-viewer><svg id="edge-overlay" aria-hidden="true"></svg></div><div class="controls" style="margin-top:12px"><button id="overall">Whole sheep</button><button id="focus">Focus selected panel</button></div>
+<header><h1>The Build · Panel Workshop</h1><p>Earl · <span data-panel-count>206</span> flat, convex exterior panels · driver-side DJ booth</p></header>
+<main><section class="sticky"><div class="model-stage" id="dj-booth"><model-viewer data-animated-eyes id="model" data-rear-frame-src="assets/models/earl-animated-eyes.glb?v=crown-header-1" camera-controls min-camera-orbit="auto auto 0.2m" camera-orbit="0deg 75deg 24m" camera-target="0m 3.5m 0m" exposure="1.25" shadow-intensity="0" interaction-prompt="none" alt="Earl with the driver-side DJ opening above the speakers"><button class="pin" slot="hotspot-selected" data-position="0m 0m 0m" data-normal="0m 1m 0m" id="pin">Panel</button></model-viewer><svg id="edge-overlay" aria-hidden="true"></svg></div>
 <fieldset class="booth-controls"><legend>DJ booth</legend>
 <div class="controls"><button id="booth-exterior" type="button">View from the crowd</button><button id="booth-interior" type="button">Look out from the booth</button></div>
 <p>The six-sided opening is centered between the speaker stacks. It measures about 68 × 23 in in side view. <a href="#B-D-074">One triangular panel</a> spans its upper edge. Earl’s sliding windows and posts remain in place.</p>
 <p class="booth-panels">Booth panels <span id="booth-links"></span></p>
-</fieldset><div class="eye-controls" data-eye-controls="model"><label>Eyes <select data-eye-select disabled aria-label="Eye animation"></select></label><button data-eye-pause disabled>Pause eyes</button><button data-eye-focus disabled>Eye close-up</button><a href="eyes.html">Eye lab ↗</a><output data-eye-status>Loading eyes…</output></div><fieldset id="workshop-layers" class="workshop-layers" disabled><legend>Earl model layers</legend><div class="layer-options">
+</fieldset>
+<div class="controls" style="margin-top:12px"><button id="overall">Whole sheep</button><button id="focus">Focus selected panel</button></div>
+<details class="workshop-downloads">
+  <summary>Downloads</summary>
+  <nav aria-label="Workshop downloads">
+    <a href="assets/earl-dj-panel-register.csv?v=crown-header-1" download>Download Earl panel register</a>
+    <a href="assets/models/earl-animated-eyes.glb?v=crown-header-1" data-rear-frame-download download>Download current GLB</a>
+    <a href="assets/models/BAAABS-Animated-Eyes.blend?v=crown-header-1" download>Download editable Blender model</a>
+  </nav>
+</details>
+<aside class="structural-callout" aria-label="Current structural study"><div><strong>20-person target · A clear cabin</strong><p>Iteration 06: full-height perimeter trusses, three equally spaced shore pairs and no cabin uprights. HDX-informed landing positions are provisional; body capacity and passenger protection remain unverified.</p></div><a href="structural/">Open structural study →</a></aside>
+<div class="eye-controls" data-eye-controls="model"><label>Eyes <select data-eye-select disabled aria-label="Eye animation"></select></label><button data-eye-pause disabled>Pause eyes</button><button data-eye-focus disabled>Eye close-up</button><a href="eyes.html">Eye lab ↗</a><output data-eye-status>Loading eyes…</output></div><fieldset id="workshop-layers" class="workshop-layers" disabled><legend>Earl model layers</legend><div class="layer-options">
 
 
 <label><input id="layer-panels" type="checkbox" checked> Sheep panels</label><label><input id="paint-black" type="checkbox"> Paint it black</label><label><input id="layer-bus" type="checkbox" checked> Bus</label><label><input id="layer-deckframe" type="checkbox" checked> Truss &amp; end portals</label><label><input id="layer-mounts" type="checkbox" checked> Shores &amp; chassis fittings</label><label><input id="layer-deck" type="checkbox" checked> Plywood floor</label><label><input id="layer-equipment" type="checkbox" checked> Equipment &amp; railings</label></div>

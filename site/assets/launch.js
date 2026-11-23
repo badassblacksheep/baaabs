@@ -49,3 +49,13 @@
   });
   window.addEventListener('pagehide', () => { if (ready) player.pauseVideo(); });
 })();
+
+const modelTools = document.querySelector('.model-tools');
+if (modelTools) {
+  const compact = window.matchMedia('(max-width: 1000px)');
+  function setInitialControls(layout) {
+    modelTools.open = !layout.matches;
+  }
+  setInitialControls(compact);
+  compact.addEventListener('change', setInitialControls);
+}
