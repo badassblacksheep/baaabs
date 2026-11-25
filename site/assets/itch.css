@@ -1,10 +1,10 @@
 .itch{max-width:1400px;margin:auto;padding:clamp(20px,5vw,72px);color:#f6f1e8}
-.itch figure{margin:0}.itch img{width:100%;height:auto;display:block}.itch figcaption,.itch .signature{font:500 .88rem/1.5 Arial,sans-serif;color:#c9bdce}
-.itch figcaption{margin-top:.65rem}.itch .name{font:400 1em "Smooth Circulars",sans-serif}
+.itch figure{margin:0}.itch img{width:100%;height:auto;display:block}.itch figcaption,.itch .signature{font:500 .88rem/1.5 var(--font-body);color:#c9bdce}
+.itch figcaption{margin-top:.65rem}.itch .name{font:400 1em var(--font-brand)}
 .itch .opening,.itch .chapter{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(24px,6vw,90px)}
 .itch .opening{background:#1e141f}.itch .opening-copy{padding:clamp(24px,4vw,65px)}.itch .opening img{max-height:76vh;object-fit:cover;object-position:50% 39%}
 .itch h1{font-size:clamp(4.5rem,9vw,9rem);line-height:.93}.itch .signature span{color:#f39372;padding:0 .35em}
-.itch .lead{font-family:Georgia,serif;letter-spacing:-.025em;line-height:1.16}
+.itch .lead{font-family:var(--font-body);letter-spacing:-.025em;line-height:1.16}
 .itch .lead{font-size:clamp(1.55rem,2.65vw,2.8rem);margin:1.5em 0 0}
 .itch .chapter,.itch .reflection,.itch .fire-story{margin-top:clamp(3rem,8vw,8rem)}
 .itch h2{font-size:clamp(2.3rem,4.6vw,5rem);line-height:1.02;letter-spacing:-.055em;margin:0 0 .48em}

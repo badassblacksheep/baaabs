@@ -1,0 +1,27 @@
+/* Single source of truth for site typography. Monaco is a local system font. */
+@font-face {
+  font-family: "Smooth Circulars";
+  src: url("../fonts/smooth_circulars/Smooth%20Circulars.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Smooth Circulars";
+  src: url("../fonts/smooth_circulars/Smooth%20Circulars%20Italic.otf") format("opentype");
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+}
+:root {
+  --font-main: Monaco, Menlo, Consolas, "Liberation Mono", monospace;
+  --font-body: var(--font-main);
+  --font-heading: var(--font-main);
+  --font-ui: var(--font-main);
+  --font-code: var(--font-main);
+  --font-brand: "Smooth Circulars", var(--font-main);
+}
+body { font-family: var(--font-body); }
+button, input, select, textarea { font-family: var(--font-ui); }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+code, pre, kbd, samp { font-family: var(--font-code); }

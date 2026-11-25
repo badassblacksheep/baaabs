@@ -27,7 +27,7 @@ Present a broad-audience interactive summary and findings first, followed by the
 
 ## Site typography
 
-Use DynaPuff for regular site headings, with 500 as the default heading weight. The homepage splash headings (hero tagline and Earl introduction) use Monaco with Menlo and monospace fallbacks; other pages retain DynaPuff. Keep body copy in its existing readable sans-serif. Preserve the distinct sheep-name treatment below.
+Use `site/assets/typography.css` as the single source of truth for typography. Monaco is the default for body copy, headings, navigation, controls, and technical labels, with portable monospace fallbacks. Use the semantic CSS custom properties `--font-body`, `--font-heading`, `--font-ui`, `--font-code`, and `--font-brand`; do not introduce page-local font-family stacks or external font imports. All rendered HTML pages must load the shared typography stylesheet. Preserve the distinct sheep-name treatment below.
 
 Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and the standalone names `BAAABS` and `BAAAHS`. Both names have first-class status in site typography. Match either name as a whole word regardless of capitalization, including next to punctuation, and preserve its written case. In sentences, headings, captions, buttons, and navigation labels, style only the name itself. Use the site’s regular typography for the surrounding text and the hero tagline.
 

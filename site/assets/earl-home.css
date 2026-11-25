@@ -20,13 +20,13 @@
 .earl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.5rem; }
 .crew-link, .story-credit { text-decoration: underline; text-underline-offset: .22em; }
 .crew-link { display: inline-flex; align-items: baseline; gap: .3em; padding-block: .7rem; color: #e2b5f3; }
-.sheep-name { font-family: "Smooth Circulars", sans-serif; }
+.sheep-name { font-family: var(--font-brand); }
 .earl-intro .crew-note { max-width: 45ch; font-size: 1rem; line-height: 1.5; color: #c8c0cf; }
 .earl-photo { margin: 0; }
 .earl-photo img { width: 100%; height: auto; border-radius: .75rem; }
 .photo-source { display: inline-block; padding-block: .45rem; color: #bcb4c5; font-size: .83rem; }
 .photo-source:hover { text-decoration: underline; }
-.earl-photo blockquote { margin: .55rem 0 .6rem; font: italic clamp(1.15rem, 1.8vw, 1.65rem)/1.35 Georgia, serif; }
+.earl-photo blockquote { margin: .55rem 0 .6rem; font: italic clamp(1.15rem, 1.8vw, 1.65rem)/1.35 var(--font-body); }
 .story-credit { color: #e2b5f3; }
 @media (max-width: 1000px) {
   .model-tools { border-block: 1px solid #ffffff24; background: #100d1a; }
