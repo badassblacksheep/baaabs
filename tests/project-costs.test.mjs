@@ -67,3 +67,16 @@ test('per-$100 values use the visible subtotal and dollars spent keep their prec
   assert.equal(chartValue(2000,0,8000,'hundred'),'$25.00');
   assert.equal(chartValue(2000,2000,8000,'spent'),'≈$20');
 });
+
+test('chart segments and legend keys use the same opaque category artwork', () => {
+  const assets = buildCostPages(costLedger, ()=>'');
+  const overview = assets.get(costPath('total').slice(1)+'index.html');
+  for (const g of summarizeCosts(costLedger).groups) {
+    const segment = overview.split('data-segment="'+g.slug+'"')[1].split('</a>')[0];
+    const row = overview.split('data-category="'+g.slug+'"')[1].split('</summary>')[0];
+    const src = segment.match(/<img src="([^"]+)"/)?.[1];
+    assert.ok(src, g.slug+' needs a visible chart image');
+    assert.ok(row.includes('class="swatch" src="'+src+'"'));
+    assert.ok(assets.get(src.slice(1))?.includes('fill="'+g.color+'"'));
+  }
+});

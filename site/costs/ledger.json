@@ -10,7 +10,7 @@
       "slug": "vehicle",
       "name": "The bus",
       "description": "Earl, the 2007 Thomas HDX that carries the sheep.",
-      "color": "#ffca65",
+      "color": "#A855F7",
       "image": "/assets/build-log/2026-11-24-earl-day/earl-pickup-morton.jpeg",
       "alt": "Skip and Earl on pickup day in Morton.",
       "caption": "November 24, 2026 · Pickup day in Morton."
@@ -19,7 +19,7 @@
       "slug": "registration",
       "name": "Tags & registration",
       "description": "Washington tags and registration for Earl.",
-      "color": "#70dccc",
+      "color": "#FF5A1F",
       "image": "/assets/build-log/2026-11-24-earl-day/earl-at-the-shop.jpeg",
       "alt": "Earl parked inside after the drive home.",
       "caption": "Earl after his first trip home."
@@ -28,7 +28,7 @@
       "slug": "fuel",
       "name": "Fuel",
       "description": "Diesel for Earl’s first drive home.",
-      "color": "#85bbff",
+      "color": "#FFDA69",
       "image": "/assets/build-log/2026-11-24-earl-day/earl-first-night.jpeg",
       "alt": "Skip beside Earl after dark on pickup day.",
       "caption": "The first night with Earl."
@@ -37,7 +37,7 @@
       "slug": "patches",
       "name": "Fundraising patches",
       "description": "Embroidered patches we sell to help fund the build.",
-      "color": "#ff91bd",
+      "color": "#FF3CAC",
       "image": "/assets/baaabs-patch-photo.jpg",
       "alt": "The embroidered black sheep patch with rainbow lettering.",
       "caption": "The embroidered patch that helps fund the build."
@@ -46,7 +46,7 @@
       "slug": "website",
       "name": "Website domains",
       "description": "Three names for the project, registered through September 2036.",
-      "color": "#b2a6ff",
+      "color": "#60E8EF",
       "image": "/assets/earl-pitch-1600.jpg",
       "alt": "A rendering of the black sheep art vehicle developed for the project website.",
       "caption": "The sheep as it appears in the project’s digital model."
