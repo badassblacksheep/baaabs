@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      force_model_rebuild:
+        description: Rebuild generated GLB and Blender assets even on a cache hit
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,16 +25,59 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      MODEL_BUILD_DIR: .generated-models
+      ANIMATED_EYE_MODEL: site/assets/models/earl-animated-eyes.glb
+      WORKSHOP_MODEL: baaabs-earl-x-braced-workshop.glb
+      STRUCTURAL_MODEL: baaabs-earl-iteration06-six-shores.glb
+      BLENDER_MODEL: BAAABS-Animated-Eyes.blend
     steps:
       - name: Check out the site
         uses: actions/checkout@v4
       - name: Check generated site configuration
         run: node tools/sync-site-config.mjs --check
-      # Retired station, frame-comparison and individual cabin-post studies are archival.
-      - name: Build and verify animated eye model
+      # Exact matches only: cached outputs must belong to these model inputs.
+      # Include the workflow so toolchain or build-command changes invalidate the cache.
+      - name: Restore generated model assets
+        id: model-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ANIMATED_EYE_MODEL }}
+            ${{ env.MODEL_BUILD_DIR }}
+          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
+      - name: Determine whether models require rebuilding
+        id: model-build
+        env:
+          CACHE_HIT: ${{ steps.model-cache.outputs.cache-hit }}
+          FORCE_REBUILD: ${{ inputs.force_model_rebuild || false }}
+        shell: bash
         run: |
-          python3 -m pip install "numpy>=2.0,<3"
-          python3 tools/build-animated-eyes.py
+          set -euo pipefail
+          rebuild=false
+          reason="exact cache hit; all generated files present"
+          if [[ "$FORCE_REBUILD" == "true" ]]; then
+            rebuild=true
+            reason="manual override"
+          elif [[ "$CACHE_HIT" != "true" ]]; then
+            rebuild=true
+            reason="model dependency cache miss"
+          elif [[ ! -s "$ANIMATED_EYE_MODEL" || ! -s "$MODEL_BUILD_DIR/$WORKSHOP_MODEL" || ! -s "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" || ! -s "$MODEL_BUILD_DIR/$BLENDER_MODEL" ]]; then
+            rebuild=true
+            reason="one or more generated files missing or empty"
+          fi
+          echo "rebuild_models=$rebuild" >> "$GITHUB_OUTPUT"
+          echo "REBUILD_MODELS=$rebuild ($reason)"
+          printf '### Model assets\n\nREBUILD_MODELS=%s — %s\n' "$rebuild" "$reason" >> "$GITHUB_STEP_SUMMARY"
+      - name: Install numerical test dependencies
+        run: python3 -m pip install "numpy>=2.0,<3"
+      - name: Build animated eye model
+        if: steps.model-build.outputs.rebuild_models == 'true'
+        run: python3 tools/build-animated-eyes.py
+      # Keep the checks on every push, even when the generated assets are reused.
+      # Retired station, frame-comparison and individual cabin-post studies are archival.
+      - name: Verify animated eye model, DJ booth and panel register
+        run: |
           python3 -m unittest discover -s tests -p 'test_animated_eyes.py'
           python3 -m unittest discover -s tests -p 'test_dj_booth.py'
           python3 -m unittest discover -s tests -p 'test_panel_coverage.py'
@@ -37,6 +85,25 @@ jobs:
           node --test tests/dj-workshop.test.mjs tests/home-dj.test.mjs
       - name: Check structural report and workshop revision
         run: node --test tests/structural-report.test.mjs tests/structural05.test.mjs tests/structural05a.test.mjs tests/structural06.test.mjs
+      - name: Build workshop and six-shore models
+        if: steps.model-build.outputs.rebuild_models == 'true'
+        run: |
+          mkdir -p "$MODEL_BUILD_DIR"
+          python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb "$MODEL_BUILD_DIR/$WORKSHOP_MODEL"
+          node tools/bake-structural06.mjs "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL"
+      - name: Verify test-drive geometry
+        run: node tools/bake-drive-model.mjs --check "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL"
+      - uses: actions/setup-python@v5
+        if: steps.model-build.outputs.rebuild_models == 'true'
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: tools/make-eye-blender.py
+      - name: Export and reopen the editable Blender assembly
+        if: steps.model-build.outputs.rebuild_models == 'true'
+        run: |
+          python -m pip install 'bpy==5.2.2'
+          python tools/make-eye-blender.py -- "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" "$MODEL_BUILD_DIR/$BLENDER_MODEL"
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
@@ -45,26 +112,15 @@ jobs:
         run: |
           rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
           rsync -a fonts/ pages-dist/fonts/
-      - name: Build the X-braced panel workshop model
-        run: |
-          python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb pages-dist/assets/models/baaabs-earl-x-braced-workshop.glb
-      - name: Bake the current six-shore model
-        run: |
-          node tools/bake-structural06.mjs pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
-          node tools/bake-drive-model.mjs --check pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: pip
-          cache-dependency-path: tools/make-eye-blender.py
-      - name: Export and reopen the editable Blender assembly
-        run: |
-          python -m pip install 'bpy==5.2.2'
-          python tools/make-eye-blender.py -- pages-dist/assets/models/baaabs-earl-iteration06-six-shores.glb pages-dist/assets/models/BAAABS-Animated-Eyes.blend
+          for asset in "$WORKSHOP_MODEL" "$STRUCTURAL_MODEL" "$BLENDER_MODEL"; do
+            test -s "$MODEL_BUILD_DIR/$asset"
+            cp "$MODEL_BUILD_DIR/$asset" pages-dist/assets/models/
+          done
+          test -s "pages-dist/${ANIMATED_EYE_MODEL#site/}"
       - uses: actions/upload-artifact@v4
         with:
           name: baaabs-dj-blender
-          path: pages-dist/assets/models/BAAABS-Animated-Eyes.blend
+          path: pages-dist/assets/models/${{ env.BLENDER_MODEL }}
           compression-level: 0
       - name: Package the site
         uses: actions/upload-pages-artifact@v3
