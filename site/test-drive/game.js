@@ -1,6 +1,7 @@
-import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js';
+import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js?v=drive-config-1';
+import {DRIVE_CONFIG, speedLimitWords} from './drive-config.mjs';
 import {createClockMap} from './city-clock.js';
-import {createRenderer,zoneRadius} from './renderer.js?v=crown-header-1';
+import {createRenderer,zoneRadius} from './renderer.js?v=drive-config-1';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
 import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);
@@ -97,7 +98,7 @@ function end(){
   keys.clear();hush();radio('');state.fire=0;setMode('over');
   $('eyebrow').textContent='SKIPPO  /  KEYS CONFISCATED';
   $('title').innerHTML='Game<br><i>over.</i>';
-  const line='Five. I gave you five miles an hour. Give me the fucking keys.';
+  const line=`${speedLimitWords[0].toUpperCase()+speedLimitWords.slice(1)}. I gave you ${speedLimitWords} miles an hour. Give me the fucking keys.`;
   $('copy').textContent='“'+line+'”';$('start').textContent='Try again ↗';$('start').focus({preventScroll:true});
   if(sound&&window.speechSynthesis&&window.SpeechSynthesisUtterance){
     const voice=new SpeechSynthesisUtterance(line);voice.rate=1.08;window.speechSynthesis.speak(voice);
@@ -149,9 +150,9 @@ function press(k,keyboard=true){
   if(k==='Digit5'||k==='Numpad5'){
     if(state.cruise)return;
     state.cruise=true;
-    state.cruiseSpeed=5*state.gear;
+    state.cruiseSpeed=DRIVE_CONFIG.speedLimitMph*state.gear;
     state.speed=state.cruiseSpeed;
-    radio('CRUISE  /  Holding 5.0 mph.');
+    radio(`CRUISE  /  Holding ${DRIVE_CONFIG.speedLimitMph.toFixed(1)} mph.`);
   }
   if(k==='Space'&&fireCooldown<=0){state.fire=.62;fireCooldown=.85;whoosh();scorePoof();}
 }
@@ -253,12 +254,12 @@ function advance(dt){
   }
   const tenths=Math.round(Math.abs(state.speed)*10);
   $('mph').textContent=(tenths/10).toFixed(1);$('gear').textContent=(state.gear===1?'DRIVE':'REVERSE')+(state.cruise?' · CRUISE':'');
-  if(tenths>50){end();return;}
-  if(!state.cruise&&!heckled&&tenths>=46){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
+  if(tenths>Math.round(DRIVE_CONFIG.speedLimitMph*10)){end();return;}
+  if(!state.cruise&&!heckled&&tenths>=Math.round((DRIVE_CONFIG.speedLimitMph-DRIVE_CONFIG.speedWarningMarginMph)*10)){heckled=true;radio('ROOF CREW  /  Dude. Floor it.');}
   const left=held('KeyA'),right=held('KeyD');
   const target=left||right?Number(right)-Number(left):stickTurn;
   state.steer+=(target-state.steer)*(1-Math.exp(-dt*5));
-  const meters=state.speed*.44704*dt;
+  const meters=state.speed*DRIVE_CONFIG.metersPerSecondPerMph*dt;
   const yaw=state.yaw+meters*Math.tan(state.steer*.69)/6.05;
   const x=state.x+Math.sin(yaw)*meters,z=state.z-Math.cos(yaw)*meters;
   impactTimer=Math.max(0,impactTimer-dt);

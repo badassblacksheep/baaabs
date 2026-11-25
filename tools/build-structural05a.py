@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / 'site/structural'
 DATA = json.loads((SITE / 'iteration-05-data.json').read_text())
 MODEL = json.loads((ROOT / 'site/assets/structural-models-05.json').read_text())['variants'][0]
-TABS = [('index.html', '06 · Six-shore truss'), ('iteration-05a.html', '05a · Visual guide'), ('iteration-05.html', '05 · Shared structure'), ('iteration-04.html', '04 · Frame & shores'), ('iteration-03.html', '03 · Dancer ceilings'), ('iteration-02.html', '02 · 38 ft + shoring'), ('baseline.html', '01 · Original 36 ft')]
+TABS = json.loads((SITE / 'navigation.json').read_text())
 
 def tabs(current):
     return '<nav class="design-tabs" aria-label="Structural design iterations">' + ''.join('<a href="'+url+'"'+(' aria-current="page"' if url == current else '')+'>'+label+'</a>' for url,label in TABS) + '</nav>'

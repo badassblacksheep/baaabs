@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "index.html",
+    "patch.html",
+    "pitch.html",
+    "the_build.html",
+    "itch.html",
+    "journal/index.html",
+    "structural/index.html",
+    "safety/index.html"
+  ],
+  "links": [
+    {
+      "href": "patch.html",
+      "label": "The Patch"
+    },
+    {
+      "href": "pitch.html",
+      "label": "The Pitch"
+    },
+    {
+      "href": "the_build.html",
+      "label": "The Build"
+    },
+    {
+      "href": "itch.html",
+      "label": "The Itch"
+    },
+    {
+      "href": "https://www.instagram.com/b_a_a_a_b_s/",
+      "label": "The Gram",
+      "external": true
+    },
+    {
+      "href": "/journal/",
+      "label": "The Journal",
+      "page": "journal/index.html"
+    }
+  ]
+}

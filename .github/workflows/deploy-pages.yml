@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Check out the site
         uses: actions/checkout@v4
+      - name: Check generated site configuration
+        run: node tools/sync-site-config.mjs --check
       # Retired station, frame-comparison and individual cabin-post studies are archival.
       - name: Build and verify animated eye model
         run: |

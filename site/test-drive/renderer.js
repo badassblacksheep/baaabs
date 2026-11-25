@@ -27,7 +27,8 @@ function passengers(cheering){
   return people;
 }
 
-export const zoneRadius=6;
+import {DRIVE_CONFIG} from './drive-config.mjs';
+export const zoneRadius=DRIVE_CONFIG.partyZoneRadiusMeters;
 function scenery(){
   const g=new Geometry();
   buildCity(g);

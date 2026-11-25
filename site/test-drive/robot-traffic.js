@@ -1,3 +1,4 @@
+import {DRIVE_CONFIG} from './drive-config.mjs';
 // Sample a closed Catmull-Rom path once, then move in metres along it.
 const waypoints=[[-19,-9],[-46,2],[-58,-33],[-46,-82],[-4,-111],[48,-107],[56,-70],[32,-45],[37,-13],[12,8]];
 const points=[];
@@ -27,7 +28,7 @@ export function approachesPlayer(robot,earl,nextRobot=robot,nextEarl=earl,margin
   return t>0&&Math.hypot(dx+t*vx,dz+t*vz)<16+margin;
 }
 export function advanceRobot(robot,earl,dt){
-  let i=robot.i,offset=robot.offset+dt*2.2352; // Exactly 5 mph along the route.
+  let i=robot.i,offset=robot.offset+dt*DRIVE_CONFIG.speedLimitMph*DRIVE_CONFIG.metersPerSecondPerMph; // Follow the shared playa speed limit.
   while(offset>=edges[i].length){offset-=edges[i].length;i=(i+1)%edges.length;}
   const next=pose(i,offset);
   return approachesPlayer(robot,earl,next,earl,1.5)?robot:next;

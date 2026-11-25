@@ -5,7 +5,7 @@ import json,re
 R=Path(__file__).resolve().parents[1];S=R/'site/structural'
 D=json.loads((S/'iteration-06-data.json').read_text());r=D['selected']
 M=json.loads((R/'site/assets/structural-models-06.json').read_text())['variants'][0]
-TABS=[('index.html','06 · Six-shore truss'),('iteration-05a.html','05a · Visual guide'),('iteration-05.html','05 · Shared structure'),('iteration-04.html','04 · Frame & shores'),('iteration-03.html','03 · Dancer ceilings'),('iteration-02.html','02 · 38 ft + shoring'),('baseline.html','01 · Original 36 ft')]
+TABS = json.loads((S / 'navigation.json').read_text())
 def tabs(current):
     return '<nav class="design-tabs" aria-label="Structural design iterations">'+''.join(f'<a href="{u}"'+(' aria-current="page"' if u==current else '')+'>'+t+'</a>' for u,t in TABS)+'</nav>'
 def table(head,rows):
