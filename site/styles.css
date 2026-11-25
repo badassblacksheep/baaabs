@@ -225,14 +225,13 @@ nav a:focus-visible::after {
   padding-block: var(--pitch-spacing);
 }
 
-.section-number {
+.intro-ram {
   position: absolute;
-  top: 110px;
+  top: var(--pitch-spacing);
   right: 0;
-  color: rgba(245, 241, 232, 0.035);
-  font-size: clamp(12rem, 28vw, 30rem);
-  font-weight: 700;
-  line-height: 0.8;
+  width: min(44%, 30rem);
+  height: auto;
+  opacity: 0.12;
   pointer-events: none;
 }
 
@@ -834,9 +833,6 @@ footer p {
     gap: 70px;
   }
 
-  .section-number {
-    top: 80px;
-  }
 
   .manifesto {
     max-width: 520px;
