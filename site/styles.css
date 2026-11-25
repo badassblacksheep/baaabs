@@ -266,7 +266,6 @@ nav a:focus-visible::after {
     linear-gradient(145deg, rgba(168, 85, 247, 0.14), rgba(255, 60, 172, 0.035)),
     rgba(7, 7, 10, 0.62);
   box-shadow: 20px 20px 0 rgba(168, 85, 247, 0.08);
-  transform: rotate(1.5deg);
 }
 
 .manifesto p {
@@ -397,7 +396,6 @@ nav a:focus-visible::after {
   width: min(100%, 430px);
   padding: clamp(28px, 4vw, 54px);
   border: 2px solid var(--hot-pink);
-  transform: rotate(-6deg);
   isolation: isolate;
 }
 
