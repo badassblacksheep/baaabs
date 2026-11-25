@@ -40,11 +40,17 @@
     .build-title-detail .sheep-name, .finale-name { font-family: var(--font-brand); font-weight: 400; letter-spacing: normal; }
     @media (min-width: 901px) {
       .build-heading {
+        display: grid;
+        grid-template-columns: fit-content(100%);
         width: min(calc(100% + 48px), calc(50% + 50vw - 24px));
         container-type: inline-size;
       }
       .build-title-detail { font-size: min(4cqi, 3.2rem); }
-      .build-heading > p:last-child { max-width: calc(60ch + 48px); }
+      .build-heading > p:last-child {
+        /* Let the heading set the shared line width. */
+        contain: inline-size;
+        max-width: none;
+      }
     }
   </style>
 </head>
