@@ -38,6 +38,14 @@
   <style>
     .build-title-detail { display: block; margin-top: 0.2em; font-size: clamp(1.25rem, 3.8vw, 3.2rem); line-height: 1.12; }
     .build-title-detail .sheep-name, .finale-name { font-family: var(--font-brand); font-weight: 400; letter-spacing: normal; }
+    @media (min-width: 901px) {
+      .build-heading {
+        width: min(calc(100% + 48px), calc(50% + 50vw - 24px));
+        container-type: inline-size;
+      }
+      .build-title-detail { font-size: min(4cqi, 3.2rem); }
+      .build-heading > p:last-child { max-width: calc(60ch + 48px); }
+    }
   </style>
 </head>
   <body>
