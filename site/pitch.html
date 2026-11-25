@@ -80,11 +80,31 @@
     .lineage-root, .lineage-names { padding: 0; }
     .lineage-root { border: 0; }
     .lineage-names { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
-    .lineage-family img {
+    .lineage-mark {
+      position: relative;
       display: block;
       width: 76%;
       max-width: 190px;
       margin: auto;
+    }
+    .lineage-mark img { display: block; width: 100%; }
+    @media (prefers-reduced-motion: no-preference) {
+      .lineage-mark::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        -webkit-mask: var(--mark) center / contain no-repeat;
+        mask: var(--mark) center / contain no-repeat;
+        background-image: linear-gradient(90deg, transparent 30%, var(--electric-violet) 43%, var(--hot-pink) 50%, var(--poofer-orange) 57%, transparent 70%);
+        background-size: 400% 100%;
+        background-position: 100% center;
+        animation: lineage-sweep 6s ease-in-out var(--delay) infinite;
+      }
+      @keyframes lineage-sweep {
+        from { background-position: 100% center; }
+        25%, to { background-position: 0% center; }
+      }
     }
     .lineage-names img:last-child { padding: 0; background: transparent; }
   </style>
@@ -229,20 +249,26 @@
           aria-label="The shared BAAA lineage of BAAAHS and BAAABS"
         >
           <div class="lineage-root">
-            <img
-              src="assets/brand/baaa-wordmark-lineage.svg"
-              alt="BAAA, the shared root"
-            />
+            <span class="lineage-mark" style="--mark: url('assets/brand/baaa-wordmark-lineage.svg'); --delay: 0s;">
+              <img
+                src="assets/brand/baaa-wordmark-lineage.svg"
+                alt="BAAA, the shared root"
+              />
+            </span>
           </div>
           <div class="lineage-names">
-            <img
-              src="assets/brand/baaahs-wordmark-lineage.svg"
-              alt="BAAAHS in white with pink outlines"
-            />
-            <img
-              src="assets/brand/baaabs-wordmark-lineage.svg"
-              alt="BAAABS in black with pink outlines"
-            />
+            <span class="lineage-mark" style="--mark: url('assets/brand/baaahs-wordmark-lineage.svg'); --delay: 1.5s;">
+              <img
+                src="assets/brand/baaahs-wordmark-lineage.svg"
+                alt="BAAAHS in white with pink outlines"
+              />
+            </span>
+            <span class="lineage-mark" style="--mark: url('assets/brand/baaabs-wordmark-lineage.svg'); --delay: 3s;">
+              <img
+                src="assets/brand/baaabs-wordmark-lineage.svg"
+                alt="BAAABS in black with pink outlines"
+              />
+            </span>
           </div>
         </div>
       </section>
