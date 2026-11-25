@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { localReferenceExists } from './site-links.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const data=JSON.parse(read('site/structural/iteration-05-data.json'));
@@ -83,7 +84,7 @@ test('05a navigation and local resources resolve and every historical page retai
   assert.ok(nav.includes('05a · Visual guide'));
   for(const [,ref] of html.matchAll(/(?:href|src)="([^"#]+)"/g)){
    if(/^(https?:|data:|mailto:)/.test(ref))continue;
-   assert.ok(fs.existsSync(path.resolve(root,'site/structural',ref.split(/[?#]/)[0])),name+' '+ref);
+   assert.ok(localReferenceExists(path.join(root,'site'),'structural/'+name,ref),name+' '+ref);
   }
  }
 });

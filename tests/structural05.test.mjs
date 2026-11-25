@@ -4,6 +4,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { localReferenceExists } from './site-links.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 test('accessible candidate controls use only solved loads and retain failure qualification',async()=>{
@@ -56,7 +57,19 @@ test('earlier iterations retain their distinct model runtimes and all local refe
   const html=read('site/structural/'+f);assert.match(html,/05 · Shared structure/);
   for(const [,ref]of html.matchAll(/(?:href|src)="([^"#]+)"/g)){
    if(/^(https?:|data:|mailto:)/.test(ref))continue;
-   assert.ok(fs.existsSync(path.resolve(root,'site/structural',ref.split(/[?#]/)[0])),f+' '+ref);
+   assert.ok(localReferenceExists(path.join(root,'site'),'structural/'+f,ref),f+' '+ref);
   }
  }
+});
+
+test('local link validation handles site-root routes and relative files',()=>{
+ const siteRoot=path.join(root,'site');
+ const page='structural/iteration-05.html';
+ assert.ok(localReferenceExists(siteRoot,page,'/journal/'));
+ assert.ok(localReferenceExists(siteRoot,page,'/journal/#earl-day'));
+ assert.ok(localReferenceExists(siteRoot,page,'../journal/'));
+ assert.ok(localReferenceExists(siteRoot,page,'/earl/checklist/pre/'));
+ assert.ok(localReferenceExists(siteRoot,page,'/earl/checklist/post/'));
+ assert.ok(localReferenceExists(siteRoot,page,'iteration-05-data.json?revision=1'));
+ assert.equal(localReferenceExists(siteRoot,page,'/nonexistent-route/'),false);
 });
