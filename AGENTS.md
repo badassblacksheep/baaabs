@@ -30,6 +30,10 @@ Iteration 03 answers the owner’s conceptual headcount comparison, expressly su
 
 Present a broad-audience interactive summary and findings first, followed by the full equations, input tables, governing cases, sensitivity, scoring rules and reproducible source. Green/yellow/red describes stress-screen reserve only; the score compares stress reserve and frame/plywood weight. It is not a probability of safety. Only recommend a conceptual option as clearing the stress screen when its demand meets the criterion. The original 01 and 02 reports, JSON datasets and solver archives must remain available.
 
+## Asset locations
+
+Use the [site asset directory](site/assets/README.md) to locate or add media, fonts and downloads. Update source templates, generated pages, render scripts and social preview URLs when moving an asset. Preserve previously published URLs in `tools/legacy-asset-urls.json` and keep the staging exclusions for retired assets.
+
 ## Site typography
 
 Keep text, wordmarks, and text-bearing panels level. Apply decorative rotations only to elements that contain no lettering.
@@ -90,7 +94,7 @@ Owner constraint: retain accessible crawl-space service storage for lighting con
 
 The 38 × 8 ft deck, height, sheep shape and 206-panel register remain constraints. The 05 beam study has 0 cabin posts and 0 body shores, 0.8 m-deep side trusses, raised ties at z=3.21 m, 6×2×1/8 top chords, 6×2×3/16 lower chords, 4×2×1/8 opening jambs and strengthened trial end portals. Both rear chassis connections and all feet remain assumed. Skins are nonstructural; use verified nodes for future removable hangers, with no unearned mass/stiffness credit.
 
-This is a preferred direction for engineering layout, not a final selection, fabrication release or established occupancy. The 2× / 207 MPa stress screen omits buckling, connection/local loads, dynamics and vehicle/cabin protection; the 3× sensitivity fails. End forces/hold-downs are now major design drivers. Reject the earlier 0.9 m trial's bottom-level transverse ties: they intersect the model roof. Do not substitute those unmodified ties for the raised access-preserving layout. All trial inputs and results are in `iteration-05-source.zip`.
+This is a preferred direction for engineering layout, not a final selection, fabrication release or established occupancy. The 2× / 207 MPa stress screen omits buckling, connection/local loads, dynamics and vehicle/cabin protection; the 3× sensitivity fails. End forces/hold-downs are now major design drivers. Reject the earlier 0.9 m trial's bottom-level transverse ties: they intersect the model roof. Do not substitute those unmodified ties for the raised access-preserving layout. All trial inputs and results are in `site/assets/downloads/structural/iteration-05-source.zip`.
 
 ## Structural iteration 05a — visual explanation (2026-11-14 Pacific)
 
@@ -107,7 +111,7 @@ The explicit provisional frame material basis is ASTM A500 Grade C carbon-steel 
 
 This supersedes the iteration-05 access-opening constraint and the earlier no-body-support preference. The owner selected three equally spaced transverse pairs of shores, ordinary complete side-truss triangulation, and preserved deck/crawl-space height. Keep the 38×8 ft deck, sheep geometry, 206 panels, light service storage and zero added cabin posts. Do not remove a structural diagonal to retrieve gear.
 
-Current report: `site/structural/index.html`. Inputs/results: `iteration-06-data.json`, `iteration-06-materials.json`, `iteration-06-source.zip`; exact geometry: `site/assets/structural-models-06.json`. Homepage/workshop use `structural-preview-06.js`. `tools/bake-structural06.mjs` bakes that same transformation for download/import and the test-drive game during deployment. Game renderer supports GLB matrix nodes. Preserve archived 05 and 05a with their own 05 runtime/data.
+Current report: `site/structural/index.html`. Inputs/results: `iteration-06-data.json`, `iteration-06-materials.json`, `site/assets/downloads/structural/iteration-06-source.zip`; exact geometry: `site/assets/structural-models-06.json`. Homepage/workshop use `structural-preview-06.js`. `tools/bake-structural06.mjs` bakes that same transformation for download/import and the test-drive game during deployment. Game renderer supports GLB matrix nodes. Preserve archived 05 and 05a with their own 05 runtime/data.
 
 Literature-informed guess: 115 inches (4×28.75-inch modules) between pairs, centered between x=-6.27 and 4.81355 m portals. Pair x=-3.649225, -0.728225, 2.192775 m; y=±1.1692 m; springs at lower-chord nodes z=3.0604 m. Body landing z=2.787072 m is unsurveyed. Earl's photographed label is body 79765-0538548-130YS, built 11-2005, chassis model year 2007. Thomas drawing 260635 (2006) is another 130YS order; it flags a false rafter. Neither literature nor photos prove any landing capacity. Identify real full bows on both sides and trace the complete body-to-chassis path. No roof-sheet-only support.
 

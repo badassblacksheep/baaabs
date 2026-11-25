@@ -116,7 +116,7 @@ export function buildCostPages(ledger, navigation) {
 <link rel="canonical" href="https://baaabs.org${route}"><meta name="theme-color" content="#0c0a10">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)} · BAAABS"><meta property="og:description" content="${esc(description)}"><meta property="og:image" content="https://baaabs.org${esc(photo.image)}"><meta property="og:url" content="https://baaabs.org${route}">
 <link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/assets/flock-nav.css"><link rel="stylesheet" href="/costs/costs.css?v=${styleVersion}">${group ? '' : '<script type="module" src="/costs/explore.mjs"></script>'}</head>
-<body><a class="skip" href="#main">Skip to content</a><header class="flock-header"><a class="flock-home" href="/" aria-label="BAAABS home"><img src="/assets/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>${navigation(file)}</header>
+<body><a class="skip" href="#main">Skip to content</a><header class="flock-header"><a class="flock-home" href="/" aria-label="BAAABS home"><img src="/assets/brand/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>${navigation(file)}</header>
 <main id="main"><div class="topline"><div class="crumb">${crumb}</div><span>As of ${dateTag(ledger.asOf)}</span></div>
 <div class="hero"${group ? ` style="--accent:${group.color}"` : ''}><div class="hero-copy"><h1>${esc(title)}</h1>
 <p class="big-value" aria-label="${approx ? 'About ' + dollars.format(cents / 100) : money.format(cents / 100)}">${amount(cents, approx)}</p>

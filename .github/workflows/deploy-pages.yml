@@ -111,7 +111,7 @@ jobs:
       - name: Stage public pages without retired donor studies
         run: |
           rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
-          rsync -a fonts/ pages-dist/fonts/
+          python3 tools/stage-asset-aliases.py pages-dist
           for asset in "$WORKSHOP_MODEL" "$STRUCTURAL_MODEL" "$BLENDER_MODEL"; do
             test -s "$MODEL_BUILD_DIR/$asset"
             cp "$MODEL_BUILD_DIR/$asset" pages-dist/assets/models/

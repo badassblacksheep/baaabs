@@ -1,5 +1,7 @@
 # BAAABS 3D models
 
+For logos, render stills, fonts and downloadable reports, see the [site asset directory](../README.md).
+
 | Collection | Where to start |
 | --- | --- |
 | Deep playa artwork | [Playa model catalog](playa/README.md) with Blender-ready GLBs, editable source and artist references |

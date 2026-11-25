@@ -38,7 +38,7 @@
       "name": "Fundraising patches",
       "description": "Embroidered patches we sell to help fund the build.",
       "color": "#FF3CAC",
-      "image": "/assets/baaabs-patch-photo.jpg",
+      "image": "/assets/images/patch/baaabs-patch-photo.jpg",
       "alt": "The embroidered black sheep patch with rainbow lettering.",
       "caption": "The embroidered patch that helps fund the build."
     },
@@ -47,7 +47,7 @@
       "name": "Website domains",
       "description": "Three names for the project, registered through September 2036.",
       "color": "#60E8EF",
-      "image": "/assets/earl-pitch-1600.jpg",
+      "image": "/assets/images/earl/earl-pitch-1600.jpg",
       "alt": "A rendering of the black sheep art vehicle developed for the project website.",
       "caption": "The sheep as it appears in the project’s digital model."
     }

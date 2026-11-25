@@ -15,10 +15,6 @@
 /assets/project-constraints.json
 /assets/road-width-status.json
 /assets/BAAABS-alignment-audit-*
-/assets/BAAABS-panel-schedule-*
-/assets/baaabs-hero*
-/assets/baaabs-panelized-*
-/assets/baaabs-speakers-*
 /assets/models/baaabs-panel*
 /assets/models/baaabs-speaker-*
 /assets/models/baaabs-subframe-*
@@ -26,3 +22,4 @@
 /assets/disco/baaabs-disco.mp4
 /assets/disco/poster.png
 /assets/disco/provenance.json
+/assets/archive/

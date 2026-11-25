@@ -7,6 +7,10 @@ BAAABS is a towering, fire-eyed black sheep built around Earl, a 2007 Thomas HDX
 Website: <https://baaabs.org/>  
 Repository: <https://github.com/badassblacksheep/baaabs>
 
+## Finding assets
+
+Start with the [site asset directory](site/assets/README.md) for logos, images, fonts, downloads, and 3D models. Page sources and their generators link to the same canonical files.
+
 ## Current structural direction
 
 The former **subframe station** concept (including six paired stations, cantilevered arms, and station-based mounts) has been abandoned as the active design direction. Historical studies and assets may remain in the repository for reference; they are **not fabrication instructions**.
