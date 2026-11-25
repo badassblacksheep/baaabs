@@ -1,9 +1,11 @@
 // Regenerate static configuration projections; keep no-JS navigation and checkout.
-import { readFileSync, writeFileSync } from 'node:fs';
-import { resolve, posix } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import { DRIVE_CONFIG, speedLimitWords } from '../site/test-drive/drive-config.mjs';
+
+import { buildCostPages, costLedger } from './build-cost-pages.mjs';
 
 const root = fileURLToPath(new URL('../site/', import.meta.url));
 const read = p => readFileSync(resolve(root,p),'utf8');
@@ -17,13 +19,18 @@ function replace(p, pattern, replacement) {
   if (!pattern.test(html)) throw Error(p + ': generated region not found: ' + pattern);
   changes.set(p,html.replace(pattern,()=>replacement));
 }
-for (const page of nav.pages) {
+function mainNavigation(page) {
   const links = nav.links.map(({href,label,external,page:target})=>{
     const url = external || href.startsWith('/') ? href : posix.relative(posix.dirname(page),href);
     return '<a href="'+escape(url)+'"'+((target ?? href)===page?' aria-current="page"':'')+(external?' target="_blank" rel="noopener"':'')+'>'+escape(label)+'</a>';
   }).join('');
-  replace(page,/<nav aria-label="Main navigation">[\s\S]*?<\/nav>/,
-    '<nav aria-label="Main navigation">'+links+'</nav>');
+  return '<nav aria-label="Main navigation">'+links+'</nav>';
+}
+for (const page of nav.pages) {
+  replace(page,/<nav aria-label="Main navigation">[\s\S]*?<\/nav>/,mainNavigation(page));
+}
+for (const [page, html] of buildCostPages(costLedger, mainNavigation)) {
+  changes.set(page, html);
 }
 // Historical report data stay untouched; only the shared navigation is generated.
 for (const [page] of structuralTabs) {
@@ -62,9 +69,13 @@ for(const property of ['og','twitter']){
 const write=process.argv.includes('--write');
 let stale=0;
 for(const [p,html] of changes){
-  if(html===read(p))continue;
+  const target = resolve(root,p);
+  if(existsSync(target) && html===read(p))continue;
   stale++;
-  if(write)writeFileSync(resolve(root,p),html);
+  if(write){
+    mkdirSync(dirname(target),{recursive:true});
+    writeFileSync(target,html);
+  }
   console.log((write?'Updated ':'Stale ')+p);
 }
 if(stale&&!write){console.error('Run node tools/sync-site-config.mjs --write and commit the generated pages.');process.exitCode=1;}

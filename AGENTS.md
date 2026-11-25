@@ -144,3 +144,9 @@ Preserve Ovine Sauron as the default, all six individual expressions, and the un
 ## Incremental Pages model builds
 
 The deployment workflow `.github/workflows/deploy-pages.yml` exposes the computed `rebuild_models` output (logged as `REBUILD_MODELS`). An exact dependency-key cache hit with all generated files present skips model generation and Blender installation/export; a miss or incomplete cache rebuilds automatically. Manual workflow dispatch supports `force_model_rebuild=true`. Keep the model input list in the workflow cache key complete when introducing or modifying a generator dependency; include changed toolchain/build instructions. No fallback cache keys: do not publish model assets for different inputs. All existing verification gates still run, and every deployment stages the generated assets whether rebuilt or restored. Do not use a manually maintained false flag to suppress a required rebuild. GitHub Actions caches are immutable for an existing key; if cached assets must be invalidated, change the cache key version. The X-braced workshop build and separate Blender upload are retained pending a separate retirement decision.
+
+## Public project costs
+
+Update `site/costs/ledger.json` when a BAAABS purchase is documented or the owner supplies an amount. Store USD cents, a public description, the date at its known precision, and the basis (`documented`, `reported`, or `estimated`). An estimate here means an approximate amount already spent. Update `asOf` when reconciling the ledger. Keep receipt images, personal identifiers, unrelated shop costs, quotes and revenue out of this public dataset. When a receipt replaces an estimate, update the existing entry.
+
+Keep category slugs stable for shared links under `/costs/<category>/breakdown/`. Run `node tools/sync-site-config.mjs --write` after changing the ledger and `node --test tests/project-costs.test.mjs` before publishing.

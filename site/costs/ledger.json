@@ -1,0 +1,112 @@
+{
+  "asOf": "2026-11-25",
+  "overview": {
+    "image": "/assets/build-log/2026-11-24-earl-day/earl-at-the-shop.jpeg",
+    "alt": "Earl, the yellow school bus, parked inside the shop.",
+    "caption": "Earl in Seattle after the drive from Morton."
+  },
+  "categories": [
+    {
+      "slug": "vehicle",
+      "name": "The bus",
+      "description": "Earl, the 2007 Thomas HDX that carries the sheep.",
+      "color": "#ffca65",
+      "image": "/assets/build-log/2026-11-24-earl-day/earl-pickup-morton.jpeg",
+      "alt": "Skip and Earl on pickup day in Morton.",
+      "caption": "November 24, 2026 · Pickup day in Morton."
+    },
+    {
+      "slug": "road",
+      "name": "Registration & fuel",
+      "description": "What it took to register Earl and drive him home.",
+      "color": "#70dccc",
+      "image": "/assets/build-log/2026-11-24-earl-day/earl-at-the-shop.jpeg",
+      "alt": "Earl parked inside after the drive home.",
+      "caption": "Earl after his first trip home."
+    },
+    {
+      "slug": "patches",
+      "name": "Fundraising patches",
+      "description": "Embroidered patches we sell to help fund the build.",
+      "color": "#ff91bd",
+      "image": "/assets/baaabs-patch-photo.jpg",
+      "alt": "The embroidered black sheep patch with rainbow lettering.",
+      "caption": "The embroidered patch that helps fund the build."
+    },
+    {
+      "slug": "website",
+      "name": "Website domains",
+      "description": "Three names for the project, registered through September 2036.",
+      "color": "#b2a6ff",
+      "image": "/assets/earl-pitch-1600.jpg",
+      "alt": "A rendering of the black sheep art vehicle developed for the project website.",
+      "caption": "The sheep as it appears in the project’s digital model."
+    }
+  ],
+  "items": [
+    {
+      "category": "vehicle",
+      "label": "Earl, the donor bus",
+      "detail": "2007 Thomas HDX purchased from Morton School District.",
+      "date": "2026-11-23",
+      "basis": "documented",
+      "cents": 602582
+    },
+    {
+      "category": "road",
+      "label": "Tags and registration",
+      "detail": "Washington vehicle tags and registration for Earl.",
+      "date": "2026-11",
+      "basis": "reported",
+      "cents": 39500
+    },
+    {
+      "category": "road",
+      "label": "Diesel",
+      "detail": "Fuel for Earl’s pickup trip.",
+      "date": "2026-11",
+      "basis": "estimated",
+      "cents": 15000
+    },
+    {
+      "category": "patches",
+      "label": "First patch run",
+      "detail": "Panda Patches · 100 embroidered patches.",
+      "date": "2026-10-23",
+      "basis": "documented",
+      "cents": 26180
+    },
+    {
+      "category": "patches",
+      "label": "Second patch run",
+      "detail": "GS-JJ · 150 embroidered patches, including sales tax.",
+      "date": "2026-11-05",
+      "basis": "documented",
+      "cents": 25537
+    },
+    {
+      "category": "website",
+      "label": "baaabs.org",
+      "detail": "Porkbun · 10-year registration.",
+      "date": "2026-09-15",
+      "basis": "documented",
+      "cents": 11454
+    },
+    {
+      "category": "website",
+      "label": "baaabs.com",
+      "detail": "Porkbun · 10-year registration.",
+      "date": "2026-09-15",
+      "basis": "documented",
+      "cents": 11080
+    },
+    {
+      "category": "website",
+      "label": "badassblacksheep.org",
+      "detail": "Porkbun · 10-year registration.",
+      "date": "2026-09-15",
+      "basis": "documented",
+      "cents": 11454
+    }
+  ]
+}

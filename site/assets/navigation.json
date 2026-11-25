@@ -35,6 +35,11 @@
       "href": "/journal/",
       "label": "The Journal",
       "page": "journal/index.html"
+    },
+    {
+      "href": "/costs/total/breakdown/",
+      "label": "Project Costs",
+      "page": "costs/total/breakdown/index.html"
     }
   ]
 }
