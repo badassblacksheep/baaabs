@@ -51,11 +51,18 @@ async function googleReadOrWrite(url, token, body) {
   return response.json();
 }
 
+function patchPriceForLink(link, env) {
+  if (link === env.PATCH_LINK_ID) return env.PATCH_PRICE_ID;
+  if (link && link === env.PREVIOUS_PATCH_LINK_ID) return env.PREVIOUS_PATCH_PRICE_ID;
+}
+
 async function sync(session, env) {
   const path = "checkout/sessions/" + encodeURIComponent(session.id) + "/line_items?limit=100";
   const items = await stripe(path, env.STRIPE_RESTRICTED_KEY);
   if (items.has_more) throw new Error("Line items require review");
-  const patches = items.data.filter(item => item.price?.id === env.PATCH_PRICE_ID);
+  const priceId = patchPriceForLink(session.payment_link, env);
+  if (!priceId) throw new Error("Unknown patch payment link");
+  const patches = items.data.filter(item => item.price?.id === priceId);
   if (!patches.length || patches.some(item => !Number.isSafeInteger(item.quantity) || item.quantity < 1)) {
     throw new Error("Patch quantity requires review");
   }
@@ -124,7 +131,7 @@ export default {
     const session = event.data?.object;
     if (!event.id || !session?.id || session.object !== "checkout.session") return json({error: "invalid event"}, 400);
     if (event.livemode !== (env.STRIPE_MODE === "live") || session.livemode !== event.livemode ||
-        session.payment_status !== "paid" || session.payment_link !== env.PATCH_LINK_ID) return json({ok: true, ignored: true});
+        session.payment_status !== "paid" || !patchPriceForLink(session.payment_link, env)) return json({ok: true, ignored: true});
     const id = env.ORDER_COORDINATOR.idFromName("baaabs-patch-orders");
     return env.ORDER_COORDINATOR.get(id).fetch("https://internal/order", {
       method: "POST", body: JSON.stringify({id: event.id, session})

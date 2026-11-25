@@ -21,6 +21,8 @@ test("signed checkout deliveries, retries and isolation", async t => {
   env.ORDER_COORDINATOR = {idFromName:()=>1,get:()=>({fetch:(url,init)=>object.fetch(new Request(url,init))})};
   let failedResponse = false;
   t.mock.method(globalThis,"fetch",async (url,init) => {
+    if (url.includes("/cs_previous/line_items")) return Response.json({has_more:false,data:[
+      {price:{id:"previous-price"},quantity:2}]});
     if (url.startsWith("https://api.stripe.com/")) return Response.json({has_more:false,data:[
       {price:{id:"patch"},quantity:3},{price:{id:"other"},quantity:2}]});
     if (url.startsWith("https://oauth2.googleapis.com/")) return Response.json({access_token:"fixture"});
@@ -59,6 +61,15 @@ test("signed checkout deliveries, retries and isolation", async t => {
   assert.equal((await (await send("evt2",session,"checkout.session.async_payment_succeeded")).json()).result,"already recorded");
   assert.equal(rows.length,1);
   assert.equal(rows[0][5],"Mailed");
+  failedResponse = false;
+  env.PREVIOUS_PATCH_LINK_ID = "previous-link";
+  env.PREVIOUS_PATCH_PRICE_ID = "previous-price";
+  const previous = {...session,id:"cs_previous",payment_link:"previous-link",amount_total:2000};
+  assert.equal((await (await send("previous",previous)).json()).result,"created");
+  assert.equal(rows[1][2],2);
+  assert.equal(rows[1][3],20);
+  assert.equal((await send("wrong-price",{...previous,id:"cs_mismatch"})).status,503);
+  assert.equal(rows.length,2);
   env.STRIPE_WEBHOOK_SECRET=undefined;
   assert.equal((await send("x")).status,503);
 });
