@@ -1,4 +1,4 @@
-# Blue Bird studies retained as repository inputs, excluded from GitHub Pages.
+# Retired donor, station, and interior-support studies retained for reference, excluded from GitHub Pages.
 /panels-bluebird-v24.html
 /frame-comparison.html
 /interior-supports.html

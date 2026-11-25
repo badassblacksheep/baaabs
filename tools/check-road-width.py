@@ -1,4 +1,4 @@
-"""Audit the current road-width study. --require-pass rejects a failing/incomplete design."""
+"""Reproduce the retired station-based road-width study; not an active design or deployment gate. --require-pass evaluates only the archived geometry."""
 from pathlib import Path
 import argparse, hashlib, json, sys
 from glb_bounds import bounds

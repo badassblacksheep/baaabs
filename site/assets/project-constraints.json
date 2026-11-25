@@ -1,4 +1,6 @@
 {
+  "archive_status": "retired",
+  "archive_note": "Historical station-based design constraint and study; not an active project requirement or deployment gate. Applicable vehicle laws and real transport clearances must be evaluated separately.",
   "road_width": {
     "id": "ROAD-WIDTH-102",
     "maximum_inches": 102,

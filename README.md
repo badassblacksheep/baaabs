@@ -11,18 +11,15 @@ Repository: <https://github.com/badassblacksheep/baaabs>
 
 The former **subframe station** concept (including six paired stations, cantilevered arms, and station-based mounts) has been abandoned as the active design direction. Historical studies and assets may remain in the repository for reference; they are **not fabrication instructions**.
 
-The current concept is a **36 ft × 8 ft rooftop deck**, with a cross-braced square-tube steel frame and plywood floor. Two alternative chassis-connected support layouts are under study:
+The current published structural concept (iteration 06) is a **38 ft × 8 ft rooftop deck** with a cross-braced square-tube steel frame, plywood floor, full side trusses, three equally spaced transverse pairs of compression-only body shores, and no added cabin posts. The shores are distinct from the retired chassis-mounted stations.
 
-1. One upright attached to the driver-side chassis rail.
-2. Four uprights arranged as two transverse pairs, with chassis connections to be engineered.
-
-Neither configuration is approved for fabrication. The load path, attachment geometry, vehicle-frame interface, local reinforcement, member sizing, welds, fasteners, torsion, and dynamic loads require verification. A physical survey of Earl is required before finalizing the support layout and bill of materials.
+This concept is not approved for fabrication. The load path, attachment geometry, vehicle-frame interface, local reinforcement, member sizing, welds, fasteners, torsion, and dynamic loads require verification. A physical survey of Earl is required before finalizing the support layout and bill of materials.
 
 Follow the live structural study and survey deliverables at <https://baaabs.org/structural>. Consult `AGENTS.md` for contributor instructions.
 
 ## Road configuration
 
-The former project-specific **hard 102-inch road-width invariant** and its station-derived width checks are retired as design requirements. This does **not** waive applicable vehicle width laws, permit requirements, or safe transport clearances. The roadworthy configuration must be measured and evaluated separately before travel. Historical width-check scripts and reports may remain for reference, but must not be presented as the current structural design gate.
+The former project-specific **hard 102-inch road-width invariant** and its station-derived width checks are retired as design requirements. This does **not** waive applicable vehicle width laws, permit requirements, or safe transport clearances. The roadworthy configuration must be measured and evaluated separately before travel. Historical width-check scripts and reports remain for reference, are excluded from active deployment validation, and must not be presented as the current structural design gate.
 
 ## Exterior panels and model
 
