@@ -15,7 +15,7 @@
   margin-inline: auto;
   padding: clamp(2rem, 5vw, 5rem) 5vw 1rem;
 }
-.earl-intro h2 { font-size: clamp(2.5rem, 4.6vw, 4.8rem); line-height: 1.02; letter-spacing: -.045em; }
+.earl-intro h2 { font-size: clamp(2.5rem, 4.6vw, 4.8rem); line-height: 1.15; letter-spacing: normal; font-weight: 500; }
 .earl-intro > p { max-width: 37ch; font-size: clamp(1.1rem, 1.8vw, 1.5rem); line-height: 1.4; }
 .earl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem 1.5rem; }
 .crew-link, .story-credit { text-decoration: underline; text-underline-offset: .22em; }

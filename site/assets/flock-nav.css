@@ -1,3 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=DynaPuff:wght@400..700&display=swap");
+
+/* Rounded display typography; keep the hero tagline and sheep word art distinct. */
+:is(h1,h2,h3,h4,h5,h6):not(:where(.model-stage #hero-title,.sheep-name,.name,.finale-name)) {
+  font-family: "DynaPuff", Arial, Helvetica, sans-serif;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
 .flock-header{box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 5vw;margin:0;background:#080710;color:#f8f5f1;border:0;border-bottom:1px solid #ffffff18;font:600 15px/1.4 Arial,Helvetica,sans-serif}
 .flock-header .flock-home img{display:block;width:150px;height:auto}
 .flock-header nav{display:flex;align-items:center;flex-wrap:wrap;column-gap:clamp(.75rem,2.5vw,2.6rem);row-gap:.25rem;margin:0}
