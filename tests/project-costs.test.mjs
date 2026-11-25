@@ -7,20 +7,20 @@ import {localReferenceExists} from './site-links.mjs';
 
 test('reported payments are exact, estimated expenses are counted once', () => {
   const ledger = { ...costLedger, items: [
-    {category: 'road', label:'Fuel', date:'2026-11', basis:'estimated', cents:2500},
-    {category: 'road', label:'Tags', date:'2026-11', basis:'reported', cents:1250},
+    {category: 'fuel', label:'Fuel', date:'2026-11', basis:'estimated', cents:2500},
+    {category: 'registration', label:'Tags', date:'2026-11', basis:'reported', cents:1250},
     {category: 'vehicle', label:'Auction', date:'2026-11-23', basis:'documented', cents:10001}
   ] };
   const summary = summarizeCosts(ledger);
   assert.equal(summary.total, 13751);
   assert.equal(summary.estimated, 2500);
-  assert.deepEqual(summary.groups.map(g=>[g.slug,g.cents,g.estimated]), [['vehicle',10001,0],['road',3750,2500]]);
+  assert.deepEqual(summary.groups.map(g=>[g.slug,g.cents,g.estimated]), [['vehicle',10001,0],['fuel',2500,2500],['registration',1250,0]]);
   ledger.items[0] = {...ledger.items[0], basis:'documented', cents:2582};
   const pages = buildCostPages(ledger, ()=>'');
   const totalPage = pages.get('costs/total/breakdown/index.html');
   assert.match(totalPage, /\$138\.33/);
   assert.doesNotMatch(totalPage, /≈/);
-  assert.match(pages.get('costs/road/breakdown/index.html'), /\$38\.32/);
+  assert.match(pages.get('costs/fuel/breakdown/index.html'), /\$25\.82/);
 });
 
 test('unknown categories and invalid cents cannot silently enter the total', () => {
@@ -44,4 +44,26 @@ test('every cost URL has a static page with reachable project assets and navigat
   }
   const overview = readFileSync(site + costPath('total').slice(1) + 'index.html','utf8');
   for (const slug of slugs.slice(1)) assert.ok(overview.includes('href="' + costPath(slug) + '"'));
+});
+
+test('the explorer gives fuel and registration independent controls, pages and fallback disclosures', () => {
+  const nav = ()=>'';
+  const pages = buildCostPages(costLedger, nav);
+  const overview = pages.get('costs/total/breakdown/index.html');
+  for (const slug of ['registration', 'fuel']) {
+    assert.ok(pages.has(costPath(slug).slice(1)+'index.html'));
+    assert.ok(overview.includes('data-segment="'+slug+'"'));
+    assert.ok(overview.includes('<details id="purchases-'+slug+'"'));
+  }
+  assert.doesNotMatch(overview, /data-category="road"/);
+  assert.match(overview, /data-bus checked/);
+  for (const mode of ['spent','hundred']) assert.ok(overview.includes('value="'+mode+'"'));
+});
+
+test('per-$100 values use the visible subtotal and dollars spent keep their precision', async () => {
+  const {chartValue} = await import('../site/costs/format.mjs');
+  assert.equal(chartValue(2000,0,10000,'spent'),'$20.00');
+  assert.equal(chartValue(2000,0,10000,'hundred'),'$20.00');
+  assert.equal(chartValue(2000,0,8000,'hundred'),'$25.00');
+  assert.equal(chartValue(2000,2000,8000,'spent'),'≈$20');
 });

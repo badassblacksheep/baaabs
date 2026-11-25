@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
+import { amount, dollars, money, share } from '../site/costs/format.mjs';
 
 const base = new URL('../site/costs/', import.meta.url);
 export const costLedger = JSON.parse(readFileSync(new URL('ledger.json', base), 'utf8'));
 export const costPath = slug => `/costs/${slug}/breakdown/`;
-const money = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'});
-const dollars = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', maximumFractionDigits: 0});
 const day = new Intl.DateTimeFormat('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'});
 const month = new Intl.DateTimeFormat('en-US', {month: 'long', year: 'numeric', timeZone: 'UTC'});
 const basisLabels = {documented: 'Documented payment', reported: 'Amount confirmed by owner', estimated: 'Owner estimate'};
@@ -13,9 +12,6 @@ function dateLabel(date) {
   return date.length === 7 ? month.format(new Date(date + '-01T12:00:00Z')) : day.format(new Date(date + 'T12:00:00Z'));
 }
 const esc = value => String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-const pct = (part, total) => total ? 100 * part / total : 0;
-const share = (part, total) => pct(part, total).toLocaleString('en-US', {maximumFractionDigits: 1}) + '%';
-const amount = (cents, approx) => approx ? '≈' + dollars.format(cents / 100) : money.format(cents / 100);
 const dateTag = date => `<time datetime="${esc(date)}">${dateLabel(date)}</time>`;
 
 export function summarizeCosts(ledger) {
@@ -46,29 +42,45 @@ export function summarizeCosts(ledger) {
 }
 
 function chart(groups, total) {
-  const segments = groups.map(g => `<span style="flex:${g.cents};background:${g.color}"></span>`).join('');
-  const rows = groups.map(g => `<li><a class="cost-row" href="${costPath(g.slug)}" style="--ink:${g.color}">
+  const segments = groups.map(g => `<a href="${costPath(g.slug)}" data-segment="${g.slug}" style="flex:${g.cents};--ink:${g.color}" aria-label="${esc(g.name)}, ${amount(g.cents,g.estimated)}, ${share(g.cents,total)}"></a>`).join('');
+  const rows = groups.map(g => `<li data-category="${g.slug}" data-cents="${g.cents}" data-estimated="${g.estimated}" style="--ink:${g.color}">
+    <details id="purchases-${g.slug}" name="purchases"><summary class="cost-row">
     <span class="swatch" aria-hidden="true"></span><span class="row-copy"><strong>${esc(g.name)}</strong><span>${esc(g.description)}</span></span>
-    <span class="row-value">${amount(g.cents, g.estimated)}</span><span class="row-percent">${share(g.cents, total)}</span>
-    <span class="chevron" aria-hidden="true"></span></a></li>`).join('');
-  return `<section class="breakdown" aria-labelledby="split-heading">
-    <h2 id="split-heading">Where each $100 goes</h2>
-    <p>Each color shows one category’s share. Select a category to see the purchases.</p>
-    <div class="scale" aria-hidden="true"><div class="bar">${segments}</div>
-    <div class="ticks"><span>$0</span><span>$25</span><span>$50</span><span>$75</span><span>$100</span></div></div>
+    <span class="row-value">${amount(g.cents,g.estimated)}</span><span class="row-percent">${share(g.cents,total)}</span>
+    <span class="chevron" aria-hidden="true"></span></summary>
+    <div class="row-detail">${purchases(g)}<a href="${costPath(g.slug)}">Open category page</a></div></details></li>`).join('');
+  const axis = [0, .25, .5, .75, 1].map(f => `<span>${dollars.format(f*total/100)}</span>`).join('');
+  return `<section class="breakdown" id="explorer" aria-labelledby="split-heading">
+    <h2 id="split-heading">Explore the spending</h2>
+    <p>Choose a color or open a category to see what we bought.</p>
+    <div class="chart-tools" hidden>
+      <fieldset class="units"><legend class="sr-only">Chart units</legend>
+        <label><input type="radio" name="chart-units" value="spent" checked><span>Dollars spent</span></label>
+        <label><input type="radio" name="chart-units" value="hundred"><span>Per $100</span></label>
+      </fieldset>
+      ${groups.some(g=>g.slug==='vehicle') && groups.length>1 ? '<label class="bus-filter"><input type="checkbox" data-bus checked> Include bus purchase</label>' : ''}
+    </div>
+    <div class="scale"><div class="bar" aria-label="Spending by category">${segments}</div>
+    <div class="ticks" aria-hidden="true">${axis}</div></div>
+    <p class="chart-readout" aria-live="polite" aria-atomic="true" hidden></p>
     <ul class="cost-rows" aria-label="Spending categories, amounts and shares">${rows}</ul></section>`;
 }
 
-function itemList(group) {
-  const items = [...group.items].sort((a, b) => b.date.localeCompare(a.date));
-  return `<section class="breakdown" aria-labelledby="items-heading"><h2 id="items-heading">What we paid for</h2>
-    <ul class="item-list">${items.map(item => `<li><div class="item-copy"><span class="item-date">${dateTag(item.date)}</span>
+function purchases(group) {
+  const items = [...group.items].sort((a,b)=>b.date.localeCompare(a.date));
+  return `<ul class="item-list">${items.map(item => `<li><div class="item-copy"><span class="item-date">${dateTag(item.date)}</span>
       <h3>${esc(item.label)}</h3><p>${esc(item.detail)}</p></div>
-      <div class="item-amount"><strong>${amount(item.cents, item.basis === 'estimated')}</strong><span>${basisLabels[item.basis]}</span></div></li>`).join('')}</ul></section>`;
+      <div class="item-amount"><strong>${amount(item.cents, item.basis === 'estimated')}</strong><span>${basisLabels[item.basis]}</span></div></li>`).join('')}</ul>`;
 }
+function itemList(group) {
+  return `<section class="breakdown" aria-labelledby="items-heading"><h2 id="items-heading">What we paid for</h2>${purchases(group)}</section>`;
+}
+
 
 export function buildCostPages(ledger, navigation) {
   const {groups, total, estimated} = summarizeCosts(ledger);
+  const estimateItems = ledger.items.filter(item => item.basis === 'estimated');
+  const estimateDescription = estimateItems.length === 1 ? 'for ' + esc(estimateItems[0].label.toLowerCase()) : 'in estimated spending';
   const pages = new Map();
   for (const group of [null, ...groups]) {
     const slug = group?.slug ?? 'total';
@@ -78,7 +90,7 @@ export function buildCostPages(ledger, navigation) {
     const cents = group?.cents ?? total, approx = group?.estimated ?? estimated;
     const title = group ? group.name : 'What we’ve spent';
     const description = group ? group.description : 'Follow the money behind the black sheep art bus, from buying Earl to stitching the fundraiser patches.';
-    const amountNote = approx ? `${money.format((cents - approx) / 100)} in exact payments plus about ${dollars.format(approx / 100)} in estimated spending.` : 'Total of recorded payments.';
+    const amountNote = approx ? `${money.format((cents - approx) / 100)} in exact payments plus about ${dollars.format(approx / 100)} ${estimateDescription}.` : 'Total of recorded payments.';
     const crumb = group ? `<a href="${costPath('total')}">All spending</a><span aria-hidden="true">/</span>${esc(group.name)}` : 'Project costs';
     const details = group ? itemList(group) : chart(groups, total);
     const sectionLinks = group ? `<nav class="other-cats" aria-label="Other spending categories"><a class="back" href="${costPath('total')}">All spending</a>${groups.filter(g=>g!==group).map(g=>`<a href="${costPath(g.slug)}">${esc(g.name)}</a>`).join('')}</nav>` : '';
@@ -87,7 +99,7 @@ export function buildCostPages(ledger, navigation) {
 <title>${esc(title)} · Project costs · BAAABS</title><meta name="description" content="${esc(description)}">
 <link rel="canonical" href="https://baaabs.org${route}"><meta name="theme-color" content="#0c0a10">
 <meta property="og:type" content="website"><meta property="og:title" content="${esc(title)} · BAAABS"><meta property="og:description" content="${esc(description)}"><meta property="og:image" content="https://baaabs.org${esc(photo.image)}"><meta property="og:url" content="https://baaabs.org${route}">
-<link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/assets/flock-nav.css"><link rel="stylesheet" href="/costs/costs.css"></head>
+<link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/assets/flock-nav.css"><link rel="stylesheet" href="/costs/costs.css">${group ? '' : '<script type="module" src="/costs/explore.mjs"></script>'}</head>
 <body><a class="skip" href="#main">Skip to content</a><header class="flock-header"><a class="flock-home" href="/" aria-label="BAAABS home"><img src="/assets/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a>${navigation(file)}</header>
 <main id="main"><div class="topline"><div class="crumb">${crumb}</div><span>As of ${dateTag(ledger.asOf)}</span></div>
 <div class="hero" style="--accent:${group?.color ?? '#ffca65'}"><div class="hero-copy"><h1>${esc(title)}</h1>

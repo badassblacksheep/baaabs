@@ -91,3 +91,32 @@ main { width: min(76rem, 100%); margin: 0 auto; padding: 1.5rem clamp(1rem, 4.5v
   .topline { align-items: flex-start; flex-direction: column; }
   .item-amount { flex-shrink: 1; }
 }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.chart-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1.25rem; margin-top: 1.35rem; }
+.units { display: inline-flex; margin: 0; padding: .2rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--panel); }
+.units label { position: relative; cursor: pointer; }
+.units input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.units span { display: block; padding: .48rem .9rem; border-radius: .3rem; color: var(--muted); font-size: .95rem; }
+.units input:checked + span { background: #ffca65; color: #191115; font-weight: 700; }
+.units input:focus-visible + span { outline: 3px solid #81f1da; outline-offset: 2px; }
+.bus-filter { display: inline-flex; align-items: center; gap: .55rem; min-height: 42px; font-size: .95rem; cursor: pointer; }
+.bus-filter input { accent-color: #ffca65; width: 1.15rem; height: 1.15rem; margin: 0; }
+.bar a { display: block; min-width: 0; background: var(--ink); box-shadow: inset -2px 0 var(--paper); }
+.bar a:last-child { box-shadow: none; }
+.bar a:is(:focus-visible,:hover,.active) { outline: 3px solid var(--type); outline-offset: -4px; }
+.breakdown > .chart-readout { margin: -.35rem 0 .85rem; color: var(--type); font-size: .95rem; }
+.cost-row { cursor: pointer; }
+.cost-row::-webkit-details-marker { display: none; }
+.cost-rows > li.active, .cost-rows details[open] { background: #1d1821; }
+.cost-rows details[open] .chevron { transform: rotate(135deg); }
+.cost-row:focus-visible { outline: 2px solid #81f1da; outline-offset: -2px; }
+.row-detail { padding: 0 1rem 1.25rem clamp(1rem,3vw,2.3rem); border-inline-start: 3px solid var(--ink); }
+.row-detail .item-list { margin: 0 0 1rem; }
+.row-detail a { color: var(--ink); }
+@media (max-width: 680px) {
+  .chart-tools { justify-content: flex-start; column-gap: 1rem; row-gap: .25rem; }
+  .chart-readout { min-height: 3em; }
+  .row-detail { padding-inline: .8rem; }
+  .ticks span { font-size:.78rem; }
+}
