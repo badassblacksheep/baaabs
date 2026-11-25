@@ -52,6 +52,41 @@
         max-width: none;
       }
     }
+    .lineage.section-shell {
+      grid-template-columns: minmax(0, 1fr);
+      gap: clamp(24px, 3vw, 40px);
+      padding-block: clamp(44px, 6vw, 88px);
+    }
+    .lineage-copy h2 {
+      max-width: none;
+      margin-bottom: 20px;
+      font-size: clamp(1.9rem, 4.2vw, 3.85rem);
+      line-height: 1.08;
+      text-wrap: balance;
+    }
+    .lineage-copy p:not(.eyebrow, .aside-line) { max-width: 70ch; }
+    .lineage-copy .aside-line { margin: 18px 0 0; }
+    .lineage .lineage-family {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      align-items: center;
+      width: 100%;
+      margin: 0;
+      padding: clamp(16px, 2.4vw, 32px) 0;
+      border: solid var(--rule);
+      border-width: 1px 0;
+    }
+    .lineage-family::before, .lineage-family::after { content: none; }
+    .lineage-root, .lineage-names { padding: 0; }
+    .lineage-root { border: 0; }
+    .lineage-names { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; }
+    .lineage-family img {
+      display: block;
+      width: 76%;
+      max-width: 190px;
+      margin: auto;
+    }
+    .lineage-names img:last-child { padding: 0; background: transparent; }
   </style>
 </head>
   <body>
@@ -178,6 +213,17 @@
       </section>
 
       <section class="lineage section-shell" aria-labelledby="lineage-title">
+        <div class="lineage-copy">
+          <p class="eyebrow">The lineage</p>
+          <h2 id="lineage-title">
+            Inspired by <span class="sheep-name">BAAAHS</span>.<br />Built to be a little more fiery.
+          </h2>
+          <p>
+            We might not have BootyJuice on the decks, but we still love disco,
+            house, and trance. BAAABS brings the beats wherever she rolls.
+          </p>
+          <p class="aside-line">Family resemblance. Her own fire.</p>
+        </div>
         <div
           class="lineage-family"
           aria-label="The shared BAAA lineage of BAAAHS and BAAABS"
@@ -198,17 +244,6 @@
               alt="BAAABS in black with pink outlines"
             />
           </div>
-        </div>
-        <div class="lineage-copy">
-          <p class="eyebrow">The lineage</p>
-          <h2 id="lineage-title">
-            Inspired by BAAAHS.<br />Built to be a little more fiery.
-          </h2>
-          <p>
-            We might not have BootyJuice on the decks, but we still love disco,
-            house, and trance. BAAABS brings the beats wherever she rolls.
-          </p>
-          <p class="aside-line">Family resemblance. Her own fire.</p>
         </div>
       </section>
 
