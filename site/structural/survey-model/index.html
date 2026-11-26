@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Survey-informed frame candidate · Earl</title>
+<meta name="description" content="The first structural frame candidate derived from Earl's November 25 physical survey.">
+<link rel="canonical" href="https://baaabs.org/structural/survey-model/">
+<link rel="stylesheet" href="/assets/typography.css"><link rel="stylesheet" href="/assets/launch.css"><link rel="stylesheet" href="/assets/flock-nav.css"><link rel="stylesheet" href="/structural/report.css">
+<style>
+main.survey-frame{max-width:72rem;margin:auto;padding:clamp(1rem,4vw,3rem)}
+.survey-frame h1{font-size:clamp(2rem,5vw,3.5rem);line-height:1.15}
+.survey-frame .table-wrap{overflow-x:auto}
+.survey-frame table{width:100%;border-collapse:collapse;text-align:left}
+.survey-frame th,.survey-frame td{padding:.7rem;border-bottom:1px solid #8886;vertical-align:top}
+.survey-frame svg{width:100%;height:auto;display:block;max-height:350px;background:#14121b;border-radius:.6rem}
+.survey-frame figure{margin:1.5rem 0}.survey-frame figcaption{margin-top:.5rem}
+.survey-frame .qualification{border-left:3px solid #ffda69;padding-left:1rem}
+</style></head><body>
+<header class="flock-header"><a class="flock-home" href="/" aria-label="Home"><img src="/assets/brand/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a></header>
+<main class="survey-frame">
+<p class="eyebrow"><a href="/structural/">Iteration 06</a> / <a href="/survey-results/">Field survey</a> / candidate 07</p>
+<h1>A frame for the Earl we measured.</h1>
+<p class="qualification"><strong>Provisional geometry and structural screen only.</strong> The shorter candidate is not an approved change to the previously approved 38-foot deck. Portal and landing geometry, exterior roof dimensions, body paths, attachment capacity, vehicle stability and dynamic loads remain unresolved. No fabrication or occupancy release.</p>
+<p>All new donor dimensions come from the <a href="/survey-results/measurements.json">canonical survey dataset</a>. The frame retains iteration 06 member sections and inherited vertical and lateral assumptions, while the longitudinal frame topology is remeshed. The existing 3D sheep and panel register remain iteration 06 until regenerated separately.</p>
+<section><h2>Deck length alternatives</h2><div class="table-wrap"><table><thead><tr><th>Deck</th><th>Gross area</th><th>Difference from bus</th><th>Centered end projection</th></tr></thead><tbody id="alternatives"></tbody></table></div>
+<p>Negative end projection denotes an inset from each bumper. Bumper fit does not establish roof fit or chassis support alignment.</p></section>
+<section><h2>Survey-informed frame geometry</h2><div id="geometry"></div>
+<figure><svg id="side" viewBox="0 0 960 400" role="img" aria-label="Longitudinal frame and measured axle coordinates"></svg><figcaption>Frame member centerlines and candidate shores; the bumper and axle line below is a longitudinal datum, not a measured ground or floor elevation.</figcaption></figure>
+<figure><svg id="plan" viewBox="0 0 960 250" role="img" aria-label="Plan view of the modeled roof members"></svg><figcaption>Plan view of frame centerlines. The full roof width and side clearances are still to be physically measured.</figcaption></figure>
+<figure><svg id="cabin" viewBox="0 0 360 320" role="img" aria-label="Provisional measured interior cross-section"></svg><figcaption>Interior floor width and wall/crown heights. Circular roof profile and springline width are assumptions; this is not an exterior roof measurement.</figcaption></figure>
+<p><a href="/assets/earl-survey-model.json" download>Download exact candidate member geometry (JSON)</a></p></section>
+<section><h2>Structural calculations</h2><p id="result-status" role="status">Checking for solved candidate results…</p>
+<div class="table-wrap"><table><thead><tr><th>Scenario</th><th>People</th><th>Peak normal stress (MPa)</th><th>Deck drop (in)</th><th>Peak shore (lbf)</th><th>Peak seat (lbf)</th><th>Frame + floor + shores (lbf)</th></tr></thead><tbody id="results"></tbody></table></div>
+<p>The original three-dimensional frame solver is reused with newly derived member coordinates and crowd footprint sweeps limited to the new deck length. Full skin mass remains the previous conservative allowance pending the panel redesign. The body spring stiffness and force multiplier are sensitivity assumptions, not measured properties. Normal stress is only one screening criterion.</p>
+<p><a href="https://github.com/badassblacksheep/baaabs/blob/main/tools/solve-survey-model.py">Solver driver</a> · <a href="/structural/">Iteration 06 reference</a></p></section>
+<noscript><p>JavaScript is required for this geometry view. Download the exact recipe from the link above.</p></noscript>
+</main><script type="module" src="view.mjs"></script></body></html>
