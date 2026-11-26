@@ -576,12 +576,13 @@ nav a:focus-visible::after {
 
 .build {
   padding-block: var(--pitch-spacing);
-  color: var(--black-wool);
-  background: var(--warm-fleece);
+  color: var(--warm-fleece);
+  background: var(--black-wool);
+  border-block: 1px solid var(--rule);
 }
 
 .build .eyebrow {
-  color: #b92372;
+  color: var(--hot-pink);
 }
 
 .build-heading h2 {
@@ -600,7 +601,7 @@ nav a:focus-visible::after {
 .build-steps {
   margin: 0;
   padding: 0;
-  border-top: 2px solid var(--black-wool);
+  border-top: 2px solid var(--rule);
   list-style: none;
 }
 
@@ -609,11 +610,11 @@ nav a:focus-visible::after {
   grid-template-columns: 0.22fr 1.78fr;
   gap: 30px;
   padding: 42px 0;
-  border-bottom: 1px solid rgba(7, 7, 10, 0.28);
+  border-bottom: 1px solid var(--rule);
 }
 
 .build-steps li > span {
-  color: #b92372;
+  color: var(--hot-pink);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -1046,10 +1047,10 @@ footer p {
 .material-study { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); align-items: start; margin-top: var(--pitch-spacing); scroll-margin-top: 115px; }
 .material-photo { margin: 0; }
 .material-photo img { display: block; width: 100%; height: auto; }
-.material-photo figcaption { font-size: .85rem; margin-top: 12px; color: #554e56; }
+.material-photo figcaption { font-size: .85rem; margin-top: 12px; color: var(--fleece-muted); }
 .material-copy h3 { font-size: clamp(2rem,3.5vw,3.5rem); line-height: 1.08; margin: 0 0 26px; }
-.material-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 24px; margin: 28px 0 0; border-top: 1px solid #b9b0aa; }
-.material-specs dt { font-size: .8rem; color: #554e56; margin-bottom: 6px; }
+.material-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 24px; margin: 28px 0 0; border-top: 1px solid var(--rule); }
+.material-specs dt { font-size: .8rem; color: var(--fleece-muted); margin-bottom: 6px; }
 .material-specs dd { margin: 0; font-weight: 700; }
 @media (max-width: 800px) { .material-study { grid-template-columns: 1fr; margin-top: 60px; } }
 
