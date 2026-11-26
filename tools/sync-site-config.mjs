@@ -40,8 +40,8 @@ for (const [page] of structuralTabs) {
 }
 
 const skin = JSON.parse(read('assets/panel-skin.json'));
-replace('the_build.html', /<a data-panel-material href="[^"]+">/,
-  '<a data-panel-material href="assets/'+escape(skin.reference)+'">');
+replace('the_build.html', /<a data-panel-material[^>]*>/,
+  '<a data-panel-material data-finish="'+escape(skin.name)+'" href="assets/'+escape(skin.reference)+'">');
 
 const sandbox = {window:{}, module:{exports:{}}, URL};
 runInNewContext(read('assets/patch-config.js'),sandbox);
