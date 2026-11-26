@@ -15,5 +15,6 @@
   "metallic": 0,
   "roughness": 0.95,
   "bareSteel": { "metallic": 0.34, "roughness": 0.57 },
-  "alphaCutoff": 0.30
+  "alphaCutoff": 0.30,
+  "viewHeightMeters": { "fullPerforations": 1.4, "opaquePanels": 3.5 }
 }

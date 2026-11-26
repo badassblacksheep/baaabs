@@ -67,6 +67,7 @@
    if(base.emissive)material.setEmissiveFactor(visible?base.emissive:[0,0,0]);
   }
   document.querySelector('.model-stage').classList.toggle('panels-hidden',!inputs.panels.checked);
+  window.updatePanelVisibility?.(model, true);
   paintHighlights();
  }
  window.revealWorkshopPanels=()=>{if(!inputs.panels.checked){inputs.panels.checked=true;apply()}};

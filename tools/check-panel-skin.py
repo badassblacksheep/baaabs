@@ -2,6 +2,7 @@
 import gzip
 import json
 import struct
+import zlib
 from pathlib import Path
 import runpy
 import sys
@@ -17,6 +18,21 @@ model = Model(Path(sys.argv[1]))
 spec = json.loads(CONFIG.read_text())
 tile = (ASSETS / spec['texture']).read_bytes()
 assert b'calibration\0' + calibration_digest(spec).encode() in tile
+visibility = model.doc['asset']['extras']['panelVisibility']
+assert visibility == {**spec['viewHeightMeters'], 'alphaCutoff': spec['alphaCutoff']}
+assert 0 < visibility['fullPerforations'] < visibility['opaquePanels']
+# Our tile writer emits one unfiltered RGBA PNG IDAT. Measure actual open area at all three scales.
+offset = 8
+while tile[offset+4:offset+8] != b'IDAT':
+    offset += 12 + int.from_bytes(tile[offset:offset+4], 'big')
+length = int.from_bytes(tile[offset:offset+4], 'big')
+size = spec['photo']['tileResolution']
+rows = np.frombuffer(zlib.decompress(tile[offset+8:offset+8+length]),np.uint8).reshape(size,1+size*4)
+assert np.all(rows[:,0] == 0)
+alpha = rows[:,4::4] / 255
+expected = np.pi / (2*np.sqrt(3)) * (spec['holeDiameterInches']/spec['nearestCenterInches'])**2
+for detail in (0., .5, 1.):
+    assert abs(np.mean(alpha < detail*spec['alphaCutoff']) - expected*detail) < .012, detail
 period = tile_period(spec)
 panels = sheet_sources(model)
 layout = json.loads((ASSETS / 'earl-panel-layout.json').read_text())

@@ -104,6 +104,63 @@ def populate_scene(source):
     bpy.ops.file.pack_all()
 
 
+def install_panel_visibility(scene, settings):
+    """One shared camera-dependent cutout for all imported sheets in the editable master."""
+    group = bpy.data.node_groups.new("Painted perforations at viewing distance", "ShaderNodeTree")
+    group.interface.new_socket(name="Photo mask", in_out="INPUT", socket_type="NodeSocketFloat")
+    group.interface.new_socket(name="Opacity", in_out="OUTPUT", socket_type="NodeSocketFloat")
+    nodes, links = group.nodes, group.links
+    inputs, output = nodes.new('NodeGroupInput'), nodes.new('NodeGroupOutput')
+    camera_data = nodes.new('ShaderNodeCameraData')
+    # Perspective cameras in this assembly use horizontal sensor fit and square pixels.
+    factor = nodes.new('ShaderNodeValue')
+    factor.label = "Vertical view span per metre of camera depth"
+    driver = factor.outputs[0].driver_add("default_value").driver
+    for name, path in [('lens','camera.data.lens'), ('sensor','camera.data.sensor_width'),
+                       ('width','render.resolution_x'), ('height','render.resolution_y')]:
+        var = driver.variables.new()
+        var.name = name
+        var.targets[0].id_type = 'SCENE'
+        var.targets[0].id = scene
+        var.targets[0].data_path = path
+    driver.expression = 'sensor / lens * height / width'
+    span = nodes.new('ShaderNodeMath')
+    span.operation = 'MULTIPLY'
+    links.new(camera_data.outputs['View Z Depth'],span.inputs[0])
+    links.new(factor.outputs[0],span.inputs[1])
+    detail = nodes.new('ShaderNodeMapRange')
+    detail.interpolation_type = 'SMOOTHSTEP'
+    detail.clamp = True
+    detail.inputs['From Min'].default_value = settings['fullPerforations']
+    detail.inputs['From Max'].default_value = settings['opaquePanels']
+    detail.inputs['To Min'].default_value = settings['alphaCutoff']
+    detail.inputs['To Max'].default_value = 0
+    links.new(span.outputs[0],detail.inputs['Value'])
+    hole = nodes.new('ShaderNodeMath')
+    hole.operation = 'LESS_THAN'
+    links.new(inputs.outputs['Photo mask'],hole.inputs[0])
+    links.new(detail.outputs['Result'],hole.inputs[1])
+    opacity = nodes.new('ShaderNodeMath')
+    opacity.operation = 'SUBTRACT'
+    opacity.inputs[0].default_value = 1
+    links.new(hole.outputs[0],opacity.inputs[1])
+    links.new(opacity.outputs[0],output.inputs['Opacity'])
+    for col, column in enumerate(((camera_data,factor),(span,),(detail,inputs),(hole,),(opacity,),(output,))):
+        for row, node in enumerate(column):
+            node.location = (200*col, -200*row)
+    for mat in bpy.data.materials:
+        if not mat.name.startswith('Panel_') or not mat.use_nodes:
+            continue
+        tree = mat.node_tree
+        shader = next(n for n in tree.nodes if n.type == 'BSDF_PRINCIPLED')
+        photo = next(n for n in tree.nodes if n.type == 'TEX_IMAGE')
+        rule = tree.nodes.new('ShaderNodeGroup')
+        rule.node_tree = group
+        rule.location = (shader.location.x - 250, shader.location.y - 380)
+        tree.links.new(photo.outputs['Alpha'], rule.inputs['Photo mask'])
+        tree.links.new(rule.outputs['Opacity'], shader.inputs['Alpha'])
+
+
 def add_survey_guides(doc):
     """Editable ruler geometry, separate from physical parts and hidden in renders."""
     meta = doc['scenes'][doc.get('scene', 0)]['extras']
@@ -165,6 +222,9 @@ def verify(destination, doc):
             if material and material.name.startswith('Panel_'):
                 images = [node.image for node in material.node_tree.nodes if node.type == 'TEX_IMAGE']
                 assert any(image and image.name == skin['name'] and image.packed_file for image in images), material.name
+                if doc['asset'].get('extras', {}).get('panelVisibility'):
+                    shader = next(n for n in material.node_tree.nodes if n.type == 'BSDF_PRINCIPLED')
+                    assert shader.inputs['Alpha'].links[0].from_node.type == 'GROUP', material.name
                 assert obj.data.uv_layers.active, (obj.name, 'missing panel UVs')
         panel_id, = names
         assert panel_id not in panel_ids, ('duplicate panel',panel_id)
@@ -234,6 +294,8 @@ if __name__ == "__main__":
     source, destination = [Path(arg).resolve() for arg in sys.argv[sys.argv.index("--") + 1:]]
     doc = gltf_document(source)
     populate_scene(source)
+    if (visibility := doc['asset'].get('extras', {}).get('panelVisibility')):
+        install_panel_visibility(bpy.context.scene, visibility)
     if 'survey_field_readings' in doc['scenes'][doc.get('scene', 0)]['extras']:
         add_survey_guides(doc)
     destination.parent.mkdir(parents=True, exist_ok=True)

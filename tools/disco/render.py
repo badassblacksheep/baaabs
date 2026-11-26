@@ -122,6 +122,7 @@ class Renderer:
             ctypes.c_void_p,
             ctypes.c_void_p,
             ctypes.c_int,
+            ctypes.c_float,
         ] + [ctypes.c_void_p] * 6
         self.raster.restype = None
 
@@ -138,6 +139,10 @@ class Renderer:
         basis = np.array([right, up, camera]).T
         target = np.array([0.15, 4.12, 0])
         scale = width / (22.9 if disco else 19.55)
+        if look == "detail":
+            # The junction just above the real DJ opening shows the punched sheet and adjacent facets.
+            target = self.scene.dj_header.mean(axis=0)
+            scale = width / .46
 
         def project(points):
             q = (np.asarray(points) - target) @ basis
@@ -147,11 +152,12 @@ class Renderer:
 
         surface = cairo.ImageSurface(cairo.FORMAT_RGB24, width, height)
         c = cairo.Context(surface)
+        sun = unit([-0.55, 1., 0.52])
         if look == "pitch":
-            c.set_source_rgb(0.62, 0.64, 0.65)
+            self.daylight(c, project, sun, scale, width, height)
         else:
             c.set_source_rgb(0.052, 0.044, 0.083)
-        c.paint()
+            c.paint()
         if disco:
             self.stage(c, project, width, height, phase)
             scene.animate_eyes(k)
@@ -159,6 +165,16 @@ class Renderer:
         light = 0.52 + 1.00 * np.abs(scene.normals @ direction) + 0.22 * np.abs(scene.normals[:, 1])
         rgb = scene.rgb.copy()
         rgb[:, :3] *= light[:, None]
+        if look in ("pitch", "detail"):
+            # The two sides of a folded sheet receive different amounts of sky and ground light.
+            sheets = np.isin(scene.tex, list(scene.sheet_tiles))
+            normal = scene.normals[sheets].copy()
+            normal[normal @ camera < 0] *= -1
+            direct = np.maximum(0, normal @ sun)
+            sky = .5 + .5*normal[:, 1]
+            grazing = (1 - np.clip(normal @ camera, 0, 1))**3
+            illumination = (.46 + .48*sky + .85*direct + .25*grazing)
+            rgb[sheets, :3] = scene.rgb[sheets, :3] * illumination[:, None]
         if disco:
             for direction, color in [
                 (unit([math.cos(phase), 0.7, math.sin(phase)]), (0.42, 0.05, 0.34)),
@@ -190,18 +206,67 @@ class Renderer:
             scene.pixels,
             scene.tiles,
         ]
+        settings = scene.gltf['asset']['extras']['panelVisibility']
+        near, far = settings['fullPerforations'], settings['opaquePanels']
+        t = np.clip((height / scale - near) / (far - near), 0., 1.)
         self.raster(
             width,
             height,
             bgra.ctypes.data,
             depth.ctypes.data,
-            len(triangles),
+            len(triangles), 1 - t*t*(3 - 2*t),
             *(array.ctypes.data for array in arrays),
         )
         surface.mark_dirty()
         if disco:
             self.show(c, project, scene.outlets, scale, width, height, k, phase)
         return surface
+
+    def daylight(self, c, project, sun, scale, width, height):
+        # A neutral daylight sweep and two shadow scales anchor the tires on the floor.
+        backdrop = cairo.LinearGradient(0, 0, 0, height)
+        for y, rgb in [(0., (.69,.75,.79)), (.58, (.87,.86,.82)), (1., (.69,.66,.60))]:
+            backdrop.add_color_stop_rgb(y, *rgb)
+        c.set_source(backdrop)
+        c.paint()
+        contacts = np.array(list(self.scene.contacts.values()))
+        floor = contacts[:, 1].min()
+        ground = self.scene.tri - (self.scene.tri[:,:,1:2] - floor) * sun / sun[1]
+        # Rasterize the real projected silhouette once at shadow resolution, then soften its edges.
+        w = min(width, 960)
+        h = round(height * w/width)
+        positions = np.ascontiguousarray(project(ground) * [w/width, h/height, 1], np.float32)
+        count = len(positions)
+        mask = np.zeros((h,w,4), np.uint8)
+        depth = np.full((h,w), -np.inf, np.float32)
+        white = np.ones((count,4), np.float32)
+        untextured = np.full(count,-1,np.int32)
+        self.raster(w,h,mask.ctypes.data,depth.ctypes.data,count,0.,positions.ctypes.data,
+                    white.ctypes.data,self.scene.uv.ctypes.data,untextured.ctypes.data,
+                    self.scene.pixels.ctypes.data,self.scene.tiles.ctypes.data)
+        soft = subprocess.check_output(['ffmpeg','-loglevel','error','-f','rawvideo','-pix_fmt','gray',
+            '-s', f'{w}x{h}', '-i','pipe:0','-vf','gblur=sigma=5','-frames:v','1','-f','rawvideo',
+            '-pix_fmt','gray','pipe:1'],input=mask[:,:,0].tobytes())
+        stride = cairo.ImageSurface.format_stride_for_width(cairo.FORMAT_A8,w)
+        pixels = bytearray(h*stride)
+        np.frombuffer(pixels,np.uint8).reshape(h,stride)[:,:w] = np.frombuffer(soft,np.uint8).reshape(h,w)
+        shadow = cairo.ImageSurface.create_for_data(pixels,cairo.FORMAT_A8,w,h,stride)
+        c.save()
+        c.scale(width/w,height/h)
+        c.set_source_rgba(.15,.16,.17,.36)
+        c.mask_surface(shadow)
+        c.restore()
+        for x,y,_ in project(contacts):
+            c.save()
+            c.translate(x,y)
+            c.scale(scale*.62,scale*.11)
+            contact = cairo.RadialGradient(0,0,0,0,0,1)
+            contact.add_color_stop_rgba(0,.09,.09,.09,.58)
+            contact.add_color_stop_rgba(1,.09,.09,.09,0)
+            c.set_source(contact)
+            c.arc(0,0,1,0,math.tau)
+            c.fill()
+            c.restore()
 
     @staticmethod
     def stage(c, project, W, H, phase):
@@ -321,6 +386,8 @@ def main():
         studio = renderer.frame(0, 1800, 1014, "studio")
         jpeg(studio, args.assets / "images/earl/earl-front-x-hero.jpg", 1350)
         jpeg(studio, args.assets / "home-model/poster.jpg", 520)
+        detail = renderer.frame(0, 2400, 1400, "detail")
+        jpeg(detail, args.assets / "images/earl/earl-painted-panel-detail.jpg", 1200)
         # Supersample narrow rails and mast edges for the full-width Pitch hero.
         pitch = renderer.frame(0, 7680, 4448, "pitch")
         jpeg(pitch, args.assets / "images/earl/earl-symmetric.jpg", 820)

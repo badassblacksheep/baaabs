@@ -1,4 +1,4 @@
-import {loadPanelSkin, panelFragment} from '../panel-skin.mjs?v=matte-perf1';
+import {loadPanelSkin, panelFragment} from '../panel-skin.mjs?v=perforation-lod1';
 
 const canvas = document.querySelector('#home-sheep');
 const poster = document.querySelector('#home-poster');
@@ -28,6 +28,7 @@ uniform vec3 outlet;
 varying vec3 paint;
 varying vec2 eyeUV;
 varying float eyeSide;
+varying float panelViewHeight;
 void main(){
   vec3 p = pos * .001;
   float s = sin(orbit.x), c = cos(orbit.x);
@@ -46,6 +47,7 @@ void main(){
   float aspect = viewport.x / viewport.y;
   float scale = min(.151, aspect*.102)*zoom;
   float w = 1.-forward/60.;
+  panelViewHeight = 2. * w / scale;
   gl_Position = vec4(horizontal*scale/aspect, vertical*scale, -forward/24., w);
   paint = color; eyeUV = eye == 5. ? uv * (65535./256.) : uv; eyeSide = eye;
 }`;

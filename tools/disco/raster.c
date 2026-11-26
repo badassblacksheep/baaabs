@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stdint.h>
 
-void raster(int width, int height, uint8_t *bgra, float *depth, int count,
+void raster(int width, int height, uint8_t *bgra, float *depth, int count, float sheet_detail,
             const float *points, const float *paint, const float *uv,
             const int *texture, const uint8_t *pixels, const int *tiles) {
   for (int transparent = 0; transparent < 2; transparent++) {
@@ -29,7 +29,7 @@ void raster(int width, int height, uint8_t *bgra, float *depth, int count,
         float dv1 = (coords[3]-coords[1])*th, dv2 = (coords[5]-coords[1])*th;
         float rx = hypotf(du1*(cy-ay)-du2*(by-ay), dv1*(cy-ay)-dv2*(by-ay)) / fabsf(det);
         float ry = hypotf(du2*(bx-ax)-du1*(cx-ax), dv2*(bx-ax)-dv1*(cx-ax)) / fabsf(det);
-        int lod = fminf(tile[4], roundf(log2f(fmaxf(1, fmaxf(rx, ry)))));
+        int lod = sheet_detail == 0 ? tile[4] : fminf(tile[4], roundf(log2f(fmaxf(1, fmaxf(rx, ry)))));
         for (int level = 0; level < lod; ++level) {
           offset += tw*th*tile[3];
           tw /= 2;
@@ -55,7 +55,7 @@ void raster(int width, int height, uint8_t *bgra, float *depth, int count,
             int tx = fminf(tw - 1, fmaxf(0, u * tw));
             int ty = fminf(th - 1, fmaxf(0, v * th));
             sample = pixels + offset + tile[3] * (ty * tw + tx);
-            if (tile[4] && sample[3] < tile[5]) continue;
+            if (tile[4] && sample[3] < tile[5] * sheet_detail) continue;
           }
           if (!transparent)
             depth[j] = z;

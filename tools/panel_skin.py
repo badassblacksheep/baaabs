@@ -25,6 +25,7 @@ def tile_period(spec):
 def calibration_digest(spec):
     # Trace the tile to the input pixels and the settings that affect its samples.
     settings = {key:spec[key] for key in ('photo','holeDiameterInches','nearestCenterInches','lattice')}
+    settings.update(maskVersion=2, alphaCutoff=spec['alphaCutoff'])
     return hashlib.sha256((ASSETS / spec['reference']).read_bytes()
                           + json.dumps(settings, sort_keys=True).encode()).hexdigest()
 
@@ -56,7 +57,18 @@ def make_tile(spec):
     ix, iy = sx.astype(int), sy.astype(int)
     fx, fy = (sx-ix)[...,None], (sy-iy)[...,None]
     color = (1-fy)*((1-fx)*pixels[iy,ix] + fx*pixels[iy,ix+1]) + fy*((1-fx)*pixels[iy+1,ix] + fx*pixels[iy+1,ix+1])
-    rgba = np.dstack([color, 255*alpha]).round().astype(np.uint8)
+    # The threshold contour remains exactly the punched radius. Lowering the threshold
+    # closes each aperture continuously as the holes become too fine to resolve.
+    cutoff = spec['alphaCutoff']
+    mask = np.where(distance < radius, cutoff * (distance / radius)**2,
+                    np.minimum(1, cutoff + (distance-radius)*n/rows))
+    # RGB under a cutout is visible only in the distance treatment. Extend the web
+    # colour into it so straight-RGB mipmaps converge to the linear-light average.
+    metal = 1 - math.pi * radius**2 / (math.sqrt(3)/2)
+    cavity = (metal**(1/2.2) - metal) / (1-metal)
+    web = color[alpha == 1].mean(axis=0)
+    color = alpha[...,None]*color + (1-alpha[...,None])*web*cavity
+    rgba = np.dstack([color, 255*mask]).round().astype(np.uint8)
     def chunk(kind, data):
         return struct.pack('>I', len(data)) + kind + data + struct.pack('>I', zlib.crc32(kind+data))
     raw = b''.join(b'\0' + row.tobytes() for row in rgba)
@@ -86,6 +98,8 @@ def apply_panel_skin(model):
     spec = json.loads(CONFIG.read_text())
     period = tile_period(spec)
     doc = model.doc
+    doc['asset'].setdefault('extras', {})['panelVisibility'] = {
+        **spec['viewHeightMeters'], 'alphaCutoff': spec['alphaCutoff']}
     tile = (ASSETS / spec['texture']).read_bytes()
     if b'calibration\0' + calibration_digest(spec).encode() not in tile:
         raise ValueError('Panel texture is stale. Rebuild it with python3 tools/panel_skin.py')

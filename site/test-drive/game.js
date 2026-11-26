@@ -1,7 +1,7 @@
 import {spawnRobot,advanceRobot,approachesPlayer} from './robot-traffic.js?v=drive-config-1';
 import {DRIVE_CONFIG, speedLimitWords} from './drive-config.mjs';
 import {createClockMap} from './city-clock.js';
-import {createRenderer,zoneRadius} from './renderer.js?v=matte-perf1';
+import {createRenderer,zoneRadius} from './renderer.js?v=perforation-lod1';
 import {art,targets,obstacles,clearance,partyAlignment} from './landmarks.js?v=lord-snort';
 import {createSoundCar} from './sound-car.js?v=duet';
 const $=id=>document.getElementById(id);

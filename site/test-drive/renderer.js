@@ -1,4 +1,4 @@
-import {loadPanelSkin,panelFragment} from '../assets/panel-skin.mjs?v=matte-perf1';
+import {loadPanelSkin,panelFragment} from '../assets/panel-skin.mjs?v=perforation-lod1';
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
@@ -39,9 +39,11 @@ function scenery(){
 }
 const vertex=`
 attribute vec3 pos,col; varying vec3 tint,eyeUV; uniform vec3 eye,side,up,look,origin;
+varying float panelViewHeight;
 uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;uniform float lightPhase;
 void main(){float c=cos(angle),s=sin(angle);vec3 p=pose*(pos*scale);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
+panelViewHeight=2.*max(d,0.)/focal;
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
 eyeUV=col.x>=2.?vec3(col.yz,-2.):col.x<0.?vec3(-col.x-1.,col.y,col.z):vec3(0.,0.,-1.);
 vec3 paint=col.x>=2.?vec3(col.x-2.):col;

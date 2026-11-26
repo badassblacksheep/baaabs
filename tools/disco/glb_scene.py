@@ -39,6 +39,7 @@ class Scene:
             if img.get("name", "").startswith("Ovine_fire_")
         }
         self.textures, self.texture_ids, self.outlets = [], {}, []
+        self.contacts = {}
         self.deck = 0
         for root in self.gltf["scenes"][self.gltf["scene"]]["nodes"]:
             self.visit(root, np.eye(4))
@@ -135,8 +136,14 @@ class Scene:
         if "mesh" in node and (component != "eye_effect" or eye):
             for prim in self.gltf["meshes"][node["mesh"]]["primitives"]:
                 pos = self.accessor(prim["attributes"]["POSITION"]) @ world[:3, :3].T + world[:3, 3]
+                if name.startswith(('Bus__Front tire ', 'Bus__Rear tire ')) and name.rsplit(' ', 1)[1] in ('1', '-1'):
+                    centre = (pos.min(axis=0) + pos.max(axis=0)) / 2
+                    centre[1] = pos[:, 1].min()
+                    self.contacts[name] = centre
                 ind = self.accessor(prim["indices"]).reshape(-1, 3)
                 mat = self.gltf["materials"][prim["material"]]
+                if mat["name"].startswith("Panel_B-D-074"):
+                    self.dj_header = pos[np.unique(ind)]
                 pbr = mat.get("pbrMetallicRoughness", {})
                 base = np.array(pbr.get("baseColorFactor", [1, 1, 1, 1]), dtype=float)
                 base[:3] = np.clip(base[:3], 0, 1) ** (1 / 2.2)

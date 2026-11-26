@@ -31,9 +31,11 @@ if (modelButton && modelStage) {
     modelStatus.textContent = 'Loading the model…';
     let viewer;
     try {
-      await import('./assets/vendor/model-viewer-4.1.0.min.js');
+      await Promise.all([import('./assets/vendor/model-viewer-4.1.0.min.js'),
+        import('./assets/panel-view-detail.js?v=perforation-lod1')]);
       await customElements.whenDefined('model-viewer');
       viewer = document.createElement('model-viewer');
+      window.attachPanelVisibility(viewer);
       viewer.setAttribute('alt', 'Earl, the Morton Thomas HDX in BAAABS bodywork. Rotate to inspect the sheep head, faceted body, rooftop dance floor, stairs and twin poofer masts.');
       viewer.setAttribute('camera-controls', '');
       viewer.setAttribute('animation-name', 'BAAABS | Ovine');
@@ -49,7 +51,7 @@ if (modelButton && modelStage) {
         viewer.addEventListener('load', () => { clearTimeout(timer); resolve(); }, {once:true});
         viewer.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Model unavailable')); }, {once:true});
       });
-      viewer.setAttribute('src', 'assets/models/earl-survey-fit.glb?v=matte-perf1');
+      viewer.setAttribute('src', 'assets/models/earl-survey-fit.glb?v=perforation-lod1');
       modelStage.append(viewer);
       await loaded;
       modelStage.classList.add('is-loaded');

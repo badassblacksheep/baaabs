@@ -259,3 +259,32 @@ test('bare steel preview restores the paint and layer toggles preserve the perfo
   assert.equal(panel.mode,'MASK');
   assert.equal(panel.cutoff,spec.alphaCutoff);
 });
+
+test('camera framing resolves real cutouts up close and closes them at whole-sheep scale', () => {
+  const {q,cx}=workshop();
+  const spec=JSON.parse(fs.readFileSync(new URL('assets/panel-skin.json',site)));
+  const viewer=q('#model'), sheet={name:'Panel_B-D-033',mode:'MASK',cutoff:spec.alphaCutoff,
+    getAlphaMode(){return this.mode;},getAlphaCutoff(){return this.cutoff;},setAlphaCutoff(v){this.cutoff=v;}};
+  const range=spec.viewHeightMeters;
+  let span=range.opaquePanels*2;
+  viewer.model={materials:[sheet,{name:'Workshop_bus_DJ_Glazing'}]};
+  viewer.originalGltfJson={asset:{extras:{panelVisibility:{...range,alphaCutoff:spec.alphaCutoff}}}};
+  viewer.getFieldOfView=()=>60;
+  viewer.getCameraOrbit=()=>({radius:span/(2*Math.tan(Math.PI/6))});
+  vm.runInContext(fs.readFileSync(new URL('assets/panel-view-detail.js',site),'utf8'),cx);
+  cx.window.attachPanelVisibility(viewer);
+  assert.equal(sheet.cutoff,0);
+  span=(range.fullPerforations+range.opaquePanels)/2;
+  viewer.emit('camera-change');
+  assert.ok(Math.abs(sheet.cutoff-spec.alphaCutoff/2)<.001);
+  span=range.fullPerforations/2;
+  viewer.emit('camera-change');
+  assert.equal(sheet.cutoff,spec.alphaCutoff);
+  sheet.mode='BLEND';
+  span=range.opaquePanels*2;
+  viewer.emit('camera-change');
+  assert.equal(sheet.cutoff,spec.alphaCutoff);
+  sheet.mode='MASK';
+  cx.window.updatePanelVisibility(viewer,true);
+  assert.equal(sheet.cutoff,0);
+});
