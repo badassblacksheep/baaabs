@@ -31,7 +31,7 @@ def solve():
     with tempfile.TemporaryDirectory(prefix="baaabs-survey-") as temp:
         with zipfile.ZipFile(ARCHIVE) as archive:
             # Fixed trusted archive, extract only the original solver dependencies.
-            for name in ("screen04.py", "bearing04.py", "hss-properties.json"):
+            for name in ("screen.py", "screen04.py", "bearing04.py", "hss-properties.json"):
                 archive.extract(name, temp)
         sys.path.insert(0, temp)
         from screen04 import analyze, check_element
