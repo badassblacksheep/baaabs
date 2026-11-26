@@ -47,6 +47,7 @@
    const pbr=material.pbrMetallicRoughness;
    if(!originals.has(material))originals.set(material,{
     color:[...pbr.baseColorFactor],emissive:material.name.startsWith('Workshop_equipment_Eye_')?null:[...material.emissiveFactor],alpha:material.getAlphaMode(),
+    cutoff:material.getAlphaMode()==='MASK'?material.getAlphaCutoff():null,
     metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
    });
    const base=originals.get(material),visible=window.workshopMaterialVisible(material);
@@ -56,7 +57,12 @@
     pbr.setMetallicFactor(paintedPanel?0:base.metallic);
     pbr.setRoughnessFactor(paintedPanel?1:base.roughness);
    }
-   material.setAlphaMode(visible?base.alpha:'BLEND');
+   const mode=visible?base.alpha:'BLEND';
+   if(material.getAlphaMode()!==mode){
+    material.setAlphaMode(mode);
+    // model-viewer resets MASK to 0.5, which clips the entire sheet at distant mip levels.
+    if(mode==='MASK')material.setAlphaCutoff(base.cutoff);
+   }
    pbr.setBaseColorFactor(visible?color:[...color.slice(0,3),0]);
    if(base.emissive)material.setEmissiveFactor(visible?base.emissive:[0,0,0]);
   }

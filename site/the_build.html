@@ -272,4 +272,4 @@ for(const p of DATA.panels.filter(p=>p.dj_booth)){
  $('#booth-links').append(link);
 }
 $('#search').addEventListener('input',list);$('#region').addEventListener('change',list);$('#side').addEventListener('change',list);$('#focus').addEventListener('click',focus);$('#overall').addEventListener('click',()=>{stopPicking();clearFlash();model.cameraTarget='0m 3.5m 0m';model.cameraOrbit=matchMedia('(min-width: 1100px)').matches?'0deg 75deg 19m':'0deg 75deg 24m'});model.addEventListener('load',()=>{stopPicking();clearFlash();select(selected,false);if(!openLinkedView()&&matchMedia('(min-width: 1100px)').matches)model.cameraOrbit='0deg 75deg 19m'});model.addEventListener('error',()=>{$('#viewer-status').textContent='3D preview could not load. The panel table and downloads are still available.'});select(selected,false);$('#viewer-status').textContent=helpText;
-</script><script src="panel-layers.js?v=animated-eyes-1"></script><script src="panel-inspector.js?v=crown-header-1"></script></html>
+</script><script src="panel-layers.js?v=perforated-steel"></script><script src="panel-inspector.js?v=crown-header-1"></script></html>

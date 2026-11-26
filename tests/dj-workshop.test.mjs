@@ -20,6 +20,7 @@ class Element {
     this.events.set(type, [...(this.events.get(type) || []), listener]);
   }
   emit(type) { for (const fn of this.events.get(type) || []) fn({ target: this }); }
+  before() {}
   append(...items) { this.children.push(...items); }
   remove() {}
   replaceChildren(...items) { this.children = items; }
@@ -36,7 +37,7 @@ function workshop() {
   const window = new Element();
   const location = {hash:'#dj-booth'};
   const document = Object.assign(new Element(), {
-    querySelector:q, querySelectorAll:()=>[], createElement:()=>new Element(), createElementNS:()=>new Element()
+    querySelector:q, querySelectorAll:()=>[], createTextNode:text=>text, createElement:()=>new Element(), createElementNS:()=>new Element()
   });
   const cx = vm.createContext({
     window, document, location, matchMedia:()=>({matches:true}), setTimeout:()=>1,
@@ -44,7 +45,7 @@ function workshop() {
   });
   vm.runInContext(script, cx);
   vm.runInContext(fs.readFileSync(new URL('panel-inspector.js', site), 'utf8'), cx);
-  return {q, window, location};
+  return {q, window, location, cx};
 }
 
 test('booth deep link and interior button set opposite sightlines at the same target', () => {
@@ -218,4 +219,26 @@ test('one flat triangle spans the entire top of the DJ opening', () => {
     assert.match(q('#viewer-status').textContent,new RegExp(id+'.*'+replacement));
     if(replacement===header.id)assert.equal(q('#edge-a').children.length,3);
   }
+});
+
+
+test('layer toggles preserve the imported alpha cutoff at whole-vehicle distances', () => {
+  const {q, cx} = workshop();
+  const spec = JSON.parse(fs.readFileSync(new URL('assets/panel-skin.json', site)));
+  const panel = {
+    name:'Panel_B-D-049', mode:'MASK', cutoff:spec.alphaCutoff, emissiveFactor:[0,0,0],
+    getAlphaMode(){return this.mode;}, getAlphaCutoff(){return this.cutoff;},
+    setAlphaMode(mode){this.mode=mode; this.cutoff=mode==='MASK' ? .5 : undefined;},
+    setAlphaCutoff(value){this.cutoff=value;}, setEmissiveFactor(){},
+    pbrMetallicRoughness:{baseColorFactor:[1,1,1,1], setBaseColorFactor(){}, setMetallicFactor(){}, setRoughnessFactor(){}}
+  };
+  q('#model').model = {materials:[panel]};
+  vm.runInContext(fs.readFileSync(new URL('panel-layers.js', site),'utf8'),cx);
+  assert.equal(panel.cutoff,spec.alphaCutoff);
+  const toggle=q('#layer-panels');
+  toggle.checked=false; toggle.emit('change');
+  assert.equal(panel.mode,'BLEND');
+  toggle.checked=true; toggle.emit('change');
+  assert.equal(panel.mode,'MASK');
+  assert.equal(panel.cutoff,spec.alphaCutoff);
 });
