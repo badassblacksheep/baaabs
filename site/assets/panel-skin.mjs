@@ -1,6 +1,7 @@
 // Compact viewers sample the same repeat tile embedded in the full glTF material.
 export async function loadPanelSkin(gl, program, unit, current = () => true) {
   const configURL = new URL('panel-skin.json', import.meta.url);
+  configURL.search = new URL(import.meta.url).search;
   const response = await fetch(configURL);
   if (!response.ok) throw Error('Could not load the panel material configuration');
   const spec = await response.json();
@@ -19,16 +20,18 @@ export async function loadPanelSkin(gl, program, unit, current = () => true) {
   gl.useProgram(program);
   gl.uniform1i(gl.getUniformLocation(program, 'panelMap'), unit);
   gl.uniform1f(gl.getUniformLocation(program, 'panelCutoff'), spec.alphaCutoff);
+  gl.uniform3fv(gl.getUniformLocation(program, 'panelBaseColor'), spec.baseColorFactor.slice(0, 3));
 }
 
 export const panelFragment = `
 uniform sampler2D panelMap;
 uniform float panelCutoff;
+uniform vec3 panelBaseColor;
 vec3 steelColor(vec2 uv, vec3 light) {
   vec4 sheet = texture2D(panelMap, uv);
   if (sheet.a < panelCutoff) discard;
   // RGB mips average the photographed dark holes with the metal in display space.
   // Recover the web color and apply both coverage and facet light in linear light.
   vec3 web = min(vec3(1.), sheet.rgb / max(sheet.a, .001));
-  return web * pow(sheet.a * light, vec3(1./2.2));
+  return web * pow(panelBaseColor * sheet.a * light, vec3(1./2.2));
 }`;

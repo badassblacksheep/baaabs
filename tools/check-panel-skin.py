@@ -31,7 +31,7 @@ for path in (ASSETS / 'home-model').glob('*.mesh'):
         offset += 8
         for x,y,z,r,g,b,surface,u,v in struct.iter_unpack('<hhhBBBBHH',data[offset:offset+14*count]):
             if surface == 5:
-                assert r == g == b and r >= 96, 'Homepage bake tints or darkens the steel photograph'
+                assert r == g == b and r >= 96, 'Homepage vertex lighting would apply the paint twice'
                 home_vertices.add((x,y,z,u,v))
         offset += 14*count + 2*indices
 material_ids = set()
@@ -40,7 +40,7 @@ for pid, src in panels.items():
     mat = model.doc['materials'][src['material']]
     pbr = mat['pbrMetallicRoughness']
     assert mat['alphaMode'] == 'MASK' and mat['alphaCutoff'] == spec['alphaCutoff'], pid
-    assert pbr['baseColorFactor'] == [1,1,1,1], (pid, 'a tint would obscure the photo')
+    assert pbr['baseColorFactor'] == spec['baseColorFactor'], (pid, 'incorrect paint finish')
     assert (pbr['metallicFactor'], pbr['roughnessFactor']) == (spec['metallic'],spec['roughness']), pid
     material_ids.add(src['material'])
     texture_ids.add(pbr['baseColorTexture']['index'])

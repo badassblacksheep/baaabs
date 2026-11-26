@@ -1,4 +1,4 @@
-import {loadPanelSkin, panelFragment} from '../panel-skin.mjs?v=linear';
+import {loadPanelSkin, panelFragment} from '../panel-skin.mjs?v=matte-perf1';
 
 const canvas = document.querySelector('#home-sheep');
 const poster = document.querySelector('#home-poster');

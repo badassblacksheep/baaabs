@@ -104,7 +104,7 @@ def apply_panel_skin(model):
         mat = doc['materials'][src['material']]
         mat.pop('normalTexture', None)
         mat.update(alphaMode='MASK', alphaCutoff=spec['alphaCutoff'], doubleSided=True)
-        mat['pbrMetallicRoughness'] = {'baseColorFactor':[1,1,1,1], 'baseColorTexture':{'index':texture},
+        mat['pbrMetallicRoughness'] = {'baseColorFactor':spec['baseColorFactor'], 'baseColorTexture':{'index':texture},
                                       'metallicFactor':spec['metallic'], 'roughnessFactor':spec['roughness']}
         extras = mat['extras']
         estimate_keys = ('perforation_open_area_nominal','open_area_fraction','perforation_pattern',

@@ -3,7 +3,7 @@
  const groups=['subframe','deckframe','mounts','panels','bus','deck','equipment'].filter(g=>document.querySelector('#layer-'+g));
  const inputs=Object.fromEntries(groups.map(g=>[g,document.querySelector('#layer-'+g)]));
  const originals=new WeakMap();
- const paintBlack=document.querySelector('#paint-black');
+ const barePreview=document.querySelector('#preview-bare-steel');
  // Road configuration is a conservative visibility study, not a certified road model.
  const roadLabel=document.createElement('label');
  roadLabel.style.cssText='display:flex;gap:8px;align-items:center;margin:10px 0;font-weight:650';
@@ -51,11 +51,11 @@
     metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
    });
    const base=originals.get(material),visible=window.workshopMaterialVisible(material);
-   const paintedPanel=group==='panels' && paintBlack?.checked;
-   const color=paintedPanel?[0.006,0.006,0.006,base.color[3]]:base.color;
+   const bare=group==='panels' && barePreview?.checked;
+   const color=bare?[1,1,1,base.color[3]]:base.color;
    if(group==='panels'){
-    pbr.setMetallicFactor(paintedPanel?0:base.metallic);
-    pbr.setRoughnessFactor(paintedPanel?1:base.roughness);
+    pbr.setMetallicFactor(bare?Number(barePreview.dataset.metallic):base.metallic);
+    pbr.setRoughnessFactor(bare?Number(barePreview.dataset.roughness):base.roughness);
    }
    const mode=visible?base.alpha:'BLEND';
    if(material.getAlphaMode()!==mode){
@@ -70,7 +70,7 @@
   paintHighlights();
  }
  window.revealWorkshopPanels=()=>{if(!inputs.panels.checked){inputs.panels.checked=true;apply()}};
- paintBlack?.addEventListener('change',apply);
+ barePreview?.addEventListener('change',apply);
  for(const input of Object.values(inputs))input.addEventListener('change',apply);
  document.querySelector('#show-framing').addEventListener('click',()=>{
    if(roadInput.checked){roadInput.checked=false;roadInput.dispatchEvent(new Event('change'))}

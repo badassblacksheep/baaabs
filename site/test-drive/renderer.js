@@ -1,4 +1,4 @@
-import {loadPanelSkin,panelFragment} from '../assets/panel-skin.mjs?v=linear';
+import {loadPanelSkin,panelFragment} from '../assets/panel-skin.mjs?v=matte-perf1';
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';

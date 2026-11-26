@@ -44,9 +44,9 @@ Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the
 
 ## Exterior panel appearance
 
-Use the owner’s [perforated steel photograph](site/assets/images/materials/round-perforated-steel-reference.png) for every registered detachable sheet. [The material configuration](site/assets/panel-skin.json) owns the photograph, derived repeat tile, hole size, pitch, calibration and finish. The default is exposed mill-finish steel with visible openings on a staggered lattice. Black paint is an explicit workshop preview.
+Use the owner’s [perforated steel photograph](site/assets/images/materials/round-perforated-steel-reference.png) for every registered detachable sheet. [The material configuration](site/assets/panel-skin.json) owns the photograph, derived repeat tile, hole size, pitch, calibration and finish. The default is matte black paint over the photographed steel. Apply the configured linear base color, roughness and metallic factor to the metal between the holes. Keep the staggered openings transparent. The workshop offers an unpainted steel preview.
 
-Apply the texture in the installed plane of each panel, in metres, after fitting the assembly. Preserve each panel's picking material. The GLB, packed Blender file, compact viewers, posters and pitch renders all use the same tile and UV scale. Rebuild the tile with `python3 tools/panel_skin.py` after editing the reference or calibration. Follow the field-fit rebuild sequence below, then run `python3 tools/disco/render.py` to refresh public imagery. Check a close-up for round holes and an overall view for a stable metallic finish.
+Apply the texture in the installed plane of each panel, in metres, after fitting the assembly. Preserve each panel's picking material. The GLB, packed Blender file, compact viewers, posters and pitch renders all use the same tile and UV scale. Rebuild the tile with `python3 tools/panel_skin.py` after editing the reference or calibration. Follow the field-fit rebuild sequence below, then run `python3 tools/disco/render.py` to refresh public imagery. Check a close-up for round holes and an overall view for readable matte black facets.
 
 ## Provisional exterior skin mass estimate (2026-11-08)
 

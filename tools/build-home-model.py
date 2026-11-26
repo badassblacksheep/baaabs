@@ -133,6 +133,8 @@ def build():
                     if fixed.min() < 0 or fixed.max() > 65535:
                         raise ValueError(f'Panel UVs exceed packed range on {name}')
                     verts[:,10:14] = fixed.astype('<u2').view('u1').reshape(-1,4)
+                    # The shared WebGL shader applies the paint factor once, after sampling the steel.
+                    verts[:,6:9] = (255 * light.clip(0,1)).round().astype('u1').repeat(3)[:,None]
                     verts[:,9] = 5
                 group.append(verts)
         for child in n.get('children',[]):

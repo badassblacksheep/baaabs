@@ -9,6 +9,6 @@ For logos, render stills, fonts and downloadable reports, see the [site asset di
 | Exterior shell revisions | The `baaabs-panelized-v*.glb` files in this directory track successive panel assemblies |
 | Structural and transport studies | The `baaabs-subframe-study-*` and `baaabs-panel-mounting-*` files include historical design variants and exploded views |
 
-The active survey-fit GLB embeds the [photographic panel finish](../panel-skin.json). The Blender export packs it. Use the fitted sheet UVs for model derivatives, including the homepage, game and renders. At vehicle scale, mipmaps average the small openings; zooming in resolves the steel webs and punched holes.
+The active survey-fit GLB embeds the [matte black paint and photographic panel texture](../panel-skin.json). The Blender export packs it. Use the fitted sheet UVs for model derivatives, including the homepage, game and renders. At vehicle scale, mipmaps average the small openings; zooming in resolves the steel webs and punched holes.
 
 See the [interactive build workshop](../../the_build.html) for the current configuration.

@@ -18,7 +18,7 @@ Public asset URLs begin with `/assets/`. For example, the approved [heart-shaped
 
 For new media, use the subject directory and reference its canonical URL. For a new pitch render, [the renderer](../../tools/disco/render.py) writes the 820, 1600, 2560 and 3840 px stills together. Keep the pitch page’s responsive image list in sync with those outputs.
 
-The detachable sheep panels use the [original steel photograph](images/materials/round-perforated-steel-reference.png) and a [repeat tile with transparent holes](images/materials/round-perforated-steel-tile.png). Their paths and physical calibration live in [panel-skin.json](panel-skin.json).
+The detachable sheep panels use the [original steel photograph](images/materials/round-perforated-steel-reference.png) and a [repeat tile with transparent holes](images/materials/round-perforated-steel-tile.png). Their paths, physical calibration and matte black paint settings live in [panel-skin.json](panel-skin.json).
 
 Feature data and code stay with their consumers. The [structural reports](../structural/) own their numerical results, [project costs](../costs/) owns its ledger, and [Test Drive](../test-drive/) owns its game code and baked mesh. Shared scripts, styles and configuration are in this directory. The [donor auction archive](../../reference/donor-bus/2007-thomas-hdx/auction-4108380/README.md) preserves original reference photos outside the published site.
 

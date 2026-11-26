@@ -222,7 +222,7 @@ test('one flat triangle spans the entire top of the DJ opening', () => {
 });
 
 
-test('layer toggles preserve the imported alpha cutoff at whole-vehicle distances', () => {
+test('bare steel preview restores the paint and layer toggles preserve the perforations', () => {
   const {q, cx} = workshop();
   const spec = JSON.parse(fs.readFileSync(new URL('assets/panel-skin.json', site)));
   const panel = {
@@ -230,10 +230,27 @@ test('layer toggles preserve the imported alpha cutoff at whole-vehicle distance
     getAlphaMode(){return this.mode;}, getAlphaCutoff(){return this.cutoff;},
     setAlphaMode(mode){this.mode=mode; this.cutoff=mode==='MASK' ? .5 : undefined;},
     setAlphaCutoff(value){this.cutoff=value;}, setEmissiveFactor(){},
-    pbrMetallicRoughness:{baseColorFactor:[1,1,1,1], setBaseColorFactor(){}, setMetallicFactor(){}, setRoughnessFactor(){}}
+    pbrMetallicRoughness:{
+      baseColorFactor:[...spec.baseColorFactor], metallicFactor:spec.metallic, roughnessFactor:spec.roughness,
+      setBaseColorFactor(value){this.baseColorFactor=Array.from(value);},
+      setMetallicFactor(value){this.metallicFactor=value;},
+      setRoughnessFactor(value){this.roughnessFactor=value;}
+    }
   };
+  const preview=q('#preview-bare-steel');
+  const input=html.match(/<input id="preview-bare-steel"[^>]*>/)[0];
+  assert.doesNotMatch(input,/\bchecked\b/);
+  preview.dataset.metallic=input.match(/data-metallic="([^"]+)"/)[1];
+  preview.dataset.roughness=input.match(/data-roughness="([^"]+)"/)[1];
   q('#model').model = {materials:[panel]};
   vm.runInContext(fs.readFileSync(new URL('panel-layers.js', site),'utf8'),cx);
+  const pbr=panel.pbrMetallicRoughness;
+  const finish=()=>[pbr.baseColorFactor,pbr.metallicFactor,pbr.roughnessFactor];
+  assert.deepEqual(finish(),[spec.baseColorFactor,spec.metallic,spec.roughness]);
+  preview.checked=true; preview.emit('change');
+  assert.deepEqual(finish(),[[1,1,1,1],spec.bareSteel.metallic,spec.bareSteel.roughness]);
+  preview.checked=false; preview.emit('change');
+  assert.deepEqual(finish(),[spec.baseColorFactor,spec.metallic,spec.roughness]);
   assert.equal(panel.cutoff,spec.alphaCutoff);
   const toggle=q('#layer-panels');
   toggle.checked=false; toggle.emit('change');
