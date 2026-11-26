@@ -15,7 +15,7 @@ import zipfile
 
 os.environ.setdefault("OPENBLAS_NUM_THREADS", "1")
 ROOT = Path(__file__).resolve().parents[1]
-RECIPE = ROOT / "site/assets/earl-survey-model.json"
+RECIPE = ROOT / "site/assets/earl-deck-model.json"
 ARCHIVE = ROOT / "site/assets/downloads/structural/iteration-06-source.zip"
 
 def sweep(deck_ft, length_ft):
@@ -24,8 +24,8 @@ def sweep(deck_ft, length_ft):
     offsets = sorted({float(x) for x in range(int(end) + 1)} | {end, end / 2})
     return [(f"patch_{length_ft:g}ft_at_{x:g}ft", x, length_ft) for x in offsets]
 
-def solve():
-    recipe = json.loads(RECIPE.read_text())
+def solve(recipe_path):
+    recipe = json.loads(recipe_path.read_text())
     frame, loads = recipe["candidate"], recipe["loadInputs"]
     deck_ft = frame["deckLengthIn"] / 12
     with tempfile.TemporaryDirectory(prefix="baaabs-survey-") as temp:
@@ -73,9 +73,10 @@ def solve():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--recipe", type=Path, default=RECIPE)
     parser.add_argument("--output", type=Path,
-        default=ROOT / "site/structural/survey-model/results.json")
+        default=ROOT / "site/structural/deck-results.json")
     args = parser.parse_args()
-    result = solve()
+    result = solve(args.recipe)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n")

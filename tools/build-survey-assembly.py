@@ -10,6 +10,7 @@ import numpy as np
 
 from dj_booth import read_accessor
 from dj_panel_layout import gltf_coordinates, node_matrix, sheet_sources, transform_points
+from survey_deck import install_deck
 from survey_fit import ARCHIVE_LAYOUT, ROOT, SURVEY, LongitudinalFit, donor_datums
 
 Model = runpy.run_path(str(ROOT / 'tools/build-animated-eyes.py'))['Model']
@@ -104,7 +105,7 @@ def apply_survey(model):
     survey = json.loads(SURVEY.read_text())
     extras = model.doc['scenes'][model.doc.get('scene', 0)]['extras']
     extras.update(survey_date=fit.date, survey_source='survey-results/measurements.json',
-                  fit_revision='Longitudinal survey fit. Fixed front axle; original 38 ft concept deck.',
+                  fit_revision='Longitudinal survey fit. Front axle fixed.',
                   survey_field_readings=survey['measurements'], survey_inferences=survey['inferences'],
                   survey_unmeasured=survey['unmeasured'], survey_release=survey['release'],
                   survey_stations_world_x_m=fit.target.tolist())
@@ -117,4 +118,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     model = Model(args.source)
     apply_survey(model)
+    recipe = json.loads((ROOT / 'site/assets/earl-deck-model.json').read_text())
+    install_deck(model, recipe, donor_datums(model.doc)[0])
     model.save(args.destination)

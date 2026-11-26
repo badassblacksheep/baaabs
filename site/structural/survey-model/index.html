@@ -16,11 +16,11 @@ main.survey-frame{max-width:72rem;margin:auto;padding:clamp(1rem,4vw,3rem)}
 .survey-frame .qualification{border-left:3px solid #ffda69;padding-left:1rem}
 </style></head><body>
 <header class="flock-header"><a class="flock-home" href="/" aria-label="Home"><img src="/assets/brand/baaabs-wordmark-glow.svg" alt="BAAABS" width="150" height="37"></a></header>
-<main class="survey-frame">
-<p class="eyebrow"><a href="/structural/">Iteration 06</a> / <a href="/survey-results/">Field survey</a> / candidate 07</p>
+<main class="survey-frame" data-results="results.json">
+<p class="eyebrow"><a href="/structural/iteration-06.html">Iteration 06</a> / <a href="/survey-results/">Field survey</a> / candidate 07</p>
 <h1>A frame for the Earl we measured.</h1>
-<p class="qualification"><strong>Provisional geometry and structural screen only.</strong> The shorter candidate is not an approved change to the previously approved 38-foot deck. Portal and landing geometry, exterior roof dimensions, body paths, attachment capacity, vehicle stability and dynamic loads remain unresolved. No fabrication or occupancy release.</p>
-<p>All new donor dimensions come from the <a href="/survey-results/measurements.json">canonical survey dataset</a>. The frame retains iteration 06 member sections and inherited vertical and lateral assumptions, while the longitudinal frame topology is remeshed. The <a href="/the_build.html">survey-fitted sheep and panel register</a> use the same donor stations. The workshop shows the approved 38-foot deck. This page models the separate 35-foot candidate.</p>
+<p class="qualification"><strong>Archived 35 × 8 ft survey candidate.</strong> The <a href="/structural/">current 36-foot deck</a> uses the same survey. The calculations below refer to the 35-foot footprint.</p>
+<p>All new donor dimensions come from the <a href="/survey-results/measurements.json">canonical survey dataset</a>. The frame retains iteration 06 member sections and inherited vertical and lateral assumptions, while the longitudinal frame topology is remeshed. The <a href="/the_build.html">survey-fitted sheep and panel register</a> use the same donor stations. The workshop now shows the 36-foot trial.</p>
 <section><h2>Deck length alternatives</h2><div class="table-wrap"><table><thead><tr><th>Deck</th><th>Gross area</th><th>Difference from bus</th><th>Centered end projection</th></tr></thead><tbody id="alternatives"></tbody></table></div>
 <p>Negative end projection denotes an inset from each bumper. Bumper fit does not establish roof fit or chassis support alignment.</p></section>
 <section><h2>Survey-informed frame geometry</h2><div id="geometry"></div>
@@ -31,6 +31,6 @@ main.survey-frame{max-width:72rem;margin:auto;padding:clamp(1rem,4vw,3rem)}
 <section><h2>Structural calculations</h2><p id="result-status" role="status">Checking for solved candidate results…</p>
 <div class="table-wrap"><table><thead><tr><th>Scenario</th><th>People</th><th>Peak normal stress (MPa)</th><th>Deck drop (in)</th><th>Peak shore (lbf)</th><th>Peak seat (lbf)</th><th>Frame + floor + shores (lbf)</th></tr></thead><tbody id="results"></tbody></table></div>
 <p>The original three-dimensional frame solver is reused with newly derived member coordinates and crowd footprint sweeps limited to the new deck length. Full skin mass remains the previous conservative allowance for comparison with iteration 06; see the <a href="/panels.html">updated skin estimate</a>. The body spring stiffness and force multiplier are sensitivity assumptions, not measured properties. Normal stress is only one screening criterion.</p>
-<p><a href="https://github.com/badassblacksheep/baaabs/blob/main/tools/solve-survey-model.py">Solver driver</a> · <a href="/structural/">Iteration 06 reference</a></p></section>
+<p><a href="https://github.com/badassblacksheep/baaabs/blob/main/tools/solve-survey-model.py">Solver driver</a> · <a href="/structural/iteration-06.html">Iteration 06 reference</a></p></section>
 <noscript><p>JavaScript is required for this geometry view. Download the exact recipe from the link above.</p></noscript>
-</main><script type="module" src="view.mjs"></script></body></html>
+</main><script type="module" src="view.mjs?v=deck36"></script></body></html>

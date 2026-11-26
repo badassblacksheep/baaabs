@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
-function derive(survey, source) {
+function derive(survey, source, design) {
   const inch=.0254, m=Object.fromEntries(survey.measurements.map(v=>[v.id,v]));
   const length=m["EXT-001"].nominal, wheelbase=m["EXT-002"].value, front=m["EXT-004"].value, rear=length-front-wheelbase;
   const pitch=m["INT-006"].value, pairPitch=4*pitch;
@@ -12,9 +12,9 @@ function derive(survey, source) {
   const oldPortals=[v.members.find(m=>m.name==="Front corner post").a[0],v.members.find(m=>m.rear&&m.name.endsWith("Front corner post")).a[0]];
   const oldPairs=[...new Set(v.shorePositions.map(p=>p[0]))].sort((a,b)=>a-b);
   const originalDeckIn=Math.round((oldDeck[1]-oldDeck[0])/inch), widthIn=96;
-  // Candidate only: fit the largest whole-foot deck within the nominal bumper envelope.
+  // The owner selects the trial deck length independently of measured bumper length.
   // Centering and inherited portal edge setbacks are explicit visualization/solver assumptions.
-  const candidateIn=Math.floor(length/12)*12;
+  const candidateIn=design.deckLengthIn;
   const start=(length-candidateIn)/2*inch, end=start+candidateIn*inch;
   const newPortals=[start+oldPortals[0]-oldDeck[0],end-(oldDeck[1]-oldPortals[1])];
   const center=(newPortals[0]+newPortals[1])/2;
@@ -33,13 +33,13 @@ function derive(survey, source) {
   const maxJoistGap=Math.max(...joists.slice(1).map((x,i)=>(x-joists[i])/inch));
   if(maxJoistGap>24.0001)throw Error("Candidate exceeds 24-inch modeled joist spacing: "+maxJoistGap);
   const totalLength=ms=>ms.reduce((sum,m)=>sum+Math.hypot(...m.a.map((x,i)=>m.b[i]-x)),0);
-  const alternatives=[candidateIn,432,originalDeckIn].map(n=>({deckLengthIn:n,deckWidthIn:widthIn,grossAreaFt2:n*widthIn/144,deltaFromBusIn:n-length,areaChangePct:100*(n-originalDeckIn)/originalDeckIn,nominalCenteredEndProjectionIn:(n-length)/2}));
-  return {revision:"survey-candidate-07",surveyDate:survey.survey_date,qualification:"Conceptual frame geometry only. Not a released design, measured support map, or verified structural capacity.",coordinates:"Metres; x=0 at front bumper, positive rearward; y,z retained from iteration 06 assumed axes. Interior floor elevations relative to frame unknown.",donor:{lengthIn:length,observedLengthRangeIn:m["EXT-001"].range,roofCenterlineIn:m["EXT-005"].value,frontAxleIn:front,rearAxleIn:front+wheelbase,wheelbaseIn:wheelbase,rearOverhangNominalIn:rear,rearOverhangMeasuredIn:m["EXT-003"].value,aisleIn:m["INT-001"].value,floorWidthIn:m["INT-002"].value,crownIn:m["INT-003"].value,wallIn:m["INT-004"].value,ceilingRiseIn:m["INT-003"].value-m["INT-004"].value,pillarPitchIn:pitch},alternatives,assumptions:["Candidate is not an owner-approved replacement for the 38-foot deck. Centered on nominal bumper envelope; bumper fit is not roof or portal fit.","Preserve iteration 06 front/rear deck-to-portal offsets, all y/z coordinates, material dimensions and six shore plate/tube assumptions. Real chassis seats, body bows, exterior envelope and clearance remain unmeasured.","Center three shore pairs between candidate portals at four measured pillar pitches; absolute phase is not verified.","Piecewise longitudinal remesh preserves topology and member sections. Does not rebuild the donor GLB, skin, panel layouts or transport configuration."],baseline:{deckLengthIn:originalDeckIn,totalMemberLengthM:totalLength(v.members)},candidate:{...v,deckLengthIn:candidateIn,deckWidthIn:widthIn,deckBoundsM:[start,end],portalXsM:newPortals,pairXsM:newPairs,pairPitchIn:pairPitch,maxJoistGapIn:maxJoistGap,totalMemberLengthM:totalLength(members),members,shorePositions},loadInputs:{panelAllowanceLbf:source.panelAllowanceLbf,people:20,personLbf:225,gearLbf:250,liveMultiplier:2,shoreK_LbfPerIn:5000,stressScreenMPa:207}};
+  const alternatives=[...new Set([Math.floor(length/12)*12,length,candidateIn,originalDeckIn])].map(n=>({deckLengthIn:n,deckWidthIn:widthIn,grossAreaFt2:n*widthIn/144,deltaFromBusIn:n-length,areaChangePct:100*(n-originalDeckIn)/originalDeckIn,nominalCenteredEndProjectionIn:(n-length)/2}));
+  return {revision:design.revision,surveyDate:survey.survey_date,qualification:"Conceptual frame geometry only. Not a released design, measured support map, or verified structural capacity.",coordinates:"Metres; x=0 at front bumper, positive rearward; y,z retained from iteration 06 assumed axes. Interior floor elevations relative to frame unknown.",donor:{lengthIn:length,observedLengthRangeIn:m["EXT-001"].range,roofCenterlineIn:m["EXT-005"].value,frontAxleIn:front,rearAxleIn:front+wheelbase,wheelbaseIn:wheelbase,rearOverhangNominalIn:rear,rearOverhangMeasuredIn:m["EXT-003"].value,aisleIn:m["INT-001"].value,floorWidthIn:m["INT-002"].value,crownIn:m["INT-003"].value,wallIn:m["INT-004"].value,ceilingRiseIn:m["INT-003"].value-m["INT-004"].value,pillarPitchIn:pitch},alternatives,assumptions:["Owner-selected trial deck centered on the nominal bumper envelope. Roof and portal fit require separate measurements.","Preserve iteration 06 front/rear deck-to-portal offsets, all y/z coordinates, material dimensions and six shore plate/tube assumptions. Real chassis seats, body bows, exterior envelope and clearance remain unmeasured.","Center three shore pairs between candidate portals at four measured pillar pitches; absolute phase is not verified.","Piecewise longitudinal remesh preserves topology and member sections. The workshop frame uses these same member endpoints and shore positions."],baseline:{deckLengthIn:originalDeckIn,totalMemberLengthM:totalLength(v.members)},candidate:{...v,deckLengthIn:candidateIn,deckWidthIn:widthIn,deckBoundsM:[start,end],portalXsM:newPortals,pairXsM:newPairs,pairPitchIn:pairPitch,maxJoistGapIn:maxJoistGap,totalMemberLengthM:totalLength(members),members,shorePositions},loadInputs:{panelAllowanceLbf:source.panelAllowanceLbf,people:20,personLbf:225,gearLbf:250,liveMultiplier:2,shoreK_LbfPerIn:5000,stressScreenMPa:207}};
 }
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
-const output=JSON.stringify(derive(read('site/survey-results/measurements.json'),read('site/assets/structural-models-06.json')),null,2)+'\n';
-const destination=path.join(root,'site/assets/earl-survey-model.json');
+const output=JSON.stringify(derive(read('site/survey-results/measurements.json'),read('site/assets/structural-models-06.json'),read('site/structural/deck-design.json')),null,2)+'\n';
+const destination=path.join(root,'site/assets/earl-deck-model.json');
 function equivalent(a,b) {
   if(typeof a==='number'&&typeof b==='number')return Math.abs(a-b)<=1e-10*Math.max(1,Math.abs(a),Math.abs(b));
   if(a===b)return true;

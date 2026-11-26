@@ -1,4 +1,6 @@
-const recipeUrl='/assets/earl-survey-model.json';
+const recipeUrl=document.querySelector('a[download]').href;
+const report=document.querySelector('.survey-frame');
+const feet=inches=>Math.floor(inches/12)+(inches%12?' ft '+inches%12+' in':' ft');
 const SVG='http://www.w3.org/2000/svg';
 const $=id=>document.getElementById(id);
 function element(svg,name,attrs={},text){const el=document.createElementNS(SVG,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;svg.append(el);return el}
@@ -9,8 +11,8 @@ const fmt=(n,d=1)=>Number(n).toFixed(d);
 try {
  const response=await fetch(recipeUrl);if(!response.ok)throw Error('Geometry unavailable');const r=await response.json();
  const d=r.donor, f=r.candidate, inch=.0254;
- for(const a of r.alternatives)row($('alternatives'),[a.deckLengthIn/12+' × '+a.deckWidthIn/12+' ft',a.grossAreaFt2+' ft²',(a.deltaFromBusIn>0?'+':'')+a.deltaFromBusIn+' in',(a.nominalCenteredEndProjectionIn>0?'+':'')+fmt(a.nominalCenteredEndProjectionIn)+' in']);
- $('geometry').textContent='Nominal bus length '+d.lengthIn+' in · Wheelbase '+d.wheelbaseIn+' in · Candidate deck '+f.deckLengthIn/12+' ft · Shore-pair pitch '+f.pairPitchIn+' in · Largest modeled joist gap '+fmt(f.maxJoistGapIn)+' in.';
+ for(const a of r.alternatives)row($('alternatives'),[feet(a.deckLengthIn)+' × '+feet(a.deckWidthIn)+(a.deckLengthIn===f.deckLengthIn?' (modeled)':''),a.grossAreaFt2+' ft²',(a.deltaFromBusIn>0?'+':'')+a.deltaFromBusIn+' in',(a.nominalCenteredEndProjectionIn>0?'+':'')+fmt(a.nominalCenteredEndProjectionIn)+' in']);
+ $('geometry').textContent='Nominal bus length '+d.lengthIn+' in · Wheelbase '+d.wheelbaseIn+' in · Modeled deck '+f.deckLengthIn/12+' ft · Shore-pair pitch '+f.pairPitchIn+' in · Largest modeled joist gap '+fmt(f.maxJoistGapIn)+' in.';
  const x=m=>50+860*m/(d.lengthIn*inch);
  const side=$('side'), z=m=>305-65*m;
  for(const m of f.members)line(side,x(m.a[0]),z(m.a[2]),x(m.b[0]),z(m.b[2]),'#66e0e9',1.7);
@@ -31,10 +33,10 @@ try {
  label(cabin,left+9,sz(d.wallIn/2),d.wallIn+' in','#d5d0de','start');
  label(cabin,origin,bottom+26,d.floorWidthIn+' in floor width');
  try {
-   const response=await fetch('results.json',{cache:'no-cache'});if(!response.ok)throw Error('not published');
+   const response=await fetch(report.dataset.results,{cache:'no-cache'});if(!response.ok)throw Error('not published');
    const results=await response.json();
    if(results.revision!==r.revision||results.deckLengthIn!==f.deckLengthIn||results.pairPitchIn!==f.pairPitchIn)throw Error('revision mismatch');
    for(const s of results.cases)row($('results'),[s.label,s.people,fmt(s.stressMPa,2),fmt(s.deckDropIn,3),fmt(s.peakShoreLbf,0),fmt(s.peakSeatLbf,0),fmt(s.frameFloorShoreLbf,0)]);
-   $('result-status').textContent='Solved candidate cases; the original solver enforces applied crowd-load and force/moment equilibrium checks. Results do not establish an operating headcount.';
+   $('result-status').textContent='Six scenarios solved. Each uses the modeled deck length and checks force and moment equilibrium. Operating occupancy remains unverified.';
  }catch(e){$('result-status').textContent='Candidate solver results have not been published or do not match this geometry. Do not substitute iteration 06 results.'}
 }catch(e){$('geometry').textContent='Survey geometry could not be loaded. See the downloadable recipe.';$('result-status').textContent='No candidate result available.'}

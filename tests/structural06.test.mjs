@@ -11,7 +11,7 @@ const config=JSON.parse(read('site/assets/structural-models-06.json')),variant=c
 const close=(a,b,tol=1e-6)=>assert.ok(Math.abs(a-b)<tol,`${a} != ${b}`);
 
 test('06 controls show only solved crowd/gear and independent support sensitivities',async()=>{
- const html=read('site/structural/index.html');
+ const html=read('site/structural/iteration-06.html');
  class Element{constructor(){this.events={};this.style={};}addEventListener(k,f){this.events[k]=f;}}
  const nodes=new Map([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>[m[1],new Element()]));
  const get=id=>{assert.ok(nodes.has(id),id);return nodes.get(id)},field={disabled:true};
@@ -102,8 +102,8 @@ test('06 public runtime preserves sheep/deck and places six short shores under t
 });
 
 test('current surfaces use 06, archives keep their data, and game handles transformed matrix nodes',()=>{
- assert.match(read('site/structural/index.html'),/structural-preview-06.js/);
- assert.match(read('site/the_build.html'),/src="assets\/models\/earl-survey-fit.glb"/);
+ assert.match(read('site/structural/iteration-06.html'),/structural-preview-06.js/);
+ assert.match(read('site/the_build.html'),/src="assets\/models\/earl-survey-fit.glb\?v=deck36"/);
  assert.match(read('site/structural/iteration-05a.html'),/structural-preview-05.js/);
  assert.match(read('site/structural/iteration-05.html'),/structural-preview-05.js/);
  assert.match(read('site/index.html'),/home-model\/viewer.js/);
