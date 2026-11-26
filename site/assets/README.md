@@ -1,6 +1,6 @@
 # Site assets
 
-Public asset URLs begin with `/assets/`. For example, the approved [heart-shaped ram](brand/heart-ram.webp) lives at `/assets/brand/heart-ram.webp`.
+Public asset URLs begin with `/assets/`. For example, the approved [heart-shaped ram](brand/Baaabs-heart.png) lives at `/assets/brand/Baaabs-heart.png`. This is the approved topology-compatible logo, also saved as `Baaabs-heart.png` in Google Drive’s Website/Assets folder. `brand/heart-ram.webp` is a lossless compatibility rendition of the same artwork for previously published image URLs.
 
 | Looking for | Location |
 | --- | --- |
