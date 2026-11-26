@@ -23,7 +23,7 @@ test('homepage geometry carries both eye channels, selectable skin and registere
     }
     assert.equal(offset, bytes.length);
   }
-  assert.deepEqual([...modes].sort(), [0,1,2,4,5]);
+  assert.deepEqual([...modes].sort(), [0,1,2,4,5,6]);
   assert.ok(photoUVs.size > 100);
   assert.ok(panelUVs.size > 100, "panel geometry must carry developed repeat coordinates");
   const model = resource('models/earl-animated-eyes.glb'), jsonSize = model.readUInt32LE(12);

@@ -153,5 +153,8 @@
     "B-P-085": "B-P-016",
     "B-P-079": "B-P-055"
   },
+  "special_items": [
+    {"id": "DJ-FRAME", "name": "DJ booth frame", "component": "dj_rim", "region": "Body", "side": "Driver"}
+  ],
   "panel_count": 206
 }

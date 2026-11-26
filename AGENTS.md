@@ -58,7 +58,7 @@ Use this as the **working estimate for all nonstructural exterior panels**, not 
 
 ## Panel pages and mass baseline
 
-The interactive workshop is `site/the_build.html` (public /the_build.html). The material and weight study is `site/panels.html` (public /panels.html). The current register contains 206 detachable sheets. Read the generated material study for the net area and the two bare-sheet estimates. Both estimates exclude mounting hardware.
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material and weight study is `site/panels.html` (public /panels.html). The register contains 206 detachable sheets plus the DJ booth frame as a special item. Register removable frame components in the seam configuration and apply panel visibility to those components in the workshop and homepage. Keep sheet area, blank dimensions and weight totals scoped to the sheets. Read the generated material study for the net area and the two bare-sheet estimates. Both estimates exclude mounting hardware.
 
 ### DJ booth and driver-side skin
 

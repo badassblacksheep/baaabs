@@ -72,6 +72,9 @@ def build():
                     '-i','pipe:0','-frames:v','1','-q:v','2',str(DEST/'ovine.jpg')],
                    input=pixels.tobytes(),check=True)
 
+    layout = json.loads((DEST.parent / 'earl-panel-layout.json').read_text())
+    special = {item['component'] for item in layout['special_items']}
+    registered = set()
     groups = {'shell':[], 'details':[]}
     sun = np.array([-.36,.85,.38])
     def visit(index,parent):
@@ -124,6 +127,10 @@ def build():
                         verts[:,6:9] = 255  # Earl's photographs already include daylight and shadows.
                     else:
                         verts[:,9] = 1 if '_L_' in name else 2
+                elif component in special:
+                    # Solid register items share skin visibility, with their original material.
+                    verts[:,9] = 6
+                    registered.add(component)
                 elif n.get('extras',{}).get('panel_id') or mat['name'].startswith('Panel_'):
                     if mat.get('extras', {}).get('display_material') != 'panel-skin.json':
                         raise ValueError(f"Missing photographic skin on {name}")
@@ -141,6 +148,8 @@ def build():
             visit(child,world)
     for root in doc['scenes'][doc['scene']]['nodes']:
         visit(root,np.eye(4))
+    if registered != special:
+        raise ValueError(f"Missing special register items in the model: {special-registered}")
     for name,parts in groups.items():
         triangles = np.concatenate(parts).reshape(-1,3,14)
         mesh = bytearray()

@@ -23,15 +23,21 @@
    }
    apply();
  });
- const groupOf=m=>m.name.startsWith('Panel_')?'panels':m.name.match(/^Workshop_([^_]+)_/)?.[1];
+ const specialMaterials=new Map();
+ const specialComponents=new Map(DATA.special_items.map(item=>[item.component,item]));
+ window.workshopSpecialItem=material=>specialMaterials.get(material?.name);
+ const groupOf=m=>specialMaterials.has(m.name)||m.name.startsWith('Panel_')?'panels':m.name.match(/^Workshop_([^_]+)_/)?.[1];
  const eyeMaterials=new Set();
- function identifyEyes(){
+ function identifyLayerMaterials(){
+  specialMaterials.clear();
   eyeMaterials.clear();
   const gltf=model.originalGltfJson;
   for(const node of gltf?.nodes??[]){
-   if(node.extras?.component!=='eye_effect')continue;
+   const item=specialComponents.get(node.extras?.component);
+   if(!item && node.extras?.component!=='eye_effect')continue;
    for(const primitive of gltf.meshes[node.mesh]?.primitives??[]){
-    eyeMaterials.add(gltf.materials[primitive.material]?.name);
+    const name=gltf.materials[primitive.material]?.name;
+    if(item)specialMaterials.set(name,item);else eyeMaterials.add(name);
    }
   }
  }
@@ -51,7 +57,7 @@
     metallic:pbr.metallicFactor,roughness:pbr.roughnessFactor
    });
    const base=originals.get(material),visible=window.workshopMaterialVisible(material);
-   const bare=group==='panels' && barePreview?.checked;
+   const bare=material.name.startsWith('Panel_') && barePreview?.checked;
    const color=bare?[1,1,1,base.color[3]]:base.color;
    if(group==='panels'){
     pbr.setMetallicFactor(bare?Number(barePreview.dataset.metallic):base.metallic);
@@ -79,6 +85,6 @@
    apply();model.cameraTarget='-0.6m 2m 0m';model.cameraOrbit='-125deg 70deg 18m';
  });
  document.querySelector('#restore-layers').addEventListener('click',()=>{for(const input of Object.values(inputs))input.checked=true;apply()});
- model.addEventListener('load',()=>{identifyEyes();apply();document.querySelector('#workshop-layers').disabled=false});
- if(model.model){identifyEyes();apply();document.querySelector('#workshop-layers').disabled=false}
+ model.addEventListener('load',()=>{identifyLayerMaterials();apply();document.querySelector('#workshop-layers').disabled=false});
+ if(model.model){identifyLayerMaterials();apply();document.querySelector('#workshop-layers').disabled=false}
 })();

@@ -65,8 +65,9 @@ uniform float tile;
 uniform bool textured;
 void main(){
   vec3 rgb = paint;
+  if(eyeSide > 4.5 && !showSkin)discard;
+  if(eyeSide > 5.5){gl_FragColor=vec4(paint,1.);return;}
   if(eyeSide > 4.5){
-    if(!showSkin)discard;
     gl_FragColor = vec4(steelColor(eyeUV,paint),1.);return;
   }
   if(eyeSide > 3.5 && eyeSide < 4.5){
@@ -177,7 +178,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name + "?v=deck36-perf1",base));
+  const response=await fetch(new URL(name + "?v=dj-frame1",base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;

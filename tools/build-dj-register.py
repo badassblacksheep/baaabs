@@ -138,8 +138,11 @@ def build(refit=False):
         if retired in parts or survivor not in parts:
             raise ValueError(f'Invalid historical panel link {retired} → {survivor}')
         parts[survivor].setdefault('prior_ids',[]).append(retired)
-    layout=dict(survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
-    return dict(revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
+    special = seams['special_items']
+    if len({i['id'] for i in special} | set(parts)) != len(parts) + len(special):
+        raise ValueError('Duplicate ID in the panel register')
+    layout=dict(special_items=special, survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
+    return dict(special_items=special,revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
 
 
 def regenerated(refit=False):
@@ -149,15 +152,19 @@ def regenerated(refit=False):
     panels=data['panels']
     csv_text=io.StringIO(newline='')
     writer=csv.writer(csv_text,lineterminator='\n')
-    writer.writerow(['Panel ID','Name','Length (in)','Width (in)','Area (sq ft)','Vertices (world meters)',
+    columns=['Panel ID','Name','Length (in)','Width (in)','Area (sq ft)','Vertices (world meters)',
                      'Material (provisional)','Thickness (in)','Open area fraction','Bare steel (lb)','With 0.5 lb/ft edging + 2 lb fittings (lb)','With 1 lb/ft edging + 2 lb fittings (lb)','Tip span (in)','Stock margin per side (in)','Flat outline (meters)',
-                     'Flat holes (meters)','Modeled plane error (mm)','Source faces','Exterior sides','Survey date','Survey fit','Prior length (in)','Prior width (in)','Status'])
+                     'Flat holes (meters)','Modeled plane error (mm)','Source faces','Exterior sides','Survey date','Survey fit','Prior length (in)','Prior width (in)','Status','Item type']
+    writer.writerow(columns)
     for p,item in zip(panels,layout['pieces']):
         writer.writerow([p['id'],p['name'],f"{p['length_m']/INCH:.3f}",f"{p['width_m']/INCH:.3f}",
                          f"{p['net_area_m2']/SQFT:.3f}",json.dumps(p['vertices_m']),p['material'],p['thickness_in'],p['open_area_fraction'],f"{p['bare_steel_lb']:.2f}",
                          f"{p['handling_half_lb']:.2f}",f"{p['handling_one_lb']:.2f}",f"{p['tip_span_m']/INCH:.2f}",f"{p['stock_margin_in']:.3f}",json.dumps(p['flat_vertices_m']),
                          json.dumps(p['flat_holes_m']),f"{p['planarity_error_mm']:.6f}",
-                         ', '.join(f['source'] for f in item['faces']),len(p['vertices_m']),data['survey_date'],p['survey_change'],*p['previous_blank_in'],p['status']])
+                         ', '.join(f['source'] for f in item['faces']),len(p['vertices_m']),data['survey_date'],p['survey_change'],*p['previous_blank_in'],p['status'],'Sheet panel'])
+    for item in data['special_items']:
+        entry = {'Panel ID':item['id'], 'Name':item['name'], 'Item type':'Special item'}
+        writer.writerow([entry.get(column, '') for column in columns])
     total=sum(p['net_area_m2'] for p in panels)
     # Measure the glazing aperture on its four original driver-side facets.
     removed=0.

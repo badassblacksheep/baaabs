@@ -10,7 +10,7 @@ import sys
 import numpy as np
 
 from dj_booth import read_accessor
-from dj_panel_layout import sheet_sources, transform_points
+from dj_panel_layout import node_matrix, sheet_sources, transform_points
 from panel_skin import ASSETS, CONFIG, calibration_digest, tile_period
 
 Model = runpy.run_path(str(Path(__file__).with_name('build-animated-eyes.py')))['Model']
@@ -39,6 +39,7 @@ layout = json.loads((ASSETS / 'earl-panel-layout.json').read_text())
 assert set(panels) == {p['id'] for p in layout['pieces']}
 # Compare physical UV pairs, including shared corners with distinct per-sheet mapping.
 home_vertices = set()
+solid_register_vertices = set()
 for path in (ASSETS / 'home-model').glob('*.mesh'):
     data = gzip.decompress(path.read_bytes())
     offset = 0
@@ -46,10 +47,33 @@ for path in (ASSETS / 'home-model').glob('*.mesh'):
         count, indices = struct.unpack_from('<II',data,offset)
         offset += 8
         for x,y,z,r,g,b,surface,u,v in struct.iter_unpack('<hhhBBBBHH',data[offset:offset+14*count]):
+            if surface == 6:
+                solid_register_vertices.add((x,y,z))
             if surface == 5:
                 assert r == g == b and r >= 96, 'Homepage vertex lighting would apply the paint twice'
                 home_vertices.add((x,y,z,u,v))
         offset += 14*count + 2*indices
+# The solid special items use the layer switch without inheriting the sheet cutout.
+nodes = model.doc['nodes']
+parents = {child: i for i,node in enumerate(nodes) for child in node.get('children', [])}
+expected_solid = set()
+for item in layout['special_items']:
+    matches = [i for i,node in enumerate(nodes) if node.get('extras',{}).get('component') == item['component']]
+    assert matches, item['id']
+    for index in matches:
+        node = nodes[index]
+        world = node_matrix(node)
+        while index in parents:
+            index = parents[index]
+            world = node_matrix(nodes[index]) @ world
+        for primitive in model.doc['meshes'][node['mesh']]['primitives']:
+            points = transform_points(read_accessor(model,primitive['attributes']['POSITION']),world)
+            indices = read_accessor(model,primitive['indices']).reshape(-1,3)
+            triangles = points[indices]
+            normals = np.cross(triangles[:,1]-triangles[:,0],triangles[:,2]-triangles[:,0])
+            used = triangles[np.linalg.norm(normals,axis=1)>1e-8].reshape(-1,3)
+            expected_solid.update(map(tuple,np.rint(1000*used).astype(int)))
+assert solid_register_vertices == expected_solid, 'Solid register items must match the homepage panel-toggle group'
 material_ids = set()
 texture_ids = set()
 for pid, src in panels.items():

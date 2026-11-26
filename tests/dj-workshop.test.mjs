@@ -242,21 +242,34 @@ test('bare steel preview restores the paint and layer toggles preserve the perfo
   assert.doesNotMatch(input,/\bchecked\b/);
   preview.dataset.metallic=input.match(/data-metallic="([^"]+)"/)[1];
   preview.dataset.roughness=input.match(/data-roughness="([^"]+)"/)[1];
-  q('#model').model = {materials:[panel]};
+  // Bind by the registered model component, independently of material naming.
+  const frame={...panel,name:'Solid aperture trim',mode:'OPAQUE',
+    pbrMetallicRoughness:{...panel.pbrMetallicRoughness,baseColorFactor:[.018,.020,.024,1]}};
+  const donor={...frame,name:'Workshop_bus_DJ_Glazing',
+    pbrMetallicRoughness:{...frame.pbrMetallicRoughness,baseColorFactor:[.2,.2,.2,.4]}};
+  const item=JSON.parse(fs.readFileSync(new URL('assets/earl-panel-layout.json',site))).special_items[0];
+  q('#model').originalGltfJson={materials:[{name:frame.name},{name:donor.name}],
+    nodes:[{mesh:0,extras:{component:item.component}}],meshes:[{primitives:[{material:0}]}]};
+  q('#model').model = {materials:[panel,frame,donor]};
   vm.runInContext(fs.readFileSync(new URL('panel-layers.js', site),'utf8'),cx);
   const pbr=panel.pbrMetallicRoughness;
   const finish=()=>[pbr.baseColorFactor,pbr.metallicFactor,pbr.roughnessFactor];
   assert.deepEqual(finish(),[spec.baseColorFactor,spec.metallic,spec.roughness]);
   preview.checked=true; preview.emit('change');
   assert.deepEqual(finish(),[[1,1,1,1],spec.bareSteel.metallic,spec.bareSteel.roughness]);
+  assert.deepEqual(frame.pbrMetallicRoughness.baseColorFactor,[.018,.020,.024,1]);
   preview.checked=false; preview.emit('change');
   assert.deepEqual(finish(),[spec.baseColorFactor,spec.metallic,spec.roughness]);
   assert.equal(panel.cutoff,spec.alphaCutoff);
   const toggle=q('#layer-panels');
   toggle.checked=false; toggle.emit('change');
   assert.equal(panel.mode,'BLEND');
+  assert.equal(frame.pbrMetallicRoughness.baseColorFactor[3],0);
+  assert.equal(donor.pbrMetallicRoughness.baseColorFactor[3],.4);
   toggle.checked=true; toggle.emit('change');
   assert.equal(panel.mode,'MASK');
+  assert.equal(frame.mode,'OPAQUE');
+  assert.deepEqual(frame.pbrMetallicRoughness.baseColorFactor,[.018,.020,.024,1]);
   assert.equal(panel.cutoff,spec.alphaCutoff);
 });
 
@@ -287,4 +300,18 @@ test('camera framing resolves real cutouts up close and closes them at whole-she
   sheet.mode='MASK';
   cx.window.updatePanelVisibility(viewer,true);
   assert.equal(sheet.cutoff,0);
+});
+
+test('the register lists the booth frame as a searchable driver-side special item', () => {
+  const {q}=workshop();
+  q('#search').value='DJ-FRAME';
+  q('#search').emit('input');
+  const rows=q('#rows').children;
+  assert.equal(rows.length,1);
+  assert.equal(rows[0].children[0].children[0].href,'#DJ-FRAME');
+  assert.match(rows[0].children[1].textContent,/DJ booth frame · special item/);
+  assert.equal(q('#count').textContent,'0 of 206 panels · 1 special item');
+  q('#side').value='Passenger';
+  q('#side').emit('change');
+  assert.equal(q('#rows').children.length,0);
 });
