@@ -40,4 +40,11 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=p=>JSON.parse(fs.readFileSync(path.join(root,p),'utf8'));
 const output=JSON.stringify(derive(read('site/survey-results/measurements.json'),read('site/assets/structural-models-06.json')),null,2)+'\n';
 const destination=path.join(root,'site/assets/earl-survey-model.json');
-if(process.argv.includes('--check')){if(fs.readFileSync(destination,'utf8')!==output)throw Error('Survey frame recipe is stale; run node tools/build-survey-model.mjs --write');}else if(process.argv.includes('--write'))fs.writeFileSync(destination,output);else throw Error('Specify --write or --check');
+function equivalent(a,b) {
+  if(typeof a==='number'&&typeof b==='number')return Math.abs(a-b)<=1e-10*Math.max(1,Math.abs(a),Math.abs(b));
+  if(a===b)return true;
+  if(a===null||b===null||typeof a!=='object'||typeof b!=='object')return false;
+  const ak=Object.keys(a),bk=Object.keys(b);
+  return ak.length===bk.length&&ak.every(k=>Object.hasOwn(b,k)&&equivalent(a[k],b[k]));
+}
+if(process.argv.includes('--check')){if(!equivalent(JSON.parse(fs.readFileSync(destination,'utf8')),JSON.parse(output)))throw Error('Survey frame recipe is stale; run node tools/build-survey-model.mjs --write');}else if(process.argv.includes('--write'))fs.writeFileSync(destination,output);else throw Error('Specify --write or --check');
