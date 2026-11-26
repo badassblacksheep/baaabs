@@ -27,5 +27,8 @@ uniform float panelCutoff;
 vec3 steelColor(vec2 uv, vec3 light) {
   vec4 sheet = texture2D(panelMap, uv);
   if (sheet.a < panelCutoff) discard;
-  return sheet.rgb * light;
+  // RGB mips average the photographed dark holes with the metal in display space.
+  // Recover the web color and apply both coverage and facet light in linear light.
+  vec3 web = min(vec3(1.), sheet.rgb / max(sheet.a, .001));
+  return web * pow(sheet.a * light, vec3(1./2.2));
 }`;
