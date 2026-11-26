@@ -605,6 +605,10 @@ footer p {
     grid-column: 1 / -1;
     grid-row: 2;
   }
+
+  .pitch-footer p:first-of-type {
+    grid-row: 1;
+  }
 }
 
 @media (max-width: 600px) {
