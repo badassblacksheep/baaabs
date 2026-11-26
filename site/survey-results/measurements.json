@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "vehicle": "Earl — 2007 Thomas HDX",
+  "survey_date": "2026-11-25",
+  "units": "in",
+  "status": "provisional; conceptual modeling only",
+  "measurements": [
+    {
+      "id": "EXT-001",
+      "name": "Bumper-to-bumper length",
+      "range": [
+        426,
+        428
+      ],
+      "nominal": 427,
+      "notes": "Repeated readings along driver-side wheels; tape not perfectly flat; observed range, not uncertainty interval."
+    },
+    {
+      "id": "EXT-002",
+      "name": "Wheelbase",
+      "value": 234
+    },
+    {
+      "id": "EXT-003",
+      "name": "Rear overhang",
+      "value": 114,
+      "approximate": true
+    },
+    {
+      "id": "EXT-004",
+      "name": "Front overhang",
+      "value": 82
+    },
+    {
+      "id": "EXT-005",
+      "name": "Roof centerline length",
+      "value": 427,
+      "notes": "Center top back to center top front; distinct datum from bumpers."
+    },
+    {
+      "id": "INT-001",
+      "name": "Aisle length",
+      "value": 365,
+      "supersedes": 358,
+      "notes": "Endpoints not specified."
+    },
+    {
+      "id": "INT-002",
+      "name": "Floor width, wall to wall",
+      "value": 87,
+      "supersedes": 84
+    },
+    {
+      "id": "INT-003",
+      "name": "Interior crown height",
+      "value": 77
+    },
+    {
+      "id": "INT-004",
+      "name": "Interior wall height",
+      "value": 64
+    },
+    {
+      "id": "INT-006",
+      "name": "Typical window pillar pitch",
+      "value": 29,
+      "notes": "Front-to-first and last-to-rear intervals shorter; 14 pillars, 15 total reference positions including front; rear endpoint membership unclear."
+    }
+  ],
+  "inferences": {
+    "length_closure": {
+      "component_sum": 430,
+      "observed_excess_range": [
+        2,
+        4
+      ],
+      "nominal_excess": 3
+    },
+    "nominal_longitudinal_model": {
+      "datum": "x=0 at front bumper, positive rearward; visualization convention",
+      "front_bumper": 0,
+      "front_axle": 82,
+      "rear_axle": 316,
+      "rear_bumper": 427,
+      "front_overhang": 82,
+      "wheelbase": 234,
+      "rear_overhang": 111,
+      "notes": "Preserves independently read front overhang and wheelbase, fits midpoint of overall length; absorbs 3 in residual into approximate rear overhang. Not a corrected field reading."
+    },
+    "interior_cross_section": {
+      "ceiling_rise": 13,
+      "assumed_springline_chord": 87,
+      "illustrative_circular_arc_radius": 79.27884615384616,
+      "notes": "Assumes springline width equals floor width and symmetric circular arc. Neither assumption verified; not exterior geometry."
+    },
+    "pillar_layout": {
+      "pillar_count": 14,
+      "reported_reference_count_including_front": 15,
+      "typical_pitch": 29,
+      "front_end_interval": {
+        "min_exclusive": 0,
+        "max_exclusive": 29
+      },
+      "rear_end_interval": {
+        "min_exclusive": 0,
+        "max_exclusive": 29
+      },
+      "candidate_four_pitch_shore_spacing": 116,
+      "notes": "No absolute pillar phase or full bow map established. Count/datum ambiguity: 14 interior pillars imply 13 typical intervals (377 in) plus two end intervals; if 15 total positions instead include both endpoints, 12 typical intervals (348 in) plus two short intervals. Do not fit to aisle or roof length without common datums. Retain existing nominal phase provisionally if needed; show end spacing as assumption."
+    }
+  },
+  "unmeasured": [
+    "Exterior width, exterior roof crown/eave heights and cross-section",
+    "Floor elevation relative to ground/chassis",
+    "Absolute pillar offsets and rear endpoint membership",
+    "Full structural bow and body mount map, chassis rails and portal geometry",
+    "Wheel track, tire dimensions and vehicle-specific mass/axle loads",
+    "Window/door openings, engine enclosure and wheel well intrusions"
+  ],
+  "release": "No fabrication or occupancy release. Geometry, structural capacity, attachments and load paths require verification."
+}
