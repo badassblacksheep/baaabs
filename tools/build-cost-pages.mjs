@@ -68,7 +68,7 @@ function chart(groups, total) {
   const axis = [0, .25, .5, .75, 1].map(f => `<span>${dollars.format(f*total/100)}</span>`).join('');
   return `<section class="breakdown" id="explorer" aria-labelledby="split-heading">
     <h2 id="split-heading">Explore the spending</h2>
-    <p>Choose a color or open a category to see what we bought.</p>
+    <p>Choose a color or open a category to see what I bought.</p>
     <div class="chart-tools" hidden>
       <fieldset class="units"><legend class="sr-only">Chart units</legend>
         <label><input type="radio" name="chart-units" value="spent" checked><span>Dollars spent</span></label>
@@ -89,7 +89,7 @@ function purchases(group) {
       <div class="item-amount"><strong>${amount(item.cents, item.basis === 'estimated')}</strong><span>${basisLabels[item.basis]}</span></div></li>`).join('')}</ul>`;
 }
 function itemList(group) {
-  return `<section class="breakdown" aria-labelledby="items-heading"><h2 id="items-heading">What we paid for</h2>${purchases(group)}</section>`;
+  return `<section class="breakdown" aria-labelledby="items-heading"><h2 id="items-heading">What I paid for</h2>${purchases(group)}</section>`;
 }
 
 
@@ -104,7 +104,7 @@ export function buildCostPages(ledger, navigation) {
     const file = route.slice(1) + 'index.html';
     const photo = group ?? ledger.overview;
     const cents = group?.cents ?? total, approx = group?.estimated ?? estimated;
-    const title = group ? group.name : 'What we’ve spent';
+    const title = group ? group.name : 'What I’ve spent';
     const description = group ? group.description : 'Follow the money behind the black sheep art bus, from buying Earl to stitching the fundraiser patches.';
     const amountNote = approx ? `${money.format((cents - approx) / 100)} in exact payments plus about ${dollars.format(approx / 100)} ${estimateDescription}.` : 'Total of recorded payments.';
     const crumb = group ? `<a href="${costPath('total')}">All spending</a><span aria-hidden="true">/</span>${esc(group.name)}` : 'Project costs';

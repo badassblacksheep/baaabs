@@ -1,5 +1,9 @@
 # BAAABS design invariants
 
+## Public website voice
+
+Use first-person singular (I, me, my) for the owner’s project plans, purchases, work and fundraising. Preserve owner-authored wording beyond necessary pronoun and grammar changes. Retain genuine collective references to the community and intentional cultural allusions (including “dancing on our own”). Do not imply a team or shared financial commitment that has not been established.
+
 ## Configuration-driven development (repository-wide)
 
 - Before introducing or modifying a configurable value, search the entire repository for existing definitions and consumers. Extend the appropriate domain configuration rather than introducing another literal, local default, or independently maintained copy. Share units, thresholds, paths, feature flags, design tokens, and external identifiers when they represent the same semantic value; derive conversions and display strings from their canonical values.
