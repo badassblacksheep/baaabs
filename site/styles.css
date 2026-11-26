@@ -752,15 +752,6 @@ footer p {
 .model-motion[hidden] { display: none; }
 .model-motion:hover { border-color: #ff3cac; }
 
-.material-study { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px,5vw,72px); align-items: start; margin-top: var(--pitch-spacing); scroll-margin-top: 115px; }
-.material-photo { margin: 0; }
-.material-photo img { display: block; width: 100%; height: auto; }
-.material-photo figcaption { font-size: .85rem; margin-top: 12px; color: var(--fleece-muted); }
-.material-copy h3 { font-size: clamp(2rem,3.5vw,3.5rem); line-height: 1.08; margin: 0 0 26px; }
-.material-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-top: 24px; margin: 28px 0 0; border-top: 1px solid var(--rule); }
-.material-specs dt { font-size: .8rem; color: var(--fleece-muted); margin-bottom: 6px; }
-.material-specs dd { margin: 0; font-weight: 700; }
-@media (max-width: 800px) { .material-study { grid-template-columns: 1fr; margin-top: 60px; } }
 
 /* A visible invitation beside the model, without interrupting the story. */
 .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; max-width: 510px; margin-top: 28px; }
