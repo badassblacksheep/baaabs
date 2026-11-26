@@ -102,12 +102,13 @@ test('06 public runtime preserves sheep/deck and places six short shores under t
 });
 
 test('current surfaces use 06, archives keep their data, and game handles transformed matrix nodes',()=>{
- for(const file of ['site/the_build.html','site/structural/index.html'])assert.match(read(file),/structural-preview-06.js/);
+ assert.match(read('site/structural/index.html'),/structural-preview-06.js/);
+ assert.match(read('site/the_build.html'),/src="assets\/models\/earl-survey-fit.glb"/);
  assert.match(read('site/structural/iteration-05a.html'),/structural-preview-05.js/);
  assert.match(read('site/structural/iteration-05.html'),/structural-preview-05.js/);
  assert.match(read('site/index.html'),/home-model\/viewer.js/);
- assert.match(read('tools/build-home-model.py'),/baaabs-earl-iteration06-six-shores.glb/);
- assert.match(read('tools/bake-drive-model.mjs'),/baaabs-earl-iteration06-six-shores.glb/);
+ assert.match(read('tools/build-home-model.py'),/earl-survey-fit.glb/);
+ assert.match(read('tools/bake-drive-model.mjs'),/earl-survey-fit.glb/);
  const source=read('tools/bake-drive-model.mjs'),a=source.indexOf('function transform('),b=source.indexOf('function bakeVehicle');
  const ctx={};vm.runInNewContext(source.slice(a,b)+';globalThis.apply=transform;',ctx);
  const m=[2,0,0,0,0,3,0,0,0,0,4,0,10,20,30,1];

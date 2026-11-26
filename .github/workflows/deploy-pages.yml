@@ -30,6 +30,7 @@ jobs:
       ANIMATED_EYE_MODEL: site/assets/models/earl-animated-eyes.glb
       WORKSHOP_MODEL: baaabs-earl-x-braced-workshop.glb
       STRUCTURAL_MODEL: baaabs-earl-iteration06-six-shores.glb
+      SURVEY_MODEL: earl-survey-fit.glb
       BLENDER_MODEL: BAAABS-Animated-Eyes.blend
     steps:
       - name: Check out the site
@@ -45,7 +46,7 @@ jobs:
           path: |
             ${{ env.ANIMATED_EYE_MODEL }}
             ${{ env.MODEL_BUILD_DIR }}
-          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
+          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/dj_panel_layout.py', 'tools/survey_fit.py', 'tools/build-survey-assembly.py', 'tools/panel_patterns.py', 'tools/flat_panels.py', 'reference/panels/earl-iteration06-layout.json', 'site/survey-results/measurements.json', 'site/assets/earl-symmetric-panel-register.csv', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
       - name: Determine whether models require rebuilding
         id: model-build
         env:
@@ -62,7 +63,7 @@ jobs:
           elif [[ "$CACHE_HIT" != "true" ]]; then
             rebuild=true
             reason="model dependency cache miss"
-          elif [[ ! -s "$ANIMATED_EYE_MODEL" || ! -s "$MODEL_BUILD_DIR/$WORKSHOP_MODEL" || ! -s "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" || ! -s "$MODEL_BUILD_DIR/$BLENDER_MODEL" ]]; then
+          elif [[ ! -s "$ANIMATED_EYE_MODEL" || ! -s "$MODEL_BUILD_DIR/$WORKSHOP_MODEL" || ! -s "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" || ! -s "$MODEL_BUILD_DIR/$SURVEY_MODEL" || ! -s "$MODEL_BUILD_DIR/$BLENDER_MODEL" ]]; then
             rebuild=true
             reason="one or more generated files missing or empty"
           fi
@@ -98,8 +99,9 @@ jobs:
           mkdir -p "$MODEL_BUILD_DIR"
           python3 tools/build-workshop-roof.py site/assets/models/baaabs-earl-symmetric-workshop.glb "$MODEL_BUILD_DIR/$WORKSHOP_MODEL"
           node tools/bake-structural06.mjs "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL"
+          python3 tools/build-survey-assembly.py "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" "$MODEL_BUILD_DIR/$SURVEY_MODEL"
       - name: Verify test-drive geometry
-        run: node tools/bake-drive-model.mjs --check "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL"
+        run: node tools/bake-drive-model.mjs --check "$MODEL_BUILD_DIR/$SURVEY_MODEL"
       - uses: actions/setup-python@v5
         if: steps.model-build.outputs.rebuild_models == 'true'
         with:
@@ -110,7 +112,7 @@ jobs:
         if: steps.model-build.outputs.rebuild_models == 'true'
         run: |
           python -m pip install 'bpy==5.2.2'
-          python tools/make-eye-blender.py -- "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" "$MODEL_BUILD_DIR/$BLENDER_MODEL"
+          python tools/make-eye-blender.py -- "$MODEL_BUILD_DIR/$SURVEY_MODEL" "$MODEL_BUILD_DIR/$BLENDER_MODEL"
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
@@ -119,7 +121,7 @@ jobs:
         run: |
           rsync -a --exclude-from=tools/retired-pages.txt site/ pages-dist/
           python3 tools/stage-asset-aliases.py pages-dist
-          for asset in "$WORKSHOP_MODEL" "$STRUCTURAL_MODEL" "$BLENDER_MODEL"; do
+          for asset in "$WORKSHOP_MODEL" "$STRUCTURAL_MODEL" "$SURVEY_MODEL" "$BLENDER_MODEL"; do
             test -s "$MODEL_BUILD_DIR/$asset"
             cp "$MODEL_BUILD_DIR/$asset" pages-dist/assets/models/
           done

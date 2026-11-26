@@ -129,30 +129,36 @@ class PanelCoverageTests(unittest.TestCase):
             for crease in former_creases:
                 self.assertFalse(crease <= sources, f"{panel['id']} spans the former bend {crease}")
 
-        by_id = {p['id']: p for p in layout['pieces']}
+        archived = json.loads((ROOT / 'reference/panels/earl-iteration06-layout.json').read_text())
+        def contours(plan, source):
+            return {p['id']: np.asarray(p['vertices_m']) for p in plan['pieces']
+                    if any(f['source'] == source for f in p['faces'])}
+
         for bend in retained:
             start, end = np.array(bend['edge_m'])
             if bend['old_panel'] == 'B-D-033':
-                # Both panels still end on this shared seam. Its lower corner
-                # is the newly centered apex of the one-piece window header.
-                header = np.asarray(by_id['B-D-074']['vertices_m'])
-                start = header[np.argmax(header[:, 2])]
+                header = next(p for p in archived['pieces'] if p['id'] == 'B-D-074')
+                start = max(header['vertices_m'], key=lambda v: v[2])
+            tracks = []
             for pid in bend['sources']:
-                perimeters = [np.asarray(p['vertices_m']) for p in layout['pieces']
-                              if any(f['source'] == pid for f in p['faces'])]
-                edges = np.vstack([np.stack([v, np.roll(v, -1, axis=0)], axis=1)
-                                   for v in perimeters])
-                origin = edges[:, 0]
-                direction = edges[:, 1] - origin
-                length_squared = (direction ** 2).sum(axis=1)
-                # Both retained sides have a physical perimeter along the old crease.
-                # Allow a millimetre for local adjustment to shared corner positions.
+                old = contours(archived, pid)
+                current = contours(layout, pid)
+                # Follow the same material point along each side of the old seam.
+                def edges(polygons):
+                    return np.vstack([np.stack([polygons[k], np.roll(polygons[k], -1, axis=0)], axis=1)
+                                      for k in old])
+                original, fitted = edges(old), edges(current)
+                direction = original[:,1] - original[:,0]
+                squared = (direction**2).sum(axis=1)
+                track = []
                 for location in np.linspace(start, end, 51):
-                    fraction = np.clip(((location - origin) * direction).sum(axis=1) /
-                                       length_squared, 0, 1)
-                    nearest = origin + fraction[:, None] * direction
-                    gap = np.linalg.norm(nearest - location, axis=1).min()
-                    self.assertLess(gap, .001, f"{bend['old_panel']} lost its seam on {pid}")
+                    fraction = np.clip(((location-original[:,0])*direction).sum(axis=1)/squared, 0, 1)
+                    gap = np.linalg.norm(original[:,0] + fraction[:,None]*direction-location, axis=1)
+                    edge = np.argmin(gap)
+                    self.assertLess(gap[edge], .001, pid)
+                    track.append(fitted[edge,0] + fraction[edge]*(fitted[edge,1]-fitted[edge,0]))
+                tracks.append(np.array(track))
+            self.assertLess(np.linalg.norm(tracks[0]-tracks[1], axis=1).max(), .001, bend['old_panel'])
 
     def test_three_original_cutouts_stay_inside_single_panels(self):
         source = json.loads((ROOT / 'reference/panels/earl-before-dj.json').read_text())

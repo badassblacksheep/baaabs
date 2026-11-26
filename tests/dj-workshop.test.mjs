@@ -128,7 +128,14 @@ test('hoof perimeters and circular openings match the donor register', () => {
   const original=JSON.parse(fs.readFileSync(new URL('../reference/panels/earl-before-dj.json',site),'utf8')).panels;
   const hooves=entries=>entries.filter(p=>p.region==='Hoof').map(p=>[p.id,p.vertices_m]);
   assert.equal(hooves(panels).length,6);
-  assert.deepEqual(hooves(panels),hooves(original));
+  for(const [id,vertices] of hooves(panels)){
+    const prior=original.find(p=>p.id===id).vertices_m;
+    const dx=vertices[0][0]-prior[0][0];
+    vertices.forEach(([x,y,z],i)=>{
+      assert.ok(Math.abs(x-prior[i][0]-dx)<1e-7,id);
+      assert.equal(y,prior[i][1]); assert.equal(z,prior[i][2]);
+    });
+  }
   const openings=entries=>entries.flatMap(p=>p.holes_m.map(h=>JSON.stringify(h))).sort();
   assert.deepEqual(openings(panels),openings(original));
 });

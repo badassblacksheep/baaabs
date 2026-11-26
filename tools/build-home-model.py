@@ -9,7 +9,7 @@ import zlib
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / 'site/assets/models/baaabs-earl-iteration06-six-shores.glb'
+SOURCE = ROOT / 'site/assets/models/earl-survey-fit.glb'
 DEST = ROOT / 'site/assets/home-model'
 STEP = 2  # 12 fps, 16 seconds, including all three ovine ripple variants.
 

@@ -28,6 +28,7 @@ class BoothTests(unittest.TestCase):
     def setUpClass(cls):
         cls.model = Model(ROOT/'site/assets/models/earl-roof-attachment-study.glb')
         apply_dj_booth(cls.model)
+        runpy.run_path(str(ROOT/'tools/build-survey-assembly.py'))['apply_survey'](cls.model)
         cls.doc = cls.model.doc
 
     def test_all_live_sheet_records_describe_the_same_provisional_stock(self):

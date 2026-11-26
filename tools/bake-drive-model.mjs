@@ -51,7 +51,7 @@ function bakeVehicle(data){
 
 const check = process.argv[2] === '--check';
 const source = readFileSync(check && process.argv[3] ? process.argv[3] :
-  new URL('../site/assets/models/baaabs-earl-iteration06-six-shores.glb',import.meta.url));
+  new URL('../site/assets/models/earl-survey-fit.glb',import.meta.url));
 const {model,outlets}=bakeVehicle(source.buffer.slice(source.byteOffset,source.byteOffset+source.byteLength));
 if(outlets.length!==2)throw Error('Expected two mast outlets');
 const vertices=Float32Array.from([...outlets.flat(),...model.vertices],v=>Math.round(v*10000)/10000);
@@ -65,7 +65,7 @@ if (check) {
       throw Error('Driving mesh differs from the detailed model at packed float '+i);
     }
   }
-  console.log('Verified complete driving mesh against the current six-shore model');
+  console.log('Verified complete driving mesh against the survey-fitted assembly');
 } else {
   writeFileSync(asset,gzipSync(Buffer.from(vertices.buffer),{level:9}));
 }

@@ -7,7 +7,7 @@ import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
 import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js?v=rainbow';
 async function loadVehicle(){
-  const response=await fetch('./drive-model.mesh?v=crown-header-1');
+  const response=await fetch('./drive-model.mesh?v=survey-fit-1');
   if(!response.ok)throw Error('Model download failed');
   const packed=response.body.pipeThrough(new DecompressionStream('gzip'));
   const data=new Float32Array(await new Response(packed).arrayBuffer());

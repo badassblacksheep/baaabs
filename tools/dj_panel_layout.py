@@ -151,7 +151,8 @@ def uv_map(model, source, outline):
 
 def repack_panels(model):
     doc = model.doc
-    layout = json.loads((ASSETS/'earl-panel-layout.json').read_text())
+    from survey_fit import ARCHIVE_LAYOUT
+    layout = json.loads(ARCHIVE_LAYOUT.read_text())
     with (ASSETS/'earl-symmetric-panel-register.csv').open(newline='') as stream:
         old = {r['Panel ID']:json.loads(r['Vertices (world meters)']) for r in csv.DictReader(stream)}
     sources = sheet_sources(model)

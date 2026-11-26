@@ -52,7 +52,7 @@ Use this as the **working estimate for all nonstructural exterior panels**, not 
 
 ## Panel pages and mass baseline
 
-The interactive workshop is `site/the_build.html` (public /the_build.html). The material and weight study is `site/panels.html` (public /panels.html). The current register contains 206 detachable sheets with 194.43 m² of net area. At 40% open area the bare-sheet estimates are 1,111 lb for 0.063 in aluminum and 1,841 lb for 20-gauge steel. Both estimates exclude mounting hardware.
+The interactive workshop is `site/the_build.html` (public /the_build.html). The material and weight study is `site/panels.html` (public /panels.html). The current register contains 206 detachable sheets. Read the generated material study for the net area and the two bare-sheet estimates. Both estimates exclude mounting hardware.
 
 ### DJ booth and driver-side skin
 
@@ -156,3 +156,9 @@ The deployment workflow `.github/workflows/deploy-pages.yml` exposes the compute
 Update `site/costs/ledger.json` when a BAAABS purchase is documented or the owner supplies an amount. Store USD cents, a public description, the date at its known precision, and the basis (`documented`, `reported`, or `estimated`). An estimate here means an approximate amount already spent. Update `asOf` when reconciling the ledger. Keep receipt images, personal identifiers, unrelated shop costs, quotes and revenue out of this public dataset. When a receipt replaces an estimate, update the existing entry.
 
 Keep category slugs stable for shared links under `/costs/<category>/breakdown/`. Run `node tools/sync-site-config.mjs --write` after changing the ledger and `node --test tests/project-costs.test.mjs` before publishing.
+
+## Earl field fit (2026-11-25)
+
+The active workshop, Blender, homepage and driving geometry use the longitudinal survey fit. The authoritative field inputs are in `site/survey-results/measurements.json`. The existing front axle is the assembly datum. Wheel assemblies translate rigidly, front bodywork and DJ glazing stay registered, rear hooves follow the rear axle, and aft skins retain their designed rear bumper projection. Transverse and vertical exterior dimensions still need survey. The approved 38-foot frame overlays the fitted donor. The 35-foot candidate in `site/structural/survey-model/` has its own geometry and calculations.
+
+Run `python3 tools/build-dj-register.py` first. The installed vertices, developed outlines, stock dimensions, areas and handling estimates are generated together. Per-piece source faces refer to pre-survey design coordinates. Keep `reference/panels/earl-iteration06-layout.json` as the archived structural/eye bake input. Bake iteration 06, run `python3 tools/build-survey-assembly.py site/assets/models/baaabs-earl-iteration06-six-shores.glb`, then rebuild the lightweight meshes with `python3 tools/build-home-model.py` and `node tools/bake-drive-model.mjs`. The Pages job exports and reopens the editable Blender assembly from the fitted GLB. Enable its Survey rulers collection to inspect the interior and roof tape references.

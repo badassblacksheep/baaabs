@@ -104,6 +104,38 @@ def populate_scene(source):
     bpy.ops.file.pack_all()
 
 
+def add_survey_guides(doc):
+    """Editable ruler geometry, separate from physical parts and hidden in renders."""
+    meta = doc['scenes'][doc.get('scene', 0)]['extras']
+    readings = {r['id']: r for r in meta['survey_field_readings']}
+    inch = .0254
+    def metres(key):
+        return readings[key]['value'] * inch
+    group = bpy.data.collections.new('Survey rulers · ' + meta['survey_date'])
+    bpy.context.scene.collection.children.link(group)
+    group.hide_render = True
+    group['placement'] = 'Centered for comparison. Aisle endpoints, absolute pillar position, roof endpoints and cabin floor elevation need field registration.'
+    def ruler(label, coords):
+        mesh = bpy.data.meshes.new(label)
+        mesh.from_pydata(coords, [(i, i+1) for i in range(len(coords)-1)], [])
+        obj = bpy.data.objects.new(label, mesh)
+        obj.show_in_front = True
+        group.objects.link(obj)
+    front, _, _, rear = meta['survey_stations_world_x_m']
+    middle = (front + rear)/2
+    floor = 1.01  # Existing booth model floor elevation, pending survey.
+    half = metres('INT-002')/2
+    wall, crown = metres('INT-004'), metres('INT-003')
+    ruler('INT-002 · floor width', [(middle,-half,floor), (middle,half,floor)])
+    ruler('INT-004 · wall height', [(middle,-half,floor), (middle,-half,floor+wall)])
+    ruler('INT-003 · crown height', [(middle,0,floor), (middle,0,floor+crown)])
+    for key, label, z in [('INT-001','aisle length',floor), ('EXT-005','roof tape length reference',3.13),
+                          ('INT-006','one typical pillar interval',floor+wall)]:
+        span = metres(key)
+        ruler(key + ' · ' + label, [(middle-span/2,0,z), (middle+span/2,0,z)])
+    group.hide_viewport = True
+
+
 def verify(destination, doc):
     bpy.ops.wm.open_mainfile(filepath=str(destination))
     scene = bpy.context.scene
@@ -196,6 +228,8 @@ if __name__ == "__main__":
     source, destination = [Path(arg).resolve() for arg in sys.argv[sys.argv.index("--") + 1:]]
     doc = gltf_document(source)
     populate_scene(source)
+    if 'survey_field_readings' in doc['scenes'][doc.get('scene', 0)]['extras']:
+        add_survey_guides(doc)
     destination.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(destination), compress=True)
     verify(destination, doc)

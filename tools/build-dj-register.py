@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build the fabrication register from the flat, removable exterior panels."""
 import argparse
+import copy
 import csv
 import io
 import itertools
@@ -13,6 +14,7 @@ import numpy as np
 from convex_panel_layout import redesign
 from dj_booth import PANEL_IDS, panel_loops
 from flat_panels import use_stored_fit
+from survey_fit import LongitudinalFit, fit_sheets
 from panel_patterns import adjacent, area, flat, piece, points, validate_outline, value
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -110,10 +112,18 @@ def build(refit=False):
         for panel in parts.values():
             if panel['seam_fit_adjustment_mm']>seams['max_seam_fit_mm']:
                 raise ValueError(f"{panel['id']} exceeds the seam fit allowance")
+    survey_fit = LongitudinalFit()
+    previous = copy.deepcopy(parts)
+    fit_sheets(parts, survey_fit)
     layout=[];panels=[]
     for k in sorted(parts):
         p=parts[k]
+        prior = previous[k]
+        finish(prior)
         finish(p)
+        dx = np.asarray(p['vertices_m'])[:,0] - np.asarray(prior['vertices_m'])[:,0]
+        p['survey_change'] = 'Resized' if np.ptp(dx) > 1e-6 else ('Repositioned' if max(abs(dx)) > 1e-6 else 'Retained')
+        p['previous_blank_in'] = [round(prior[key]/INCH, 3) for key in ('length_m', 'width_m')]
         faces=p.pop('source_faces')
         layout.append(dict(id=k,name=p['name'],vertices_m=p['vertices_m'],holes_m=p['holes_m'],faces=faces))
         panels.append(p)
@@ -128,8 +138,8 @@ def build(refit=False):
         if retired in parts or survivor not in parts:
             raise ValueError(f'Invalid historical panel link {retired} → {survivor}')
         parts[survivor].setdefault('prior_ids',[]).append(retired)
-    layout=dict(panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
-    return dict(revision='Earl · restored crown and triangular DJ window header',panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
+    layout=dict(survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
+    return dict(revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
 
 
 def regenerated(refit=False):
@@ -141,13 +151,13 @@ def regenerated(refit=False):
     writer=csv.writer(csv_text,lineterminator='\n')
     writer.writerow(['Panel ID','Name','Length (in)','Width (in)','Area (sq ft)','Vertices (world meters)',
                      'Material (provisional)','Thickness (in)','Open area fraction','Bare steel (lb)','With 0.5 lb/ft edging + 2 lb fittings (lb)','With 1 lb/ft edging + 2 lb fittings (lb)','Tip span (in)','Stock margin per side (in)','Flat outline (meters)',
-                     'Flat holes (meters)','Modeled plane error (mm)','Source faces','Exterior sides'])
+                     'Flat holes (meters)','Modeled plane error (mm)','Source faces','Exterior sides','Survey date','Survey fit','Prior length (in)','Prior width (in)','Status'])
     for p,item in zip(panels,layout['pieces']):
         writer.writerow([p['id'],p['name'],f"{p['length_m']/INCH:.3f}",f"{p['width_m']/INCH:.3f}",
                          f"{p['net_area_m2']/SQFT:.3f}",json.dumps(p['vertices_m']),p['material'],p['thickness_in'],p['open_area_fraction'],f"{p['bare_steel_lb']:.2f}",
                          f"{p['handling_half_lb']:.2f}",f"{p['handling_one_lb']:.2f}",f"{p['tip_span_m']/INCH:.2f}",f"{p['stock_margin_in']:.3f}",json.dumps(p['flat_vertices_m']),
                          json.dumps(p['flat_holes_m']),f"{p['planarity_error_mm']:.6f}",
-                         ', '.join(f['source'] for f in item['faces']),len(p['vertices_m'])])
+                         ', '.join(f['source'] for f in item['faces']),len(p['vertices_m']),data['survey_date'],p['survey_change'],*p['previous_blank_in'],p['status']])
     total=sum(p['net_area_m2'] for p in panels)
     # Measure the glazing aperture on its four original driver-side facets.
     removed=0.
