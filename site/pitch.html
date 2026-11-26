@@ -66,6 +66,24 @@
     }
     .lineage-copy p:not(.eyebrow, .aside-line) { max-width: 70ch; }
     .lineage-copy .aside-line { margin: 18px 0 0; }
+    .lineage-visuals {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
+      align-items: center;
+      gap: clamp(24px, 4vw, 48px);
+    }
+    .lineage-morph { margin: 0; }
+    .lineage-morph video {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      background: #101215;
+    }
+    @media (max-width: 760px) {
+      .lineage-visuals { grid-template-columns: minmax(0, 1fr); }
+      .lineage-morph { width: min(100%, 360px); justify-self: center; }
+    }
     .lineage .lineage-family {
       display: grid;
       grid-template-columns: 1fr 2fr;
@@ -232,7 +250,7 @@
         </div>
       </section>
 
-      <section class="lineage section-shell" aria-labelledby="lineage-title">
+      <section class="lineage section-shell" id="lineage" aria-labelledby="lineage-title">
         <div class="lineage-copy">
           <p class="eyebrow">The lineage</p>
           <h2 id="lineage-title">
@@ -244,6 +262,7 @@
           </p>
           <p class="aside-line">Family resemblance. Her own fire.</p>
         </div>
+        <div class="lineage-visuals">
         <div
           class="lineage-family"
           aria-label="The shared BAAA lineage of BAAAHS and BAAABS"
@@ -263,13 +282,22 @@
                 alt="BAAAHS in white with pink outlines"
               />
             </span>
-            <span class="lineage-mark" style="--mark: url('assets/brand/baaabs-wordmark-lineage.svg'); --delay: 3s;">
+            <span class="lineage-mark" style="--mark: url('assets/brand/baaabs-wordmark-lineage.svg?v=white'); --delay: 3s;">
               <img
-                src="assets/brand/baaabs-wordmark-lineage.svg"
-                alt="BAAABS in black with pink outlines"
+                src="assets/brand/baaabs-wordmark-lineage.svg?v=white"
+                alt="BAAABS in white with pink outlines"
               />
             </span>
           </div>
+        </div>
+        <figure class="lineage-morph">
+          <video id="lineage-morph" width="1318" height="1318" autoplay loop muted playsinline preload="metadata"
+            poster="assets/brand/Baaabs-heart.png"
+            aria-label="Looping morph between BAAAHS and BAAABS">
+            <source src="assets/brand/baaahs-to-baaabs-iteration-02-loop.mp4" type="video/mp4">
+            <a href="assets/brand/baaahs-to-baaabs-iteration-02-loop.mp4">Watch BAAAHS become BAAABS</a>
+          </video>
+        </figure>
         </div>
       </section>
 

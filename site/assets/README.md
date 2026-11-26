@@ -5,6 +5,7 @@ Public asset URLs begin with `/assets/`. For example, the approved [heart-shaped
 | Looking for | Location |
 | --- | --- |
 | Current ram, original ram, site and lineage wordmarks | [brand/](brand/) |
+| Forward-and-reverse logo morph (iteration 02) | [brand/baaahs-to-baaabs-iteration-02-loop.mp4](brand/baaahs-to-baaabs-iteration-02-loop.mp4), shown in the Pitch lineage section |
 | Pitch hero, responsive stills, donor and workshop imagery | [images/earl/](images/earl/) |
 | Patch product photos, material samples, game share image | [images/patch/](images/patch/), [images/materials/](images/materials/), [images/test-drive/](images/test-drive/) |
 | Smooth Circulars font files, specimen and original readme | [fonts/smooth_circulars/](fonts/smooth_circulars/), loaded by [typography.css](typography.css) |
