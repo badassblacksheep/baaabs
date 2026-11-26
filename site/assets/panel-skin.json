@@ -1,0 +1,17 @@
+{
+  "name": "Mill-finish round-perforated mild steel",
+  "reference": "images/materials/round-perforated-steel-reference.png",
+  "texture": "images/materials/round-perforated-steel-tile.png",
+  "holeDiameterInches": 0.1875,
+  "nearestCenterInches": 0.25,
+  "lattice": "60-degree stagger",
+  "photo": {
+    "firstHoleCenterPx": [92.85, 646.2],
+    "nearestCenterPx": 42.85,
+    "rectangularRepeats": [4, 7],
+    "tileResolution": 256
+  },
+  "metallic": 0.34,
+  "roughness": 0.57,
+  "alphaCutoff": 0.30
+}

@@ -21,7 +21,7 @@ from glb_scene import Scene
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "site/assets"
-SOURCE = ASSETS / "models/baaabs-earl-iteration06-six-shores.glb"
+SOURCE = ASSETS / "models/earl-survey-fit.glb"
 FRAMES = 192
 FPS = 24
 
@@ -177,7 +177,7 @@ class Renderer:
             uv = scene.uv
             tex = scene.tex
         # Emissive Ovine eye textures and Earl's bus photos carry their own light.
-        textured = scene.tex >= 0
+        textured = (scene.tex >= 0) & ~np.isin(scene.tex, list(scene.sheet_tiles))
         rgb[: len(textured), :3][textured] = scene.rgb[textured, :3]
         surface.flush()
         bgra = np.frombuffer(surface.get_data(), np.uint8)

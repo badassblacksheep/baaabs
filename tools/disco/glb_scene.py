@@ -32,6 +32,7 @@ class Scene:
         self.binary = memoryview(data)[28 + n :]
         self.tri, self.rgb, self.uv, self.tex = [], [], [], []
         self.eye_tiles = {}
+        self.sheet_tiles = {}
         self.eye_frames = {
             img["name"]: img
             for img in self.gltf["images"]
@@ -47,10 +48,16 @@ class Scene:
         normals = np.cross(self.tri[:, 1] - self.tri[:, 0], self.tri[:, 2] - self.tri[:, 0])
         self.normals = normals / np.maximum(np.linalg.norm(normals, axis=1)[:, None], 1e-10)
         offsets, pixels = [], bytearray()
-        for tex in self.textures:
+        for tile_id, tex in enumerate(self.textures):
             h, w, _ = tex.shape
-            offsets.append((len(pixels), w, h))
+            cutoff = self.sheet_tiles.get(tile_id, 0)
+            levels = int(np.log2(min(w,h))) if cutoff else 0
+            offsets.append((len(pixels), w, h, tex.shape[2], levels, round(255*cutoff)))
             pixels.extend(tex.tobytes())
+            for _ in range(levels):
+                h, w, channels = tex.shape
+                tex = tex.reshape(h//2,2,w//2,2,channels).mean(axis=(1,3)).round().astype(np.uint8)
+                pixels.extend(tex.tobytes())
         self.tiles = np.asarray(offsets, dtype=np.int32)
         self.pixels = np.frombuffer(pixels, dtype=np.uint8)
         if len(self.outlets) != 2 or not self.deck:
@@ -74,32 +81,29 @@ class Scene:
             strides=(stride, dtype.itemsize),
         )
 
-    def texture(self, info):
+    def texture(self, info, cutoff=None):
         index = self.gltf["textures"][info["index"]]["source"]
         if index not in self.texture_ids:
             image = self.gltf["images"][index]
-            raw = subprocess.check_output(
-                [
-                    "ffmpeg",
-                    "-loglevel",
-                    "error",
-                    "-i",
-                    "pipe:0",
-                    "-frames:v",
-                    "1",
-                    "-f",
-                    "image2pipe",
-                    "-vcodec",
-                    "ppm",
-                    "pipe:1",
-                ],
-                input=self.view(image["bufferView"]),
-            )
-            header, dimension, maximum, rgb = raw.split(b"\n", 3)
-            assert header == b"P6" and maximum == b"255"
-            w, h = map(int, dimension.split())
-            self.texture_ids[index] = len(self.textures)
-            self.textures.append(np.frombuffer(rgb, np.uint8).reshape(h, w, 3))
+            blob = self.view(image["bufferView"])
+            # Decode the panel alpha along with the photographed steel. All other maps carry RGB.
+            codec = "pam" if cutoff is not None else "ppm"
+            raw = subprocess.check_output(["ffmpeg", "-loglevel", "error", "-i", "pipe:0",
+                                           "-frames:v", "1", "-f", "image2pipe", "-vcodec", codec,
+                                           "-pix_fmt", "rgba" if cutoff is not None else "rgb24", "pipe:1"], input=blob)
+            tile_id = len(self.textures)
+            if cutoff is not None:
+                header, pixels = raw.split(b"ENDHDR\n", 1)
+                fields = dict(line.split(maxsplit=1) for line in header.splitlines()[1:])
+                w, h, channels = (int(fields[k]) for k in (b"WIDTH", b"HEIGHT", b"DEPTH"))
+                self.sheet_tiles[tile_id] = cutoff
+            else:
+                header, dimension, maximum, pixels = raw.split(b"\n", 3)
+                assert header == b"P6" and maximum == b"255"
+                w, h = map(int, dimension.split())
+                channels = 3
+            self.texture_ids[index] = tile_id
+            self.textures.append(np.frombuffer(pixels, np.uint8).reshape(h, w, channels))
         return self.texture_ids[index]
 
     def animate_eyes(self, frame):
@@ -114,7 +118,7 @@ class Scene:
                 if kind == b"IDAT":
                     chunks.append(data[n + 8 : n + 8 + length])
                 n += length + 12
-            offset, w, h = self.tiles[tile_id]
+            offset, w, h = self.tiles[tile_id, :3]
             rows = np.frombuffer(zlib.decompress(b"".join(chunks)), np.uint8).reshape(h, 1 + 3 * w)
             if np.any(rows[:, 0]):
                 raise ValueError("Unexpected Ovine PNG scanline encoding")
@@ -138,9 +142,10 @@ class Scene:
                 base[:3] = np.clip(base[:3], 0, 1) ** (1 / 2.2)
                 index = -1
                 info = pbr.get("baseColorTexture")
-                if name.startswith("B-") or mat["name"].startswith("Panel_"):
-                    # Opaque dark display finish, consistent with the live orbit.
-                    base = np.array([0.25, 0.24, 0.266, 1])
+                if mat["name"].startswith("Panel_"):
+                    if mat.get("extras", {}).get("display_material") != "panel-skin.json":
+                        raise ValueError("Bake the active photographic assembly before rendering")
+                    index = self.texture(info, mat["alphaCutoff"])
                 elif component in ("rails", "poofer", "ladder"):
                     base = np.array([0.52, 0.51, 0.55, 1])
                 elif component == "deck":

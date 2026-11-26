@@ -46,7 +46,7 @@ jobs:
           path: |
             ${{ env.ANIMATED_EYE_MODEL }}
             ${{ env.MODEL_BUILD_DIR }}
-          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/dj_panel_layout.py', 'tools/survey_fit.py', 'tools/survey_deck.py', 'site/assets/earl-deck-model.json', 'tools/build-survey-assembly.py', 'tools/panel_patterns.py', 'tools/flat_panels.py', 'reference/panels/earl-iteration06-layout.json', 'site/survey-results/measurements.json', 'site/assets/earl-symmetric-panel-register.csv', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
+          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/dj_panel_layout.py', 'tools/survey_fit.py', 'tools/survey_deck.py', 'site/assets/earl-deck-model.json', 'tools/build-survey-assembly.py', 'tools/panel_skin.py', 'site/assets/panel-skin.json', 'site/assets/images/materials/*.png', 'tools/panel_patterns.py', 'tools/flat_panels.py', 'reference/panels/earl-iteration06-layout.json', 'site/survey-results/measurements.json', 'site/assets/earl-symmetric-panel-register.csv', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
       - name: Determine whether models require rebuilding
         id: model-build
         env:
@@ -102,6 +102,7 @@ jobs:
           python3 tools/build-survey-assembly.py "$MODEL_BUILD_DIR/$STRUCTURAL_MODEL" "$MODEL_BUILD_DIR/$SURVEY_MODEL"
       - name: Verify installed deck, access and test-drive geometry
         run: |
+          python3 tools/check-panel-skin.py "$MODEL_BUILD_DIR/$SURVEY_MODEL"
           python3 tools/check-survey-deck.py "$MODEL_BUILD_DIR/$SURVEY_MODEL"
           node tools/bake-drive-model.mjs --check "$MODEL_BUILD_DIR/$SURVEY_MODEL"
       - uses: actions/setup-python@v5

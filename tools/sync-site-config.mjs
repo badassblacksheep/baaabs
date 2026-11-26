@@ -39,6 +39,10 @@ for (const [page] of structuralTabs) {
     '<nav class="design-tabs" aria-label="Structural design iterations">'+links+'</nav>');
 }
 
+const skin = JSON.parse(read('assets/panel-skin.json'));
+replace('the_build.html', /<a data-panel-material href="[^"]+">/,
+  '<a data-panel-material href="assets/'+escape(skin.reference)+'">');
+
 const sandbox = {window:{}, module:{exports:{}}, URL};
 runInNewContext(read('assets/patch-config.js'),sandbox);
 runInNewContext(read('assets/patch.js'),sandbox);

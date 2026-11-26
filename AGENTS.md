@@ -42,7 +42,13 @@ Use `site/assets/typography.css` as the single source of truth for typography. M
 
 Reserve Smooth Circulars for the BAAABS wordmark, BAAABS word art (including the words that spell out the acronym), and the standalone names `BAAABS` and `BAAAHS`. Both names have first-class status in site typography. Match either name as a whole word regardless of capitalization, including next to punctuation, and preserve its written case. In sentences, headings, captions, buttons, and navigation labels, style only the name itself. Use the site’s regular typography for the surrounding text and the hero tagline.
 
-## Provisional exterior skin material (2026-11-08)
+## Exterior panel appearance
+
+Use the owner’s [perforated steel photograph](site/assets/images/materials/round-perforated-steel-reference.png) for every registered detachable sheet. [The material configuration](site/assets/panel-skin.json) owns the photograph, derived repeat tile, hole size, pitch, calibration and finish. The default is exposed mill-finish steel with visible openings on a staggered lattice. Black paint is an explicit workshop preview.
+
+Apply the texture in the installed plane of each panel, in metres, after fitting the assembly. Preserve each panel's picking material. The GLB, packed Blender file, compact viewers, posters and pitch renders all use the same tile and UV scale. Rebuild the tile with `python3 tools/panel_skin.py` after editing the reference or calibration. Follow the field-fit rebuild sequence below, then run `python3 tools/disco/render.py` to refresh public imagery. Check a close-up for round holes and an overall view for a stable metallic finish.
+
+## Provisional exterior skin mass estimate (2026-11-08)
 
 **Penciled in, not purchased or fabrication-approved:** McNICHOLS 20-gauge perforated carbon/mild-steel sheet, nominal 0.0359 in (0.91 mm) thick, with 1/8 in round holes on 3/16 in staggered centers (approximately 40% open area). Supplier: McNICHOLS, Fife, Washington. Reference pattern: https://www.mcnichols.com/perforated-metal/round-hole/carbon-steel-cs-16183122 (verify the exact 20-gauge SKU and availability before ordering; linked listing may be a different gauge).
 

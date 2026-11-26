@@ -21,7 +21,21 @@ void raster(int width, int height, uint8_t *bgra, float *depth, int count,
       int x1 = fminf(width - 1, ceilf(fmaxf(ax, fmaxf(bx, cx))));
       int y1 = fminf(height - 1, ceilf(fmaxf(ay, fmaxf(by, cy))));
       const float *coords = uv + 6 * i;
-      const int *tile = texture[i] < 0 ? 0 : tiles + texture[i] * 3;
+      const int *tile = texture[i] < 0 ? 0 : tiles + texture[i] * 6;
+      int tw = tile ? tile[1] : 0, th = tile ? tile[2] : 0, offset = tile ? tile[0] : 0;
+      if (tile && tile[4]) {
+        // Select a filtered repeat from the projected UV footprint, including edge-on sheets.
+        float du1 = (coords[2]-coords[0])*tw, du2 = (coords[4]-coords[0])*tw;
+        float dv1 = (coords[3]-coords[1])*th, dv2 = (coords[5]-coords[1])*th;
+        float rx = hypotf(du1*(cy-ay)-du2*(by-ay), dv1*(cy-ay)-dv2*(by-ay)) / fabsf(det);
+        float ry = hypotf(du2*(bx-ax)-du1*(cx-ax), dv2*(bx-ax)-dv1*(cx-ax)) / fabsf(det);
+        int lod = fminf(tile[4], roundf(log2f(fmaxf(1, fmaxf(rx, ry)))));
+        for (int level = 0; level < lod; ++level) {
+          offset += tw*th*tile[3];
+          tw /= 2;
+          th /= 2;
+        }
+      }
       for (int y = y0; y <= y1; y++) {
         for (int x = x0; x <= x1; x++) {
           float dx = x + .5f - ax, dy = y + .5f - ay;
@@ -37,9 +51,11 @@ void raster(int width, int height, uint8_t *bgra, float *depth, int count,
           if (tile) {
             float u = a * coords[0] + b * coords[2] + c * coords[4];
             float v = a * coords[1] + b * coords[3] + c * coords[5];
-            int tx = fminf(tile[1] - 1, fmaxf(0, u * tile[1]));
-            int ty = fminf(tile[2] - 1, fmaxf(0, v * tile[2]));
-            sample = pixels + tile[0] + 3 * (ty * tile[1] + tx);
+            if (tile[4]) { u -= floorf(u); v -= floorf(v); }
+            int tx = fminf(tw - 1, fmaxf(0, u * tw));
+            int ty = fminf(th - 1, fmaxf(0, v * th));
+            sample = pixels + offset + tile[3] * (ty * tw + tx);
+            if (tile[4] && sample[3] < tile[5]) continue;
           }
           if (!transparent)
             depth[j] = z;

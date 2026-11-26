@@ -1,3 +1,5 @@
+import {loadPanelSkin, panelFragment} from '../panel-skin.mjs';
+
 const canvas = document.querySelector('#home-sheep');
 const poster = document.querySelector('#home-poster');
 const rotateButton = document.querySelector('#rotation-toggle');
@@ -10,7 +12,7 @@ let angle = -.49, tilt = .24, zoom = 1, eyeTime = 0;
 let lastTime = 0, lastDrag = -Infinity, frame = 0, visible = true;
 let gl, program, uniforms, attributes, atlas, atlasReady = false, generation = 0;
 let batches = [];
-let showSkin = true;
+let showSkin = true, skinReady = false;
 let flameMap, flameQuad, fireReady=false, showTime=0;
 const pointers = new Map();
 
@@ -45,10 +47,11 @@ void main(){
   float scale = min(.151, aspect*.102)*zoom;
   float w = 1.-forward/60.;
   gl_Position = vec4(horizontal*scale/aspect, vertical*scale, -forward/24., w);
-  paint = color; eyeUV = uv; eyeSide = eye;
+  paint = color; eyeUV = eye == 5. ? uv * (65535./256.) : uv; eyeSide = eye;
 }`;
 const fragment = `
-precision mediump float;
+precision highp float;
+${panelFragment}
 varying vec3 paint;
 varying vec2 eyeUV;
 varying float eyeSide;
@@ -60,7 +63,10 @@ uniform float tile;
 uniform bool textured;
 void main(){
   vec3 rgb = paint;
-  if(eyeSide > 4.5 && !showSkin)discard;
+  if(eyeSide > 4.5){
+    if(!showSkin)discard;
+    gl_FragColor = vec4(steelColor(eyeUV,paint),1.);return;
+  }
   if(eyeSide > 3.5 && eyeSide < 4.5){
     gl_FragColor = vec4(texture2D(busPhoto,eyeUV).rgb,1.);return;
   }
@@ -109,7 +115,7 @@ function initProgram(){
   return p;
 }
 function schedule(){
-  if(!frame && visible && !document.hidden && batches.length) frame=requestAnimationFrame(draw);
+  if(!frame && skinReady && visible && !document.hidden && batches.length) frame=requestAnimationFrame(draw);
 }
 function draw(now){
   frame=0;
@@ -169,7 +175,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name + "?v=deck36",base));
+  const response=await fetch(new URL(name + "?v=deck36-perf1",base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;
@@ -225,6 +231,7 @@ function buttons(){
 }
 async function start(){
   const version=++generation;
+  skinReady=false;
   try{
     gl=canvas.getContext('webgl',{alpha:true,antialias:true});
     if(!gl)throw Error('WebGL unavailable');
@@ -244,8 +251,9 @@ async function start(){
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,1,1,0,gl.RGB,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0]));
     gl.uniform1i(uniforms.flameMap,1);gl.activeTexture(gl.TEXTURE0);
     loadBusPhoto(version);
-    await loadMesh('shell.mesh',version);
+    await Promise.all([loadPanelSkin(gl,program,3,()=>version===generation),loadMesh('shell.mesh',version)]);
     if(version!==generation)return;
+    skinReady=true;schedule();
     buttons();rotateButton.hidden=false;eyeButton.disabled=false;
     loadAtlas(version);loadFire(version);
     loadMesh('details.mesh',version).then(()=>{if(version===generation)skinButton.hidden=false;}).catch(console.warn);

@@ -1,6 +1,6 @@
 {
-  "source": "site/assets/models/baaabs-earl-iteration06-six-shores.glb",
-  "source_sha256": "9ee54f9a9f6b9d5781794fe37e002c041a4c8bc0011f5b42ca25fe78d58071f8",
+  "source": "site/assets/models/earl-survey-fit.glb",
+  "source_sha256": "6f04121827db57d7353fec2638da278cac1e30ab39dec7af0cdc5bfb8a519025",
   "frames": 192,
   "fps": 24,
   "eye_clip": "First 8 seconds of the authored Ovine Sauron show at 24 fps",

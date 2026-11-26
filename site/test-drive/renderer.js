@@ -1,3 +1,4 @@
+import {loadPanelSkin,panelFragment} from '../assets/panel-skin.mjs';
 import {robotHeart} from '../assets/models/playa/robot-heart.js';
 import {lordSnort} from '../assets/models/playa/lord-snort.js';
 import {buildCity} from './city-clock.js';
@@ -7,7 +8,7 @@ import {buildMan} from '../assets/models/playa/man-2014.js';
 import {buildHeadMaze} from '../assets/models/playa/head-maze.js';
 import {eventHorizon,pivotHeight,gimbalPose,identity} from '../assets/models/playa/event-horizon.js?v=rainbow';
 async function loadVehicle(){
-  const response=await fetch('./drive-model.mesh?v=deck36');
+  const response=await fetch('./drive-model.mesh?v=deck36-perf1');
   if(!response.ok)throw Error('Model download failed');
   const packed=response.body.pipeThrough(new DecompressionStream('gzip'));
   const data=new Float32Array(await new Response(packed).arrayBuffer());
@@ -42,8 +43,8 @@ uniform float angle, focal, aspect, shift;uniform vec3 scale;uniform mat3 pose;u
 void main(){float c=cos(angle),s=sin(angle);vec3 p=pose*(pos*scale);
 p=vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z)+origin-eye;float d=dot(look,p);
 gl_Position=vec4(dot(side,p)*focal/aspect+d*shift,dot(up,p)*focal,d*1.0002-.15,d);
-eyeUV=col.x<0.?vec3(-col.x-1.,col.y,col.z):vec3(0.,0.,-1.);
-vec3 paint=col;
+eyeUV=col.x>=2.?vec3(col.yz,-2.):col.x<0.?vec3(-col.x-1.,col.y,col.z):vec3(0.,0.,-1.);
+vec3 paint=col.x>=2.?vec3(col.x-2.):col;
 if(lightPhase>=0.){
   float phase=atan(pos.z,pos.x)+.32*pos.y-lightPhase;
   vec3 rainbow=.55+.45*cos(phase+vec3(0.,-2.0944,2.0944));
@@ -51,11 +52,13 @@ if(lightPhase>=0.){
   paint=brightness*rainbow;
 }
 tint=mix(paint,vec3(.65,.46,.49),min(.6,max(d-35.,0.)*.0018));}`;
-const frag=`precision mediump float;
+const frag=`precision highp float;
+${panelFragment}
 varying vec3 tint,eyeUV;
 uniform float eyeTime;
 void main(){
   vec3 color=tint;
+  if(eyeUV.z < -1.5)color=steelColor(eyeUV.xy,tint);
   if(eyeUV.z>=0.){
     vec2 p=2.*eyeUV.xy-1.;
     float phase=eyeTime+eyeUV.z*1.5708;
@@ -105,6 +108,7 @@ export async function createRenderer(canvas){
   function buffer(g){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,g.vertices instanceof Float32Array?g.vertices:new Float32Array(g.vertices),gl.STATIC_DRAW);return {b,count:g.vertices.length/6};}
   const sky=new Geometry();sky.tri([-1,-1,0],[3,-1,0],[-1,3,0],[0,0,0]);
   const skyBuf=buffer(sky),world=buffer(scenery()),{model,outlets}=await loadVehicle(),bus=buffer(model);
+  await loadPanelSkin(gl,solid,0);
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const robotBus=buffer(robotHeart());
   const snort=lordSnort(), shaft=buffer(snort.base), boar=buffer(snort.boar);

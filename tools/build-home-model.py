@@ -107,8 +107,6 @@ def build():
                 if not len(tri):
                     continue
                 color = np.array(mat.get('pbrMetallicRoughness',{}).get('baseColorFactor',[.45,.45,.45,1])[:3])
-                if mat['name'].startswith('Panel_'):
-                    color = np.array([.033,.030,.038])
                 light = .39 + .52*np.abs(normals@sun) + .22*np.maximum(normals[:,1],0)
                 rgb = np.clip(255*color**.45*light[:,None],0,255).round().astype('u1')
                 # 14-byte vertex: mm position, RGB, surface ID, two normalized 16-bit UVs.
@@ -127,6 +125,14 @@ def build():
                     else:
                         verts[:,9] = 1 if '_L_' in name else 2
                 elif n.get('extras',{}).get('panel_id') or mat['name'].startswith('Panel_'):
+                    if mat.get('extras', {}).get('display_material') != 'panel-skin.json':
+                        raise ValueError(f"Missing photographic skin on {name}")
+                    # Surface 5 stores unsigned 8.8 fixed-point tile repeats, without wrapping each corner.
+                    uv = read(p['attributes']['TEXCOORD_0'])[indices].reshape(-1,2)
+                    fixed = (uv * 256).round()
+                    if fixed.min() < 0 or fixed.max() > 65535:
+                        raise ValueError(f'Panel UVs exceed packed range on {name}')
+                    verts[:,10:14] = fixed.astype('<u2').view('u1').reshape(-1,4)
                     verts[:,9] = 5
                 group.append(verts)
         for child in n.get('children',[]):

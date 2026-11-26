@@ -103,7 +103,7 @@ test('06 public runtime preserves sheep/deck and places six short shores under t
 
 test('current surfaces use 06, archives keep their data, and game handles transformed matrix nodes',()=>{
  assert.match(read('site/structural/iteration-06.html'),/structural-preview-06.js/);
- assert.match(read('site/the_build.html'),/src="assets\/models\/earl-survey-fit.glb\?v=deck36"/);
+ assert.match(read('site/the_build.html'),/src="assets\/models\/earl-survey-fit\.glb(?:\?[^"]+)?"/);
  assert.match(read('site/structural/iteration-05a.html'),/structural-preview-05.js/);
  assert.match(read('site/structural/iteration-05.html'),/structural-preview-05.js/);
  assert.match(read('site/index.html'),/home-model\/viewer.js/);

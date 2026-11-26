@@ -6,7 +6,7 @@ import {gunzipSync} from 'node:zlib';
 const resource = name => readFileSync(new URL('../site/assets/' + name, import.meta.url));
 
 test('homepage geometry carries both eye channels, selectable skin and registered Earl photograph UVs', () => {
-  const modes = new Set(), photoUVs = new Set();
+  const modes = new Set(), photoUVs = new Set(), panelUVs = new Set();
   for (const group of ['shell', 'details']) {
     const bytes = gunzipSync(resource('home-model/' + group + '.mesh'));
     let offset = 0;
@@ -16,6 +16,7 @@ test('homepage geometry carries both eye channels, selectable skin and registere
       for (let j = 0; j < vertices; j++) {
         const vertex = offset + j * 14, mode = bytes[vertex + 9];
         modes.add(mode);
+        if (mode === 5) panelUVs.add(bytes.readUInt32LE(vertex + 10));
         if (mode === 4) photoUVs.add(bytes.readUInt32LE(vertex + 10));
       }
       offset += 14 * vertices + 2 * indices;
@@ -24,6 +25,7 @@ test('homepage geometry carries both eye channels, selectable skin and registere
   }
   assert.deepEqual([...modes].sort(), [0,1,2,4,5]);
   assert.ok(photoUVs.size > 100);
+  assert.ok(panelUVs.size > 100, "panel geometry must carry developed repeat coordinates");
   const model = resource('models/earl-animated-eyes.glb'), jsonSize = model.readUInt32LE(12);
   const doc = JSON.parse(model.subarray(20, 20 + jsonSize));
   const photo = doc.images.find(image => image.name === 'Earl-atlas');

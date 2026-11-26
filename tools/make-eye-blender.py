@@ -151,6 +151,7 @@ def verify(destination, doc):
     layout_file = Path(__file__).resolve().parents[1] / 'site/assets/earl-panel-layout.json'
     layout = json.loads(layout_file.read_text())
     expected_ids = {p['id'] for p in layout['pieces']}
+    skin = json.loads((layout_file.parent / 'panel-skin.json').read_text())
     panel_ids = set()
     max_deviation = 0.
     for obj in scene.objects:
@@ -160,6 +161,11 @@ def verify(destination, doc):
                  if (match := re.match(r"^Panel_([A-Z]-[A-Z]-\d{3})(?:_|$)", mat.name))}
         if not names:
             continue
+        for material in obj.data.materials:
+            if material and material.name.startswith('Panel_'):
+                images = [node.image for node in material.node_tree.nodes if node.type == 'TEX_IMAGE']
+                assert any(image and image.name == skin['name'] and image.packed_file for image in images), material.name
+                assert obj.data.uv_layers.active, (obj.name, 'missing panel UVs')
         panel_id, = names
         assert panel_id not in panel_ids, ('duplicate panel',panel_id)
         panel_ids.add(panel_id)

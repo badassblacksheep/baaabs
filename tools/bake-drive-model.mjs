@@ -1,7 +1,7 @@
 // Run after bake-structural06.mjs to refresh the checked-in driving mesh.
 import {readFileSync,writeFileSync} from 'node:fs';
 import {gunzipSync,gzipSync} from 'node:zlib';
-import {Geometry,rgb,add,mul,cross} from '../site/assets/models/playa/geometry.js';
+import {Geometry,rgb,add,mul,cross,sub,unit} from '../site/assets/models/playa/geometry.js';
 function transform(p,n){
   if(n.matrix){const m=n.matrix;return [0,1,2].map(i=>m[i]*p[0]+m[i+4]*p[1]+m[i+8]*p[2]+m[i+12]);}
   const s=n.scale||[1,1,1], t=n.translation||[0,0,0], q=n.rotation||[0,0,0,1];
@@ -29,8 +29,19 @@ function bakeVehicle(data){
       for(let i=0;i<pos.length;i+=3)points.push(transforms.reduce(transform,Array.from(pos.subarray(i,i+3))));
       const component=n.extras?.component, panel=mat.name.startsWith('Panel_');
       let color=rgb(0x777277);
-      if(panel){const shade=42+(id*17)%32;color=[shade*.94,shade,shade*1.16].map(v=>v/255);}
-      else if(component==='poofer'||component==='ladder'||component==='rails')color=rgb(0xbab2c0);
+      if(panel){
+        if(mat.extras?.display_material!=='panel-skin.json')throw Error('Missing photographic skin on '+mat.name);
+        const uv=accessor(prim.attributes.TEXCOORD_0);
+        // Reserve red > 1 for the sheet shader; green and blue carry unwrapped repeats.
+        for(let j=0;j<idx.length;j+=3){
+          const [a,b,c]=[points[idx[j]],points[idx[j+1]],points[idx[j+2]]];
+          const n=unit(cross(sub(b,a),sub(c,a)));
+          const light=.55+.28*Math.abs(n[1])+.17*Math.abs(n[0]*.8+n[2]*.6);
+          for(const i of idx.subarray(j,j+3))model.vertices.push(...points[i],2+light,uv[i*2],uv[i*2+1]);
+        }
+        continue;
+      }
+      if(component==='poofer'||component==='ladder'||component==='rails')color=rgb(0xbab2c0);
       else if(component==='deck')color=rgb(0x9c795d);
       else if(component==='eye_effect')color=rgb(0xffab45);
       else if(component==='structure'||component==='equipment')color=rgb(0x494555);
