@@ -71,6 +71,13 @@ jobs:
           printf '### Model assets\n\nREBUILD_MODELS=%s — %s\n' "$rebuild" "$reason" >> "$GITHUB_STEP_SUMMARY"
       - name: Install numerical test dependencies
         run: python3 -m pip install "numpy>=2.0,<3"
+      - name: Verify survey-informed geometry and calculate candidate structural cases
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: |
+          node tools/build-survey-model.mjs --check
+          node --check site/structural/survey-model/view.mjs
+          python3 tools/solve-survey-model.py
       - name: Build animated eye model
         if: steps.model-build.outputs.rebuild_models == 'true'
         run: python3 tools/build-animated-eyes.py
