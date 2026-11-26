@@ -2,6 +2,8 @@
 
 ## Public website voice
 
+Use numbering in public-facing lists only when a meaningful order is evident (steps, rankings, sequences, or indexed references). Do not number unordered feature cards merely for decoration. Keep the Pitch concise; the Journal owns progress updates and the Cost owns spending transparency.
+
 Use first-person singular (I, me, my) for the owner’s project plans, purchases, work and fundraising. Preserve owner-authored wording beyond necessary pronoun and grammar changes. Retain genuine collective references to the community and intentional cultural allusions (including “dancing on our own”). Do not imply a team or shared financial commitment that has not been established.
 
 ## Configuration-driven development (repository-wide)
