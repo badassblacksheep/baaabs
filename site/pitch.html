@@ -57,15 +57,7 @@
       gap: clamp(24px, 3vw, 40px);
       padding-block: clamp(44px, 6vw, 88px);
     }
-    .lineage-copy h2 {
-      max-width: none;
-      margin-bottom: 20px;
-      font-size: clamp(1.9rem, 4.2vw, 3.85rem);
-      line-height: 1.08;
-      text-wrap: balance;
-    }
-    .lineage-copy p:not(.eyebrow, .aside-line) { max-width: 70ch; }
-    .lineage-copy .aside-line { margin: 18px 0 0; }
+    .lineage-copy h2.eyebrow { margin: 0; font-size: 0.8rem; line-height: 1.4; }
     .lineage-visuals {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(240px, 360px);
@@ -220,15 +212,7 @@
 
       <section class="lineage section-shell" id="lineage" aria-labelledby="lineage-title">
         <div class="lineage-copy">
-          <p class="eyebrow">The lineage</p>
-          <h2 id="lineage-title">
-            Inspired by <span class="sheep-name">BAAAHS</span>.<br />Built to be a little more fiery.
-          </h2>
-          <p>
-            I might not have BootyJuice on the decks, but I still love disco,
-            house, and trance. BAAABS brings the beats wherever she rolls.
-          </p>
-          <p class="aside-line">Family resemblance. Her own fire.</p>
+          <h2 class="eyebrow" id="lineage-title">The lineage</h2>
         </div>
         <div class="lineage-visuals">
         <div
