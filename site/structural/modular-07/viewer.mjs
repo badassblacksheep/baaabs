@@ -83,5 +83,9 @@ export function createViewer(canvas,onPick) {
   canvas.addEventListener('keydown',e=>{const keys={ArrowLeft:()=>rotate(-.12,0),ArrowRight:()=>rotate(.12,0),ArrowUp:()=>rotate(0,.1),ArrowDown:()=>rotate(0,-.1),'+':()=>scale(1.15),'-':()=>scale(1/1.15),Home:()=>{reset();render()}};if(keys[e.key]){e.preventDefault();keys[e.key]()}});
   new ResizeObserver(render).observe(canvas);
   return {setScene(next,layers,opts){if(mode!==opts.mode){mode=opts.mode;reset()}scene=next;visible=layers;nodes=opts.nodes;focus=opts.focus;trace=opts.trace;stats=opts;cameraLabel=opts.label;render()},
-    reset(){reset();render()},scale,angle(name){yaw=name==='end'?-Math.PI/2:0;pitch=name==='plan'?Math.PI/2:0;render()}};
+    reset(){reset();render()},scale,angle(name){
+      yaw=name==='end'?-Math.PI/2:name==='underside'?-.38:0;
+      pitch=name==='plan'?Math.PI/2:name==='underside'?-.75:0;
+      render()
+    }};
 }

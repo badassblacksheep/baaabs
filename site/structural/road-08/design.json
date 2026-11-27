@@ -1,0 +1,10 @@
+{
+  "revision": "08",
+  "joistPitchIn": 24,
+  "joistSection": "Floor joist 00",
+  "edgeGirder": "Deck edge girder",
+  "planBrace": "Roof bay 1 diagonal",
+  "jointLayout": "Two fore-aft sheet lanes with staggered end joints and continuous support under the center seam.",
+  "beamScreenLineLoadKNm": 1,
+  "steelService": "Fixed in service; major repair or removal is a shop operation."
+}
