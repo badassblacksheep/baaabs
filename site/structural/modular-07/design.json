@@ -1,0 +1,62 @@
+{
+  "revision": "07",
+  "date": "2026-11-27",
+  "status": "Architectural candidate · fit-up only",
+  "inputs": {
+    "recipe": "../../assets/earl-deck-model.json",
+    "survey": "../../survey-results/measurements.json",
+    "panels": "../../assets/earl-panel-layout.json",
+    "material": "../iteration-06-materials.json",
+    "archived": "../iteration-06-data.json",
+    "surveyResults": "../deck-results.json",
+    "stiffness": "./stiffness.json",
+    "shellConfig": "./shell-data.json"
+  },
+  "primary": {"bayCount": 6, "carryTrial": "separate side ladders and transverse members"},
+  "deck": {
+    "selected": "4x4",
+    "formats": [
+      {"id":"4x4","widthIn":48,"lengthIn":48},
+      {"id":"4x6","widthIn":48,"lengthIn":72},
+      {"id":"2x6","widthIn":24,"lengthIn":72}
+    ],
+    "stockSheetIn":[48,96],
+    "plyThicknessIn":0.75,
+    "plyLbFt2":2.3,
+    "frameSectionIn":[2,2,0.125],
+    "maxRibPitchIn":24,
+    "handlingBasis":"Illustrative nominal square-corner HSS and plywood. Stock, feet, seams, finish, connector plates and fasteners require weighing."
+  },
+  "audio": {
+    "partySide":"driver",
+    "stageStations":[2,4],
+    "projectionLocal":[0,-1,0],
+    "trialCradleOutreachM":1.25,
+    "trialDropOffsetM":0.45,
+    "trialCradleHeightM":1.05,
+    "mvp":{"model":"JBL PartyBox Stage 320","count":2,"sizeM":[0.385,0.335,0.669],"eachKg":16.5,"manual":"https://support.jbl.com/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw88bed052/pdfs/JBL_PARTYBOX_STAGE_320_OM_Global_EN_V4.pdf"},
+    "studyMassesKg":[50,150,300],
+    "gravityMS2":9.80665,
+    "brakingStudyG":0.5
+  },
+  "stiffnessStudy":{"jointFactors":[10,1,0.1],"testForceN":1000,"testTorqueNm":1000,"crowdPatchFt":12,"crowdJointFactor":1},
+  "shell":{
+    "inwardOffsetM":0.04,"stockEnvelopeM":0.04,
+    "runs":[
+      {"side":"driver","crownPanelIds":["B-D-011","B-D-013","B-D-015","B-D-017","B-D-019","B-D-021"],"flankPanelId":"B-D-034"},
+      {"side":"passenger","crownPanelIds":["B-P-019","B-P-021","B-P-023","B-P-025","B-P-027","B-P-029"],"flankPanelId":"B-P-042"}
+    ]
+  },
+  "windStudy":{"netPressuresKPa":[0.25,0.5,1]},
+  "transport":{"aisleStudyIn":24,"wallGapIn":2,"endGapIn":4,"separatorIn":1,"rackBaseIn":2,"bundleHeightIn":18},
+  "classes":{
+    "splice":{"family":"Primary structural","label":"Truss splice","orientation":"longitudinal","connection":"Mating module-end planes at the upper and lower chord. Design the shear transfer and the axial couple together.","compatible":["paired side-truss ends"],"cases":["crowd gravity and rhythm","lateral racking","torsion","reversal and loss of contact"],"access":"Trial insertion, wrench swing and extraction from the crawl-space side.","dependencies":["joint force–displacement curves","anti-rotation and fit-up","portal/shore reaction envelopes"]},
+    "cross":{"family":"Primary structural","label":"Transverse tie seat","orientation":"transverse","connection":"Transverse member terminates at a side-truss work point. Upper and lower ties restrain the two sides.","compatible":["crossmember","plan brace"],"cases":["transverse racking","wind uplift","crowd patch","stage eccentricity"],"access":"Reserve a tool approach from inside the bay before fitting the walking surface.","dependencies":["tie end stiffness","temporary erection bracing"]},
+    "shore":{"family":"Primary structural","label":"Body shore seat","orientation":"vertical","connection":"Compression-only saddle under the lower chord. Paired landings reference the surveyed study, pending inspection.","compatible":["body shore"],"cases":["downward reaction","unloading","missing shore","chassis twist"],"access":"Record adjustment, inspection and removal envelope with the bus at normal ride height.","dependencies":["full bow identification","body mounts and chassis compliance"]},
+    "deck":{"family":"Primary structural","label":"Cassette carrier seat","orientation":"vertical","connection":"A removable transverse carrier seats on the two side chords. Locate carriers at cassette ends independently of truss splices.","compatible":["walking-surface carrier"],"cases":["crowd patch","local point load","uplift and retention"],"access":"Trial top removal and underside inspection with the adjacent cassette installed.","dependencies":["chord local bending","carrier bearing, lateral restraint and retention","plywood edge bearing"]},
+    "panel":{"family":"Secondary panel","label":"Shell adapter","orientation":"outboard","connection":"Keyed removable arm root and witness datum. Outer pickup positions follow the registered facet edges.","compatible":["triangulated facet carrier"],"cases":["skin weight","pressure and suction","panel vibration and fatigue"],"access":"Check reach, hand clearance, adjacent sheet removal and the DJ sightline.","dependencies":["facet pickup coordinates","local plate tear-out","arm root and primary node demand"]},
+    "upperAudio":{"family":"Equipment structural","label":"Upper audio receiver","orientation":"outboard","connection":"Paired empty receiver zones on the party-side upper chord. Adapter terminates at the selected manufacturer's approved fly frame.","compatible":["reviewed array adapter"],"cases":["eccentric suspended mass","dynamic and lateral forces","fatigue"],"access":"Reserve rigging access, pin withdrawal, secondary retention and inspection sightlines.","dependencies":["system-specific approved rigging","engineered reaction envelope","qualified rigger"]},
+    "lowerAudio":{"family":"Equipment structural","label":"Lower audio receiver","orientation":"outboard","connection":"Removable drop-frame and outside bearer transfer shelf load into two backbone elevations. The supported cabinet footprint can change.","compatible":["engineered subwoofer cradle"],"cases":["eccentric cabinet mass","braking","lateral inertia","vibration"],"access":"Trial cabinet loading, positive retention, service and shelf removal with a lightweight dummy.","dependencies":["mass, centre of gravity and restraints","body and shell interference","combined roll and bending"]}
+  },
+  "unreviewedInterface":{"connectionDimensionsMm":null,"allowableLocalForcesKN":[null,null,null],"allowableLocalMomentsKNm":[null,null,null],"toolEnvelopeMm":null,"release":null}
+}
