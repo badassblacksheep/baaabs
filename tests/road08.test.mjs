@@ -8,7 +8,7 @@ const root = new URL('../site/structural/modular-07/', import.meta.url);
 const read = path => JSON.parse(readFileSync(new URL(path,root),'utf8'));
 const design = read('design.json'), recipe = read(design.inputs.recipe);
 const revision = read('../road-08/design.json');
-const study = compareRoadConfigurations({design,frame:recipe.candidate,material:read(design.inputs.material)},revision);
+const study = compareRoadConfigurations({design,frame:recipe.candidate,donor:recipe.donor,material:read(design.inputs.material)},revision);
 const {open,decked,packed} = study.modes;
 const approx = (a,b) => assert.ok(Math.abs(a-b) < 1e-6, a+' != '+b);
 
@@ -19,7 +19,7 @@ test('a single steel plane replaces carriers, cassette frames and upper ties on 
   assert.equal(open.items.filter(i=>i.label==='Continuous side bearer').length,2);
   assert.ok(open.items.some(i=>i.group==='portal'));
   assert.equal(open.items.filter(i=>i.label.startsWith('Plan diagonal')).length,2*design.primary.bayCount);
-  assert.equal(open.items.filter(i=>i.label.startsWith('Body shore')).length,recipe.candidate.shorePositions.length);
+  assert.equal(open.items.filter(i=>i.label.startsWith('Body shore')).length,revision.preferredShorePairs*2);
   const xs=open.items.filter(i=>i.label.startsWith('Transverse floor joist')).map(i=>i.points[0][0]);
   const length=recipe.candidate.deckLengthIn*IN;
   for(let i=0;i<=design.primary.bayCount;i++) assert.ok(xs.some(x=>Math.abs(x-(xs[0]+i*length/design.primary.bayCount))<1e-6));
@@ -61,8 +61,25 @@ test('both plywood lanes tile the deck end-to-end with all end joints supported 
 });
 
 test('the beam sensitivity uses the surveyed support spacing and the governing single missing shore', () => {
-  approx(study.beam.seated.spanIn,recipe.candidate.pairPitchIn);
-  approx(study.beam.unloaded.spanIn,2*recipe.candidate.pairPitchIn);
-  approx(study.beam.unloaded.momentKNm,4*study.beam.seated.momentKNm);
-  approx(study.beam.unloaded.dropMm,16*study.beam.seated.dropMm);
+  const ctx={design,frame:recipe.candidate,donor:recipe.donor,material:read(design.inputs.material)};
+  let lastMass=0;
+  for (const pairs of revision.shorePairTrials) {
+    const trial=compareRoadConfigurations(ctx,revision,pairs);
+    assert.equal(trial.stationsIn.length,pairs);
+    assert.equal(trial.modes.open.items.filter(i=>i.label.startsWith('Body shore ')).length,pairs*2);
+    const [f,r]=ctx.frame.portalXsM.map(x=>x/IN);
+    const xs=[f,...trial.stationsIn,r];
+    const gaps=xs.slice(1).map((x,i)=>x-xs[i]);
+    approx(trial.beam.seated.spanIn,Math.max(...gaps));
+    approx(trial.beam.unloaded.spanIn,Math.max(...gaps.slice(1).map((g,i)=>g+gaps[i])));
+    assert.ok(trial.modes.open.installedLb>lastMass);
+    lastMass=trial.modes.open.installedLb;
+    for (const x of trial.stationsIn) {
+      const pitchCount=(x-recipe.candidate.pairXsM[1]/IN)/recipe.donor.pillarPitchIn;
+      approx(pitchCount,Math.round(pitchCount));
+    }
+  }
+  const initial=compareRoadConfigurations(ctx,revision,recipe.candidate.pairs);
+  approx(initial.beam.unloaded.dropMm,16*initial.beam.seated.dropMm);
+  assert.equal(study.stationsIn.length,5);
 });

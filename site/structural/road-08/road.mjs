@@ -7,8 +7,41 @@ function tubeArea(width, depth, wall) {
   return width * depth - (width - 2 * wall) * (depth - 2 * wall);
 }
 
-export function compareRoadConfigurations(ctx, revision) {
+// The window pitch is measured. Bow phase and load paths at these stations remain provisional.
+function shoreStations(frame, pitch, count) {
+  if (count === frame.pairs) return [...frame.pairXsM];
+  const [front,rear] = frame.portalXsM;
+  const phase = frame.pairXsM[Math.floor(frame.pairXsM.length/2)];
+  const candidates = [];
+  for (let n=Math.floor((front-phase)/pitch)+1; phase+n*pitch<rear-1e-7; n++) {
+    candidates.push(phase+n*pitch);
+  }
+  let best, bestScore;
+  function visit(xs, start) {
+    if (xs.length === count) {
+      const ordered = [front,...xs,rear];
+      const gaps = ordered.slice(1).map((x,i)=>x-ordered[i]);
+      const target = (rear-front)/gaps.length;
+      const score = [Math.max(...gaps), Math.max(...gaps.slice(1).map((g,i)=>g+gaps[i])),
+        gaps.reduce((sum,g)=>sum+(g-target)**2,0),
+        xs.reduce((sum,x,i)=>sum+(x+xs[count-1-i]-front-rear)**2,0)];
+      const different = bestScore ? score.findIndex((v,i)=>Math.abs(v-bestScore[i])>1e-8) : -1;
+      if (!bestScore || (different>=0 && score[different]<bestScore[different])) {
+        best = [...xs]; bestScore = score;
+      }
+      return;
+    }
+    for (let i=start; i<=candidates.length-(count-xs.length); i++) visit([...xs,candidates[i]],i+1);
+  }
+  visit([],0);
+  if (!best) throw Error('Insufficient candidate bow stations for the requested shore count');
+  return best;
+}
+
+export function compareRoadConfigurations(ctx, revision, pairs=revision.preferredShorePairs) {
   const {design, frame, material} = ctx;
+  if (!revision.shorePairTrials.includes(pairs) || !(ctx.donor.pillarPitchIn>0)) throw Error('Invalid shore study inputs');
+  const stations = shoreStations(frame, ctx.donor.pillarPitchIn*IN, pairs);
   const selected = compareDecks(ctx).find(format => format.id === design.deck.selected);
   const previous = buildBackbone({...ctx, analysis: {selected}});
   const previousParts = previous.ledger.filter(part => layers.has(part.layer));
@@ -18,7 +51,7 @@ export function compareRoadConfigurations(ctx, revision) {
   const chord = section(revision.edgeGirder), joist = section(revision.joistSection), brace = section(revision.planBrace);
   // Reuse the end portals, bearing assemblies and horizontal plan bracing. Intermediate
   // bays have no deep side trusses, lower transverse ties or field-spliced side ladders.
-  const keep = item => (item.layer === 'shores' && item.kind === 'box') || item.group === 'portal' || item.label.startsWith('Plan diagonal ');
+  const keep = item => item.group === 'portal' || item.label.startsWith('Plan diagonal ');
   const steel = previous.items.filter(keep).map(item => ({...item}));
   const keptIds = new Set(steel.map(item => item.label));
   const retained = previousParts.filter(part => keptIds.has(part.id));
@@ -50,7 +83,11 @@ export function compareRoadConfigurations(ctx, revision) {
   const shore = frame.shoreGeometry;
   const postArea = tubeArea(shore.tubeWidthM,shore.tubeWidthM,shore.tubeWallM);
   const bearingZ = top - chord.depth;
-  for (const [i,[x,y]] of frame.shorePositions.entries()) {
+  const postLocations = stations.flatMap(x=>[-previous.width/2,previous.width/2].map(y=>[x,y]));
+  for (const [i,[x,y]] of postLocations.entries()) {
+    const [baseLength,baseWidth] = shore.bottomPlateM;
+    steel.push({layer:'shores',kind:'box',label:'Provisional body landing',
+      points:[[x-baseLength/2,y-baseWidth/2,shore.landingM-shore.padThicknessM],[x+baseLength/2,y+baseWidth/2,shore.landingM]]});
     const [padLength,padWidth] = shore.topPlateM;
     const topOfPost = bearingZ - shore.padThicknessM;
     steel.push({layer:'shores', kind:'box', label:'Upper bearing plate',
@@ -94,7 +131,7 @@ export function compareRoadConfigurations(ctx, revision) {
     heightSavedIn:(previous.deckTop-surface)/IN, massSavedLb:previousFullLb-modes.decked.installedLb,
     oldFaces:selected.count, fullFaceAreaM2:sheetW*sheetL, previousFullLb, pitchIn:revision.joistPitchIn};
   // This is an ideal isolated simple span at unit line load, not a model of body/vehicle stiffness.
-  const supports = [frame.portalXsM[0], ...frame.pairXsM, frame.portalXsM[1]];
+  const supports = [frame.portalXsM[0], ...stations, frame.portalXsM[1]];
   const longestSpan = xs => Math.max(...xs.slice(1).map((x,i) => x-xs[i]));
   const inertia = (chord.width*chord.depth**3-(chord.width-2*chord.wall)*(chord.depth-2*chord.wall)**3)/12;
   const load = revision.beamScreenLineLoadKNm;
@@ -102,8 +139,8 @@ export function compareRoadConfigurations(ctx, revision) {
     return {spanIn:span/IN, momentKNm:load*span**2/8,
       dropMm:5*(load*1000)*span**4/(384*material.elasticModulusGPa*1e9*inertia)*1000};
   }
-  const maxWithoutShore = Math.max(...frame.pairXsM.map(x=>longestSpan(supports.filter(station=>station!==x))));
-  return {modes, deck, plywoodLb, areaFt2,
+  const maxWithoutShore = Math.max(...stations.map(x=>longestSpan(supports.filter(station=>station!==x))));
+  return {modes, deck, plywoodLb, areaFt2, stationsIn:stations.map(x=>x/IN),
     beam:{load, seated:beamScreen(longestSpan(supports)), unloaded:beamScreen(maxWithoutShore)}};
 }
 

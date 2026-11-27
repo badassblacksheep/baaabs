@@ -18,22 +18,41 @@ async function run() {
   const [recipe, material, revision] = await Promise.all([
     read(new URL(design.inputs.recipe,base)), read(new URL(design.inputs.material,base)), read(new URL('./design.json',import.meta.url))
   ]);
-  const study = compareRoadConfigurations({design, material, frame: recipe.candidate}, revision);
-  const {modes, deck} = study;
+  const ctx = {design, material, frame:recipe.candidate, donor:recipe.donor};
+  const trials = new Map(revision.shorePairTrials.map(pairs => [pairs,compareRoadConfigurations(ctx,revision,pairs)]));
+  let study = trials.get(revision.preferredShorePairs), modes = study.modes;
+  const deck = study.deck;
+  const select = byId('shore-pairs');
+  for (const [pairs, trial] of trials) {
+    select.add(new Option(pairs + ' pairs · ' + (2*pairs) + ' shores', pairs));
+    const row=byId('shore-trials').insertRow();
+    const name=document.createElement('th');
+    name.scope='row';
+    name.textContent=pairs+' pairs'+(pairs===revision.preferredShorePairs?' · baseline':'');
+    row.append(name);
+    for (const value of [decimal(trial.beam.seated.spanIn,1)+' in',decimal(trial.beam.unloaded.spanIn,1)+' in',
+      decimal(trial.beam.seated.dropMm,2)+' mm',decimal(trial.modes.decked.installedLb)+' lb']) row.insertCell().textContent=value;
+  }
+  select.value = String(revision.preferredShorePairs);
   const outline = await read(new URL('./donor.json', import.meta.url));
   const datums = [...surveyDatums(recipe.donor), ...outline.map(points => ({layer:'donor', kind:'line', points}))];
-  for (const [id, mode] of Object.entries(modes)) {
-    const row = byId('comparison').insertRow();
-    const title = document.createElement('th');
-    title.scope = 'row';
-    title.textContent = mode.label;
-    row.append(title);
-    const installation = mode.frameRetained ? 'Inspect retained steel' : 'Erect steel and fit complete cassettes';
-    for (const value of [decimal(mode.installedLb) + ' lb', mode.topIn === null ? 'Deck stowed' : elevation(mode.topIn),
-      installation, id === 'packed' ? 'Travel on packed cassettes' : mode.facesToFit + ' faces']) {
-      row.insertCell().textContent = value;
+  for(const [id,mode] of Object.entries(modes)) {
+    if(mode.frameRetained) byId('road-mode').add(new Option(mode.label,id));
+  }
+  function updateComparison() {
+    byId('comparison').replaceChildren();
+    for (const [id, mode] of Object.entries(modes)) {
+      const row = byId('comparison').insertRow();
+      const title = document.createElement('th');
+      title.scope = 'row';
+      title.textContent = mode.label;
+      row.append(title);
+      const installation = mode.frameRetained ? 'Inspect retained steel' : 'Erect steel and fit complete cassettes';
+      for (const value of [decimal(mode.installedLb) + ' lb', mode.topIn === null ? 'Deck stowed' : elevation(mode.topIn),
+        installation, id === 'packed' ? 'Travel on packed cassettes' : mode.facesToFit + ' faces']) {
+        row.insertCell().textContent = value;
+      }
     }
-    if (mode.frameRetained) byId('road-mode').add(new Option(mode.label,id));
   }
   const viewer = createViewer(byId('viewport'), () => {});
   let underside = false;
@@ -53,22 +72,34 @@ async function run() {
     viewer.angle(button.dataset.angle);
   };
   byId('road-mode').value = 'decked';
+  updateComparison();
   draw();
   byId('structure-grid').textContent = 'The candidate has ' + deck.joists + ' transverse joist lines at ' +
     deck.pitchIn + ' in centers, with a modeled clear span of ' + decimal(deck.joistSpanIn,1) +
     ' in. The sheet edge projects ' + decimal(deck.edgeOverhangIn,1) + ' in beyond the outside chord face. Verify edge bearing, hatch trimming and concentrated loads.';
-  byId('beam-screen').textContent = 'For an illustrative ' + study.beam.load + ' kN/m on one side bearer, the longest seated span is ' +
-    decimal(study.beam.seated.spanIn,1) + ' in (' + decimal(study.beam.seated.momentKNm,2) + ' kN·m, ' + decimal(study.beam.seated.dropMm,2) +
-    ' mm deflection). Omit the middle shore on that side and the ideal span becomes ' + decimal(study.beam.unloaded.spanIn,1) + ' in (' +
-    decimal(study.beam.unloaded.momentKNm,2) + ' kN·m, ' + decimal(study.beam.unloaded.dropMm,2) + ' mm).';
   byId('sheets').textContent = 'Before hatch cutouts, ' + decimal(deck.plyStock) + ' stock sheets yield ' +
     deck.faces + ' removable faces in two lanes, including a half sheet at opposite ends. Compare this with ' +
     deck.oldFaces + ' individually framed walking surfaces in Rev 07.';
-  byId('pieces').textContent = 'Rev 08 replaces the double layer of carriers and ' + deck.oldFaces +
-    ' steel cassettes with a fixed joist grid. Two continuous side bearers replace the deep side trusses. ' +
-    deck.blocks + ' short longitudinal blocks support the center plywood seam. Relative to the modeled Rev 07 decked kit, this removes about ' +
-    decimal(deck.massSavedLb) + ' lb and lowers the walking surface by ' + decimal(deck.heightSavedIn,1) +
-    ' in. Hatch frames, restraints, tabs and hardware remain unweighed.';
+  function reportShoring() {
+    byId('shore-stations').textContent = 'Selected pair centers in inches aft of Earl’s front bumper: ' +
+      study.stationsIn.map(x=>decimal(x,1)).join(' · ') + '. The end portals are additional supports. Every landing is provisional.';
+    byId('beam-screen').textContent = 'For an illustrative ' + study.beam.load + ' kN/m on one side bearer, the longest seated span is ' +
+      decimal(study.beam.seated.spanIn,1) + ' in (' + decimal(study.beam.seated.momentKNm,2) + ' kN·m, ' + decimal(study.beam.seated.dropMm,2) +
+      ' mm deflection). Omit the most consequential single shore on that side and the ideal span becomes ' + decimal(study.beam.unloaded.spanIn,1) + ' in (' +
+      decimal(study.beam.unloaded.momentKNm,2) + ' kN·m, ' + decimal(study.beam.unloaded.dropMm,2) + ' mm).';
+    byId('pieces').textContent = 'Rev 08 replaces the double layer of carriers and ' + deck.oldFaces +
+      ' steel cassettes with a fixed joist grid. Two continuous side bearers replace the deep side trusses. ' +
+      deck.blocks + ' short longitudinal blocks support the center plywood seam. Relative to the modeled Rev 07 decked kit, this removes about ' +
+      decimal(study.deck.massSavedLb) + ' lb and lowers the walking surface by ' + decimal(deck.heightSavedIn,1) +
+      ' in. Hatch frames, restraints, tabs and hardware remain unweighed.';
+  }
+  select.onchange = () => {
+    study=trials.get(Number(select.value));
+    modes=study.modes;
+    // The sheet layout remains identical; the steel mass follows the selected shore layout.
+    updateComparison(); reportShoring(); draw();
+  };
+  reportShoring();
   byId('plywood').textContent = 'Keeping the plywood on moves about ' + decimal(study.plywoodLb) +
     ' lb onto the elevated floor over ' + decimal(study.areaFt2) + ' ft². If the faces travel inside Earl, total vehicle weight still includes them.';
   byId('time-benefit').textContent = 'With plywood fitted, the current layout also avoids ' + deck.faces +
