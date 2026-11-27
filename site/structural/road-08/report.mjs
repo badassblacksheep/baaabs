@@ -1,5 +1,11 @@
-import {compareRoadConfigurations, surveyDatums} from './road.mjs';
 import {createViewer} from '../modular-07/viewer.mjs';
+
+// Load the road layout and its settings at the same revision as the page entry point.
+function revisionAsset(name) {
+  const url = new URL(name, import.meta.url);
+  url.search = new URL(import.meta.url).search;
+  return url;
+}
 
 const byId = id => document.getElementById(id);
 const decimal = (value, places = 0) => value.toLocaleString('en-US', {maximumFractionDigits: places});
@@ -15,8 +21,8 @@ async function read(url) {
 async function run() {
   const base = new URL('../modular-07/design.json', import.meta.url);
   const design = await read(base);
-  const [recipe, material, revision] = await Promise.all([
-    read(new URL(design.inputs.recipe,base)), read(new URL(design.inputs.material,base)), read(new URL('./design.json',import.meta.url))
+  const [recipe, material, revision, {compareRoadConfigurations, surveyDatums}] = await Promise.all([
+    read(new URL(design.inputs.recipe,base)), read(new URL(design.inputs.material,base)), read(revisionAsset('./design.json')), import(revisionAsset('./road.mjs').href)
   ]);
   const ctx = {design, material, frame:recipe.candidate, donor:recipe.donor};
   const trials = new Map(revision.shorePairTrials.map(pairs => [pairs,compareRoadConfigurations(ctx,revision,pairs)]));
