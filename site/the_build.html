@@ -274,11 +274,9 @@ function locateSpecial(item){
  $('#viewer-status').textContent=item.id+' · '+item.name+' · special item';
 }
 function openLinkedView(){
- if(location.hash==='#wing-supports'){$('#inspect-wing-supports').click();return true}
- if(location.hash==='#road'){
-  const road=$('#road-configuration');
-  if(road && !road.checked)road.click();
-  return Boolean(road);
+ if(location.hash==='#wing-supports' || location.hash==='#road'){
+  window.showWorkshopFloorView?.(location.hash.slice(1));
+  return true;
  }
  if(location.hash==='#dj-booth'){viewBooth();return true}
  const id=location.hash.slice(1);
@@ -300,4 +298,4 @@ for(const p of DATA.panels.filter(p=>p.dj_booth)){
  $('#booth-links').append(link);
 }
 $('#search').addEventListener('input',list);$('#region').addEventListener('change',list);$('#side').addEventListener('change',list);$('#focus').addEventListener('click',focus);$('#overall').addEventListener('click',()=>{stopPicking();clearFlash();model.cameraTarget='0m 3.5m 0m';model.cameraOrbit=matchMedia('(min-width: 1100px)').matches?'0deg 75deg 19m':'0deg 75deg 24m'});model.addEventListener('load',()=>{stopPicking();clearFlash();select(selected,false);if(!openLinkedView()&&matchMedia('(min-width: 1100px)').matches)model.cameraOrbit='0deg 75deg 19m'});model.addEventListener('error',()=>{$('#viewer-status').textContent='3D preview could not load. The panel table and downloads are still available.'});select(selected,false);$('#viewer-status').textContent=helpText;
-</script><script src="panel-layers.js?v=rev09-wings-1"></script><script src="panel-inspector.js?v=crown-header-1"></script></html>
+</script><script src="panel-layers.js?v=38db09d2da"></script><script src="panel-inspector.js?v=crown-header-1"></script></html>

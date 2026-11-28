@@ -1,4 +1,5 @@
 // Regenerate static configuration projections; keep no-JS navigation and checkout.
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -47,11 +48,14 @@ replace('the_build.html', /<a data-panel-material[^>]*>/,
 
 // Keep active model consumers, including static poster fallbacks, on one asset revision.
 const floorVersion=JSON.parse(read('structural/floor-09/design.json')).assetVersion;
-const currentAsset=/(earl-survey-fit\.glb|BAAABS-Animated-Eyes\.blend|earl-front-x-hero\.jpg|earl-symmetric\.jpg|earl-pitch-\d+\.jpg|earl-painted-panel-detail\.jpg|home-model\/(?:viewer\.js|shell\.mesh|poster\.jpg)|panel-layers\.js|drive-model\.mesh|(?:game|renderer)\.js|floor-09\/report\.mjs)\?v=[\w.-]+/g;
+const currentAsset=/(earl-survey-fit\.glb|BAAABS-Animated-Eyes\.blend|earl-front-x-hero\.jpg|earl-symmetric\.jpg|earl-pitch-\d+\.jpg|earl-painted-panel-detail\.jpg|home-model\/(?:viewer\.js|shell\.mesh|poster\.jpg)|drive-model\.mesh|(?:game|renderer)\.js|floor-09\/report\.mjs)\?v=[\w.-]+/g;
 for(const page of ['index.html','pitch.html','eyes.html','the_build.html','script.js','structural/iteration-09.html',
   'test-drive/index.html','test-drive/game.js','test-drive/renderer.js']){
   changes.set(page,source(page).replace(currentAsset,(_,asset)=>asset+'?v='+floorVersion));
 }
+
+const layerHash=createHash('sha256').update(read('panel-layers.js')).digest('hex').slice(0,10);
+replace('the_build.html',/panel-layers\.js\?v=[\w.-]+/,'panel-layers.js?v='+layerHash);
 
 const sandbox = {window:{}, module:{exports:{}}, URL};
 runInNewContext(read('assets/patch-config.js'),sandbox);

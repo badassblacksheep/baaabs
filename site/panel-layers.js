@@ -18,7 +18,7 @@
  document.querySelector('#workshop-layers .layer-options')?.before(roadLabel,roadNote);
  let supportDetail=false;
  const roadSaved=new Map();
- roadInput.addEventListener('change',()=>{
+ function changeRoad(){
    supportDetail=false;
    if(roadInput.checked){
      for(const [g,input] of Object.entries(inputs)){roadSaved.set(g,input.checked);input.checked=g==='bus' || (hasWings && ['deck','deckframe','mounts'].includes(g));input.disabled=true;}
@@ -26,7 +26,8 @@
      for(const [g,input] of Object.entries(inputs)){input.disabled=false;input.checked=roadSaved.get(g)??true;}
    }
    apply();
- });
+ }
+ roadInput.addEventListener('change',changeRoad);
  const specialMaterials=new Map();
  const specialComponents=new Map(DATA.special_items.map(item=>[item.component,item]));
  window.workshopSpecialItem=material=>specialMaterials.get(material?.name);
@@ -95,16 +96,22 @@
   paintHighlights();
  }
  function leaveRoad(){
-  if(roadInput.checked){roadInput.checked=false;roadInput.dispatchEvent(new Event('change'))}
+  if(roadInput.checked){roadInput.checked=false;changeRoad()}
  }
  window.revealWorkshopPanels=()=>{leaveRoad();supportDetail=false;if(!inputs.panels.checked){inputs.panels.checked=true;apply()}};
  barePreview?.addEventListener('change',apply);
  for(const input of Object.values(inputs))input.addEventListener('change',()=>{supportDetail=false;apply()});
- document.querySelector('#inspect-wing-supports')?.addEventListener('click',()=>{
+ function inspectSupports(){
    leaveRoad();supportDetail=true;
    for(const g of groups)inputs[g].checked=['deckframe','mounts'].includes(g);
    apply();model.cameraTarget='0m 3.8m 0m';model.cameraOrbit='-125deg 101deg 12m';
- });
+ }
+ document.querySelector('#inspect-wing-supports')?.addEventListener('click',inspectSupports);
+ // Linked views can initialize before the model's load listeners enable the fieldset.
+ window.showWorkshopFloorView=view=>{
+   if(view==='wing-supports')inspectSupports();
+   else if(view==='road' && !roadInput.checked){roadInput.checked=true;changeRoad()}
+ };
  document.querySelector('#show-framing').addEventListener('click',()=>{
    leaveRoad();supportDetail=false;
    for(const g of groups)inputs[g].checked=['bus','deckframe','mounts'].includes(g);

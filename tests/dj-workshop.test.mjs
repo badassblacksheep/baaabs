@@ -296,6 +296,12 @@ test('the wing material poses follow panel visibility and the isolated support p
   assert.deepEqual(shown(),[1,0,1]);
   q('#inspect-wing-supports').emit('click');assert.deepEqual(shown(),[1,1,0]);
   q('#restore-layers').emit('click');assert.deepEqual(shown(),[1,1,0]);
+  // Native buttons ignore clicks while their fieldset is still disabled on first GLB load.
+  cx.location.hash='#wing-supports';q('#workshop-layers').disabled=true;
+  assert.equal(vm.runInContext('openLinkedView()',cx),true);
+  assert.match(q('#rear-frame-status').textContent,/Support detail/);
+  cx.location.hash='#road';vm.runInContext('openLinkedView()',cx);
+  assert.match(q('#rear-frame-status').textContent,/Road configuration/);
 });
 
 test('camera framing resolves real cutouts up close and closes them at whole-sheep scale', () => {
