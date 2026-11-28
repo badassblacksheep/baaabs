@@ -50,6 +50,31 @@ def section_events(loops, x, sign):
 
 
 class PanelCoverageTests(unittest.TestCase):
+    def test_largest_mirrored_pairs_are_bisected_before_smaller_pairs(self):
+        from paired_sheet_splits import matched_pairs
+        before=json.loads((ROOT/'site/structural/modular-07/panel-layout.json').read_text())
+        after=json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())
+        def area3(loop):
+            v=np.asarray(loop)
+            return np.linalg.norm(np.cross(v,np.roll(v,-1,axis=0)).sum(axis=0))/2
+        originals={p['id']:dict(p,side={'D':'Driver','P':'Passenger'}.get(p['id'].split('-')[1],'Center'),
+                                region=p['id'].split('-')[0] if not p['id'].startswith('K-') else 'Hoof')
+                   for p in before['pieces']}
+        pairs=matched_pairs(originals,set(after['omitted']))
+        sizes={k:area3(p['vertices_m'])-sum(area3(h) for h in p['holes_m']) for k,p in originals.items()}
+        installed={p['id']:p for p in after['pieces']}
+        for step in after['paired_splits']:
+            parents=tuple(step['parents'])
+            winner=max(sum(sizes[k] for k in pair) for pair in pairs)
+            self.assertAlmostEqual(sum(sizes[k] for k in parents),winner,places=6)
+            self.assertIn(parents,pairs)
+            for k,new in zip(parents,step['added'],strict=True):
+                sizes[k]=sizes[new]=sizes[k]/2
+                self.assertAlmostEqual(area3(installed[new]['vertices_m']),sizes[new],places=6)
+                self.assertAlmostEqual(area3(installed[k]['vertices_m']),sizes[k],places=6)
+            pairs.append(tuple(step['added']))
+        self.assertEqual(after['panel_count'],206)
+
     def test_window_and_original_facet_coverage(self):
         source = json.loads((ROOT / 'reference/panels/earl-before-dj.json').read_text())
         baseline = {p['id']: p for p in source['panels']}
@@ -135,6 +160,12 @@ class PanelCoverageTests(unittest.TestCase):
             return {p['id']: np.asarray(p['vertices_m']) for p in plan['pieces']
                     if any(f['source'] == source for f in p['faces'])}
 
+        before_splits = json.loads((ROOT / 'site/structural/modular-07/panel-layout.json').read_text())
+        lineage = {}
+        for step in layout['paired_splits']:
+            for parent,child in zip(step['parents'], step['added'], strict=True):
+                lineage[child] = lineage.get(parent,parent)
+
         for bend in retained:
             start, end = np.array(bend['edge_m'])
             if bend['old_panel'] == 'B-D-033':
@@ -143,7 +174,12 @@ class PanelCoverageTests(unittest.TestCase):
             tracks = []
             for pid in bend['sources']:
                 old = contours(archived, pid)
-                current = contours(layout, pid)
+                # The field fit moves corners; a subsequent saw cut inserts new ones.
+                current = contours(before_splits, pid)
+                active = [np.asarray(p['vertices_m']) for p in layout['pieces']
+                          if lineage.get(p['id'],p['id']) in old]
+                active_edges = np.vstack([np.stack([v,np.roll(v,-1,axis=0)],axis=1) for v in active])
+                active_dir = active_edges[:,1]-active_edges[:,0]
                 # Follow the same material point along each side of the old seam.
                 def edges(polygons):
                     return np.vstack([np.stack([polygons[k], np.roll(polygons[k], -1, axis=0)], axis=1)
@@ -157,7 +193,11 @@ class PanelCoverageTests(unittest.TestCase):
                     gap = np.linalg.norm(original[:,0] + fraction[:,None]*direction-location, axis=1)
                     edge = np.argmin(gap)
                     self.assertLess(gap[edge], .001, pid)
-                    track.append(fitted[edge,0] + fraction[edge]*(fitted[edge,1]-fitted[edge,0]))
+                    point = fitted[edge,0] + fraction[edge]*(fitted[edge,1]-fitted[edge,0])
+                    t = np.clip(((point-active_edges[:,0])*active_dir).sum(axis=1)/(active_dir**2).sum(axis=1),0,1)
+                    nearest = np.linalg.norm(active_edges[:,0]+t[:,None]*active_dir-point,axis=1).min()
+                    self.assertLess(nearest,.001,pid)
+                    track.append(point)
                 tracks.append(np.array(track))
             self.assertLess(np.linalg.norm(tracks[0]-tracks[1], axis=1).max(), .001, bend['old_panel'])
 

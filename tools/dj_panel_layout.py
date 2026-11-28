@@ -149,6 +149,67 @@ def uv_map(model, source, outline):
     return interpolate, orientation
 
 
+def install_piece(model, piece, first, original, source_outline):
+    """Create or replace a pickable mesh from registered vertices in its source frame."""
+    doc=model.doc
+    pid=piece['id']
+    face_defs=piece['faces']
+    if original is None:
+        template = doc['nodes'][first['node']]
+        n = {key:copy.deepcopy(template[key]) for key in ('matrix','scale','rotation','translation') if key in template}
+        doc['nodes'].append(n)
+        parent = first['parent']
+        siblings = doc['scenes'][doc.get('scene',0)]['nodes'] if parent is None else doc['nodes'][parent]['children']
+        siblings.append(len(doc['nodes'])-1)
+        mat = copy.deepcopy(doc['materials'][first['material']])
+        material = len(doc['materials'])
+        mat['name'] = f'Panel_{pid}_{material}'
+        doc['materials'].append(mat)
+        world = first['world']
+    else:
+        n = doc['nodes'][original['node']]
+        material = original['material']
+        world = original['world']
+    # Source facets provide placement and the original perforation map. Only
+    # the installed cut polygon supplies geometry, including across old seams.
+    outline = gltf_coordinates(piece['vertices_m'])
+    holes = [gltf_coordinates(hole) for hole in piece['holes_m']]
+    interpolate, outward = uv_map(model,first,source_outline)
+    direction = np.cross(outline,np.roll(outline,-1,axis=0)).sum(axis=0)
+    direction /= np.linalg.norm(direction)
+    if np.dot(direction,outward)<0:
+        outline = outline[::-1]
+        direction = -direction
+    points, triangles = triangulate_surface(outline,holes)
+    deviation = np.max(abs((points-outline[0]) @ direction))
+    if deviation > 2.e-6:
+        raise ValueError(f'{pid} surface deviates {deviation*1000:.4f} mm from its plane')
+    crosses = np.cross(points[triangles[:,1]]-points[triangles[:,0]],points[triangles[:,2]]-points[triangles[:,0]])
+    net_area = float(np.linalg.norm(crosses,axis=1).sum()/2)
+    local_normal = world[:3,:3].T @ direction
+    local_normal /= np.linalg.norm(local_normal)
+    pos = transform_points(points,np.linalg.inv(world)).tolist()
+    normals = np.repeat(local_normal[None,:],len(pos),axis=0).tolist()
+    indices = triangles.ravel().tolist()
+    name = pid+' | '+piece['name']
+    mesh = len(doc['meshes'])
+    uv_index = model.accessor(interpolate(points).tolist(),2)
+    attributes = {'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normals,3),'TEXCOORD_0':uv_index}
+    attributes[perforation_uv(doc['materials'][material])] = uv_index
+    doc['meshes'].append({'name':name,'primitives':[{
+        'attributes':attributes,
+        'indices':model.accessor(indices,1,True),'material':material}]})
+    n.update(name=name, mesh=mesh, extras={**first['extras'], 'panel_id':pid, 'panel_name':piece['name'],
+        'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':3})
+    extras = n['extras']
+    if 'surface_points' in extras:
+        extras['source_surface_points'] = extras.pop('surface_points')
+    if 'empty_eye_opening' in extras:
+        extras['empty_eye_opening'] = bool(holes)
+    if any(f['source'] in PANEL_IDS for f in face_defs):
+        n['extras']['dj_booth_revision'] = 1
+
+
 def repack_panels(model):
     doc = model.doc
     from survey_fit import ARCHIVE_LAYOUT
@@ -178,60 +239,7 @@ def repack_panels(model):
                 n.setdefault('extras',{}).update(panel_id=pid,panel_name=piece['name'])
                 n['name'] = pid+' | '+piece['name']
             continue
-        if original is None:
-            template = doc['nodes'][first['node']]
-            n = {key:copy.deepcopy(template[key]) for key in ('matrix','scale','rotation','translation') if key in template}
-            doc['nodes'].append(n)
-            parent = first['parent']
-            siblings = doc['scenes'][doc.get('scene',0)]['nodes'] if parent is None else doc['nodes'][parent]['children']
-            siblings.append(len(doc['nodes'])-1)
-            mat = copy.deepcopy(doc['materials'][first['material']])
-            material = len(doc['materials'])
-            mat['name'] = f'Panel_{pid}_{material}'
-            doc['materials'].append(mat)
-            world = first['world']
-        else:
-            n = doc['nodes'][original['node']]
-            material = original['material']
-            world = original['world']
-        # Source facets provide placement and the original perforation map. Only
-        # the installed cut polygon supplies geometry, including across old seams.
-        outline = gltf_coordinates(piece['vertices_m'])
-        holes = [gltf_coordinates(hole) for hole in piece['holes_m']]
-        interpolate, outward = uv_map(model,first,gltf_coordinates(old[face_defs[0]['source']]))
-        direction = np.cross(outline,np.roll(outline,-1,axis=0)).sum(axis=0)
-        direction /= np.linalg.norm(direction)
-        if np.dot(direction,outward)<0:
-            outline = outline[::-1]
-            direction = -direction
-        points, triangles = triangulate_surface(outline,holes)
-        deviation = np.max(abs((points-outline[0]) @ direction))
-        if deviation > 2.e-6:
-            raise ValueError(f'{pid} surface deviates {deviation*1000:.4f} mm from its plane')
-        crosses = np.cross(points[triangles[:,1]]-points[triangles[:,0]],points[triangles[:,2]]-points[triangles[:,0]])
-        net_area = float(np.linalg.norm(crosses,axis=1).sum()/2)
-        local_normal = world[:3,:3].T @ direction
-        local_normal /= np.linalg.norm(local_normal)
-        pos = transform_points(points,np.linalg.inv(world)).tolist()
-        normals = np.repeat(local_normal[None,:],len(pos),axis=0).tolist()
-        indices = triangles.ravel().tolist()
-        name = pid+' | '+piece['name']
-        mesh = len(doc['meshes'])
-        uv_index = model.accessor(interpolate(points).tolist(),2)
-        attributes = {'POSITION':model.accessor(pos,3),'NORMAL':model.accessor(normals,3),'TEXCOORD_0':uv_index}
-        attributes[perforation_uv(doc['materials'][material])] = uv_index
-        doc['meshes'].append({'name':name,'primitives':[{
-            'attributes':attributes,
-            'indices':model.accessor(indices,1,True),'material':material}]})
-        n.update(name=name, mesh=mesh, extras={**first['extras'], 'panel_id':pid, 'panel_name':piece['name'],
-            'net_area_m2':net_area,'source_panels':[f['source'] for f in face_defs],'sheet_layout_revision':3})
-        extras = n['extras']
-        if 'surface_points' in extras:
-            extras['source_surface_points'] = extras.pop('surface_points')
-        if 'empty_eye_opening' in extras:
-            extras['empty_eye_opening'] = bool(holes)
-        if any(f['source'] in PANEL_IDS for f in face_defs):
-            n['extras']['dj_booth_revision'] = 1
+        install_piece(model,piece,first,original,gltf_coordinates(old[face_defs[0]['source']]))
     for retired in set(sources)-set(pieces):
         source = sources[retired]
         n = doc['nodes'][source['node']]

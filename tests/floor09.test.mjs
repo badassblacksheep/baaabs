@@ -74,7 +74,22 @@ test('the build drops precisely the crown sheets projecting over the full deploy
   const original=shellFit(r.layout,baseline,datum).crowns;
   const over=original.filter(c=>rectangles.some(rect=>overlaps(c.points,rect))).map(c=>c.label);
   assert.deepEqual(active.omitted.sort(),over.sort());
-  assert.deepEqual(active.pieces.map(s=>s.id),baseline.pieces.filter(s=>!over.includes(s.id)).map(s=>s.id));
+  const originalIds=baseline.pieces.filter(s=>!over.includes(s.id)).map(s=>s.id);
+  const added=active.paired_splits.flatMap(s=>s.added);
+  assert.deepEqual(active.pieces.map(s=>s.id),[...originalIds,...added].sort());
+  assert.equal(active.panel_count,shape.targetPanelCount);
+  const pieceArea=piece=>{
+    const v=piece.vertices_m,normal=[0,0,0];
+    for(let i=0;i<v.length;i++) for(let k=0;k<3;k++) {
+      const a=v[i], b=v[(i+1)%v.length],j=(k+1)%3,l=(k+2)%3;
+      normal[k]+=a[j]*b[l]-a[l]*b[j];
+    }
+    return Math.hypot(...normal)/2;
+  };
+  for(const step of active.paired_splits) for(const [i,parent] of step.parents.entries()) {
+    const area=pieceArea(baseline.pieces.find(p=>p.id===parent));
+    for(const id of [parent,step.added[i]]) near(pieceArea(active.pieces.find(p=>p.id===id)),area/2);
+  }
   assert.equal(crowns.length,6);
   assert.ok(crowns.every(c=>rectangles.every(rect=>!overlaps(c.points,rect))));
 });

@@ -12,6 +12,7 @@ import re
 import numpy as np
 
 from convex_panel_layout import redesign
+from paired_sheet_splits import split_to_target
 from dj_booth import PANEL_IDS, panel_loops
 from flat_panels import use_stored_fit
 from survey_fit import LongitudinalFit, fit_sheets
@@ -119,6 +120,10 @@ def build(refit=False):
     omitted = floor['omitCrownIds']
     if len(set(omitted)) != len(omitted) or any(k not in parts or ' Crown ' not in parts[k]['name'] for k in omitted):
         raise ValueError('The Rev 09 exclusion list must contain distinct registered crown sheets')
+    if 'panel_count' in seams and len(parts)!=seams['panel_count']:
+        raise ValueError(f"Expected {seams['panel_count']} physical sheets, found {len(parts)}")
+    split_steps = split_to_target(parts, previous, {p['id']:p for p in original['panels']},
+                                 omitted, floor['targetPanelCount'], seams.get('aliases',{}))
     layout=[];panels=[]
     for k in sorted(parts.keys() - set(omitted)):
         p=parts[k]
@@ -131,8 +136,6 @@ def build(refit=False):
         faces=p.pop('source_faces')
         layout.append(dict(id=k,name=p['name'],vertices_m=p['vertices_m'],holes_m=p['holes_m'],faces=faces))
         panels.append(p)
-    if 'panel_count' in seams and len(parts)!=seams['panel_count']:
-        raise ValueError(f"Expected {seams['panel_count']} physical sheets, found {len(parts)}")
     sources={f['source'] for record in layout for f in record['faces']}
     original_ids={p['id'] for p in original['panels']}
     omitted_sources={f['source'] for k in omitted for f in parts[k]['source_faces']}
@@ -146,7 +149,7 @@ def build(refit=False):
     special = seams['special_items']
     if len({i['id'] for i in special} | set(parts)) != len(parts) + len(special):
         raise ValueError('Duplicate ID in the panel register')
-    layout=dict(special_items=special, survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(layout),pieces=layout,splits=splits,omitted=omitted,aliases=aliases)
+    layout=dict(special_items=special, survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(layout),pieces=layout,splits=splits,paired_splits=split_steps,omitted=omitted,aliases=aliases)
     return dict(special_items=special,revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(panels),panels=panels,omitted=omitted,aliases=aliases),layout,original
 
 

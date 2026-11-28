@@ -17,7 +17,7 @@ async function run() {
   const [recipe,material,prior,outline,panels,datum]=await Promise.all([
     read(new URL(design.inputs.recipe,old)),read(new URL(design.inputs.material,old)),
     read(new URL(shape.baseline,moduleUrl)),read(new URL('../road-08/donor.json',moduleUrl)),
-    read(new URL(shape.panelLayout+'?v=wing-clearance',moduleUrl)),read(new URL(design.inputs.shellConfig,old))]);
+    read(new URL(shape.panelLayout+'?v=paired206',moduleUrl)),read(new URL(design.inputs.shellConfig,old))]);
   const study=foldingFloor({design,frame:recipe.candidate,donor:recipe.donor,material},prior,shape);
   const {base,layout,fixedArea,wingArea}=study;
   const fit=shellFit(layout,panels,datum);
@@ -63,6 +63,11 @@ async function run() {
   }
   byId('shell-fit').textContent='With the full 8 ft floor, the nearest modeled head panel is '+num(fit.headSideGapIn,1)+' in outboard of the plywood edge over the plywood thickness. This is lateral clearance to the skin. It excludes head mounts, guard hardware and movement.';
   byId('crown-ids').textContent=panels.omitted.join(' · ');
+  for(const step of panels.paired_splits) {
+    const li=document.createElement('li');
+    li.textContent=step.parents.join(' / ')+' → new aft sheets '+step.added.join(' / ')+'.';
+    byId('paired-cuts').append(li);
+  }
   byId('wing-weight').textContent='A nominal leaf contributes about '+num((study.wingPlyLb+study.wingFrameLb)/(2*study.leavesPerSide))+
     ' lb of steel and plywood before hardware. Give each leaf controlled lifting and lowering, with a positively locked bearing in the open position and a captive travel latch plus secondary retention when folded.';
   byId('fold-width').textContent='With the modeled pivot at the underside of the leaf, the folded plywood faces span '+num(2*(layout.half+layout.thickness+layout.tubeDepth)/IN,1)+

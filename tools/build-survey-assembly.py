@@ -9,7 +9,7 @@ import runpy
 import numpy as np
 
 from dj_booth import read_accessor
-from dj_panel_layout import apply_sheet_spec, gltf_coordinates, node_matrix, sheet_sources, transform_points
+from dj_panel_layout import apply_sheet_spec, gltf_coordinates, install_piece, node_matrix, sheet_sources, transform_points
 from panel_skin import apply_panel_skin
 from survey_deck import install_deck
 from survey_fit import ARCHIVE_LAYOUT, ROOT, SURVEY, LongitudinalFit, donor_datums
@@ -25,7 +25,13 @@ def fit_panels(model, layout):
     active = sheet_sources(model)
     kept = {p['id'] for p in layout['pieces']}
     omitted = set(layout['omitted'])
-    if active.keys() != original.keys() or kept & omitted or kept | omitted != active.keys():
+    # A daughter inherits its original mesh transform and texture coordinates.
+    roots = {}
+    for step in layout.get('paired_splits', []):
+        for parent,child in zip(step['parents'],step['added'],strict=True):
+            roots[parent] = roots.get(parent,parent)
+            roots[child] = roots[parent]
+    if active.keys() != original.keys() or kept & omitted or kept | omitted != active.keys() | roots.keys():
         raise ValueError('Source assembly and registered panel IDs differ')
     for pid in omitted:
         src = active[pid]
@@ -37,9 +43,12 @@ def fit_panels(model, layout):
         mat['name'] = 'Retired_' + mat['name']
     scene = model.doc['scenes'][model.doc.get('scene', 0)]
     scene.setdefault('extras', {})['panel_count'] = len(kept)
-    apply_sheet_spec(model.doc, len(kept))
     for sheet in layout['pieces']:
         pid = sheet['id']
+        if pid in roots:
+            template = roots[pid]
+            install_piece(model,sheet,active[template],active.get(pid),gltf_coordinates(original[template]['vertices_m']))
+            continue
         a, b = [gltf_coordinates(p['vertices_m']) for p in (original[pid], sheet)]
         if np.array_equal(a, b):
             continue
@@ -66,6 +75,8 @@ def fit_panels(model, layout):
         triangles = mesh_xyz[tris]
         area = np.linalg.norm(np.cross(triangles[:,1]-triangles[:,0], triangles[:,2]-triangles[:,0]), axis=1).sum()/2
         model.doc['nodes'][src['node']]['extras']['net_area_m2'] = float(area)
+
+    apply_sheet_spec(model.doc, len(kept))
 
 
 def fit_donor(model, fit):
