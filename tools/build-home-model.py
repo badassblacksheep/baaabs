@@ -1,4 +1,4 @@
-"""Bake homepage WebGL buffers and the Ovine Sauron atlas from the six-shore model."""
+"""Bake homepage WebGL buffers and the Ovine Sauron atlas from the current vehicle assembly."""
 import gzip
 import json
 from pathlib import Path
@@ -143,6 +143,10 @@ def build():
                     # The shared WebGL shader applies the paint factor once, after sampling the steel.
                     verts[:,6:9] = (255 * light.clip(0,1)).round().astype('u1').repeat(3)[:,None]
                     verts[:,9] = 5
+                elif n.get('extras',{}).get('floor_pose') == 'folded':
+                    verts[:,9] = 8  # Travel-only opaque parts.
+                elif not n.get('extras',{}).get('road_retained'):
+                    verts[:,9] = 7  # Event-only opaque parts.
                 group.append(verts)
         for child in n.get('children',[]):
             visit(child,world)

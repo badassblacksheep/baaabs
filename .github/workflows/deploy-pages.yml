@@ -46,7 +46,7 @@ jobs:
           path: |
             ${{ env.ANIMATED_EYE_MODEL }}
             ${{ env.MODEL_BUILD_DIR }}
-          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/dj_panel_layout.py', 'tools/survey_fit.py', 'tools/survey_deck.py', 'site/assets/earl-deck-model.json', 'tools/build-survey-assembly.py', 'tools/panel_skin.py', 'site/assets/panel-skin.json', 'site/assets/images/materials/*.png', 'tools/panel_patterns.py', 'tools/flat_panels.py', 'reference/panels/earl-iteration06-layout.json', 'site/survey-results/measurements.json', 'site/assets/earl-symmetric-panel-register.csv', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
+          key: model-assets-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.github/workflows/deploy-pages.yml', 'tools/build-animated-eyes.py', 'tools/dj_booth.py', 'tools/dj_panel_layout.py', 'tools/survey_fit.py', 'tools/survey_deck.py', 'tools/floor09_assembly.py', 'tools/floor09-recipe.mjs', 'site/structural/floor-09/*', 'site/structural/road-08/road.mjs', 'site/structural/road-08/design.json', 'site/structural/modular-07/design.json', 'site/structural/modular-07/backbone.mjs', 'site/structural/iteration-06-materials.json', 'site/assets/earl-deck-model.json', 'tools/build-survey-assembly.py', 'tools/panel_skin.py', 'site/assets/panel-skin.json', 'site/assets/images/materials/*.png', 'tools/panel_patterns.py', 'tools/flat_panels.py', 'reference/panels/earl-iteration06-layout.json', 'site/survey-results/measurements.json', 'site/assets/earl-symmetric-panel-register.csv', 'tools/infernal_eyes.py', 'tools/hypnotoad_eyes.py', 'tools/build-workshop-roof.py', 'tools/glb_bounds.py', 'tools/bake-structural06.mjs', 'tools/make-eye-blender.py', 'site/assets/models/earl-roof-attachment-study.glb', 'site/assets/models/baaabs-earl-symmetric-workshop.glb', 'site/assets/structural-models-06.json', 'site/assets/structural-preview-06.js', 'site/assets/earl-panel-layout.json') }}
       - name: Determine whether models require rebuilding
         id: model-build
         env:
@@ -90,7 +90,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_dj_booth.py'
           python3 -m unittest discover -s tests -p 'test_panel_coverage.py'
           python3 tools/build-dj-register.py --check
-          node --test tests/dj-workshop.test.mjs tests/home-dj.test.mjs
+          node --test tests/dj-workshop.test.mjs tests/home-dj.test.mjs tests/floor09.test.mjs
       - name: Check structural report and workshop revision
         run: node --test tests/structural-report.test.mjs tests/structural05.test.mjs tests/structural05a.test.mjs tests/structural06.test.mjs
       - name: Build workshop and six-shore models

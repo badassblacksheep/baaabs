@@ -6,7 +6,7 @@ const rotateButton = document.querySelector('#rotation-toggle');
 const skinButton = document.querySelector('#skin-toggle');
 const eyeButton = document.querySelector('[data-eye-pause]');
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
-const base = new URL('.', import.meta.url);
+const base = new URL(import.meta.url);
 let rotate = !motion.matches, animateEyes = !motion.matches;
 let angle = -.49, tilt = .24, zoom = 1, eyeTime = 0;
 let lastTime = 0, lastDrag = -Infinity, frame = 0, visible = true;
@@ -65,7 +65,8 @@ uniform float tile;
 uniform bool textured;
 void main(){
   vec3 rgb = paint;
-  if(eyeSide > 4.5 && !showSkin)discard;
+  if(eyeSide > 7.5 && showSkin)discard;
+  if(!showSkin && ((eyeSide > .5 && eyeSide < 2.5) || (eyeSide > 4.5 && eyeSide < 7.5)))discard;
   if(eyeSide > 5.5){gl_FragColor=vec4(paint,1.);return;}
   if(eyeSide > 4.5){
     gl_FragColor = vec4(steelColor(eyeUV,paint),1.);return;
@@ -144,7 +145,7 @@ function draw(now){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.indices);
     gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);
   }
-  if(fireReady && !motion.matches)drawFire();
+  if(showSkin && fireReady && !motion.matches)drawFire();
   poster.hidden=true;
   if(rotate || (animateEyes && atlasReady))schedule();
 }
@@ -178,7 +179,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name + (name === "shell.mesh" ? "?v=paired206" : "?v=dj-frame1"),base));
+  const response=await fetch(new URL(name + base.search,base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;
@@ -264,7 +265,7 @@ async function start(){
 }
 skinButton.onclick=()=>{
   showSkin=!showSkin;
-  skinButton.textContent=showSkin?'Hide sheep panels':'Show sheep panels';
+  skinButton.textContent=showSkin?'Show road configuration':'Show sheep panels';
   schedule();
 };
 rotateButton.onclick=()=>{rotate=!rotate;buttons();schedule();};

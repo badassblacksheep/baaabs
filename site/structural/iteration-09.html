@@ -15,7 +15,7 @@
 <div class="controls"><label>Wing position <select id="wing-angle"><option value="0">Folded down · travel</option><option value="45">Half raised · setup</option><option value="90" selected>Level · event</option></select></label>
 <label>Surface <select id="faces"><option value="fitted">Plywood fitted</option><option value="bare">Bare frames</option></select></label>
 <label><input type="checkbox" id="show-fit" checked> Head outline and retained crown sheets</label></div>
-<canvas id="viewport" tabindex="0" aria-label="Earl’s floor model. Gold shows both folding wings, blue the fixed floor, orange the shores, white the event safety railing, and pink the retained crown sheets and head outline. Use the view buttons or arrow keys."></canvas>
+<canvas id="viewport" tabindex="0" aria-label="Earl’s floor model. Gold shows both folding wings, blue the fixed floor, orange the shores, white the event safety railing, and pink the retained crown sheets and head outline. Teal shows the sliding supports. Use the view buttons or arrow keys."></canvas>
 <div class="camera"><button data-angle="plan" type="button">Plan</button><button data-angle="end" type="button">End</button><button data-angle="side" type="button">Side</button><button data-angle="underside" type="button">Underside</button><button id="reset" type="button">Isometric</button></div>
 <p id="scene-note" class="model-note" role="status">Loading the floor and the registered shell…</p></section>
 <section id="footprint"><h2>The Rev 09 footprint</h2>
@@ -36,10 +36,10 @@
 <p class="notes">Reference photos supplied by the owner, antixian666’s August 21, 2023 playa-bound front and rear views and April 6, 2014 “Recapitated!” yard view. The yard view exposes the wood underside and shallow framing beneath it. The pink head section in the model comes from Earl’s registered geodesic shell.</p>
 </section>
 <section id="wings"><h2>How the wings work</h2>
-<p>Each leaf pivots around its long inboard edge. A controlled lift takes it just above level so transverse support arms can slide out underneath. Pin the arms, seat the outer edge and engage the leaf’s anti-lift latch. Reverse the order to fold down. Each side gets four support lines across its three leaves, sharing the seat at each seam. Dashed green lines in the level view show their exposed reach.</p>
+<p>Each leaf pivots around its long inboard edge. A controlled lift takes it just above level so transverse support arms can slide out underneath. Pin the arms, seat the outer edge and engage the leaf’s anti-lift latch. Reverse the order to fold down. Each side gets four support lines across its three leaves, sharing the seat at each seam. Teal receivers stay under the fixed floor in all three views. At level, the arms project beneath the leaves and removable saddles bridge up to their undersides. In the folded and half-raised views the arms nest inside the receivers.</p>
 <p>The outer edge loads those arms. Spaced receiver bearings under the fixed floor transfer the resulting shear and bending into the primary grid, then into the side beams, shores and portals. This gives the wings a bus-supported path that leaves the DJ opening clear. Receiver engagement, anchorage, clearance to the existing plan braces and the shared seat at a seam are detail-design items. Each side must carry an uneven crowd without relying on weight on the opposite wing.</p>
 <p id="wing-weight"></p><p id="fold-width"></p>
-<p>The model shows the leaf frame, its motion and the event railing. Support arms, receivers, lift and latch hardware are still conceptual. One-sided loading governs a different case from an evenly filled floor. Edge crowding, rhythmic motion, guard loads and roll need to be resolved before setting an occupancy or permitting occupied movement.</p>
+<p>The model shows the leaf frame, support arms, open-ended receivers, keeper pins, removable saddles and event railing. Hardware envelopes illustrate fit and motion. The lift, leaf latches, travel restraints and connection details remain open. One-sided loading governs a different case from an evenly filled floor. Edge crowding, rhythmic motion, guard loads and roll need to be resolved before setting an occupancy or permitting occupied movement.</p>
 </section>
 <section id="shell"><h2>Clear floor, guarded edge</h2>
 <p>Ten body crown sheets crossed the deployed floor in plan. I removed the entire sheet in each case, five per side. The six crown sheets beyond the wing footprint remain. The <a href="../the_build.html">workshop</a> and <a href="../assets/earl-dj-panel-register.csv">cut register</a> carry 206 sheets after five mirrored pairs are split and the separate DJ booth frame.</p>
@@ -52,4 +52,4 @@
 <li><strong>Head.</strong> Fit the geodesic head at the full-width forward deck on its separate pickup.</li>
 <li><strong>Panels.</strong> Fit the retained crown and body sheets outside the guarded floor while preserving the DJ sightline.</li>
 </ol><p class="notes">The earlier <a href="iteration-08.html">fixed-floor study</a> remains available with its original rectangular deck, road comparison and three-to-six-pair sensitivity. Rev 09 establishes a layout. Installed hardware, road use and crowd capacity are unrated.</p></section>
-</main><script type="module" src="floor-09/report.mjs?v=paired206"></script></body></html>
+</main><script type="module" src="floor-09/report.mjs?v=rev09-wings-1"></script></body></html>

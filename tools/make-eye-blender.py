@@ -161,6 +161,33 @@ def install_panel_visibility(scene, settings):
         tree.links.new(rule.outputs['Opacity'], shader.inputs['Alpha'])
 
 
+def install_floor_views(scene):
+    """Switch the editable assembly using Blender's native view-layer picker."""
+    event_parts = bpy.data.collections.new('Event equipment and deployed wings')
+    folded = bpy.data.collections.new('Folded wings and retracted arms')
+    for coll in (event_parts,folded):
+        scene.collection.children.link(coll)
+    for obj in list(scene.objects):
+        if obj.type!='MESH' or (obj.get('road_retained') and obj.get('floor_pose')!='folded'):
+            continue
+        target = folded if obj.get('floor_pose')=='folded' else event_parts
+        for collection in list(obj.users_collection):
+            collection.objects.unlink(obj)
+        target.objects.link(obj)
+        if target == folded:
+            for mat in obj.data.materials:
+                if mat and mat.node_tree:
+                    for node in mat.node_tree.nodes:
+                        if node.type=='BSDF_PRINCIPLED':
+                            node.inputs['Alpha'].default_value=1
+    event = bpy.context.view_layer
+    event.name = 'Event'
+    travel = scene.view_layers.new('Road')
+    event.layer_collection.children[folded.name].exclude=True
+    travel.layer_collection.children[event_parts.name].exclude=True
+    travel.use=False  # The default render outputs the event layer.
+    scene['Floor configurations']='Select Event or Road in the view-layer picker.'
+
 def add_survey_guides(doc):
     """Editable ruler geometry, separate from physical parts and hidden in renders."""
     meta = doc['scenes'][doc.get('scene', 0)]['extras']
@@ -196,6 +223,11 @@ def add_survey_guides(doc):
 def verify(destination, doc):
     bpy.ops.wm.open_mainfile(filepath=str(destination))
     scene = bpy.context.scene
+    if doc['asset'].get('extras',{}).get('roof_iteration')=='09':
+        for pose,layer,other in [('folded','Road','Event'),('event','Event','Road')]:
+            objs=[o for o in scene.view_layers[layer].objects if o.get('floor_role')=='slide arm']
+            assert len(objs)==8 and all(o.get('floor_pose')==pose for o in objs)
+            assert all(o.name not in scene.view_layers[other].objects for o in objs)
     expected_tracks = {clip["name"] for clip in doc["animations"]}
     tracks = {track.name for obj in scene.objects if obj.animation_data
               for track in obj.animation_data.nla_tracks}
@@ -294,6 +326,8 @@ if __name__ == "__main__":
     source, destination = [Path(arg).resolve() for arg in sys.argv[sys.argv.index("--") + 1:]]
     doc = gltf_document(source)
     populate_scene(source)
+    if doc['asset'].get('extras',{}).get('roof_iteration')=='09':
+        install_floor_views(bpy.context.scene)
     if (visibility := doc['asset'].get('extras', {}).get('panelVisibility')):
         install_panel_visibility(bpy.context.scene, visibility)
     if 'survey_field_readings' in doc['scenes'][doc.get('scene', 0)]['extras']:

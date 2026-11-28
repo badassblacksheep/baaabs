@@ -72,13 +72,13 @@ export function compareRoadConfigurations(ctx, revision, pairs=revision.preferre
   }
   const [blockWidth,blockDepth,blockWall] = design.deck.frameSectionIn.map(value => value*IN);
   let addedKg = 0;
-  function member(label, a, b, area, layer='deck') {
-    steel.push({layer, kind:'line', points:[a,b], label});
+  function member(label, a, b, area, section, layer='deck') {
+    steel.push({layer, kind:'line', points:[a,b], label, section});
     addedKg += Math.hypot(...a.map((value,i)=>value-b[i])) * area * material.densityKgM3;
   }
   const nominalArea = s => tubeArea(s.width,s.depth,s.wall/material.designWallFactor);
   for(const y of [-previous.width/2, previous.width/2]) {
-    member('Continuous side bearer', [front,y,previous.high], [rear,y,previous.high], nominalArea(chord), 'primary');
+    member('Continuous side bearer', [front,y,previous.high], [rear,y,previous.high], nominalArea(chord), [chord.width,chord.depth], 'primary');
   }
   const shore = frame.shoreGeometry;
   const postArea = tubeArea(shore.tubeWidthM,shore.tubeWidthM,shore.tubeWallM);
@@ -92,7 +92,7 @@ export function compareRoadConfigurations(ctx, revision, pairs=revision.preferre
     const topOfPost = bearingZ - shore.padThicknessM;
     steel.push({layer:'shores', kind:'box', label:'Upper bearing plate',
       points:[[x-padLength/2,y-padWidth/2,topOfPost],[x+padLength/2,y+padWidth/2,bearingZ]]});
-    member('Body shore '+(i+1), [x,y,shore.landingM], [x,y,topOfPost], postArea, 'shores');
+    member('Body shore '+(i+1), [x,y,shore.landingM], [x,y,topOfPost], postArea, [shore.tubeWidthM,shore.tubeWidthM], 'shores');
     const area = ([l,w]) => l*w;
     addedKg += (area(shore.topPlateM)+area(shore.bottomPlateM))*shore.padThicknessM*material.densityKgM3;
   }
@@ -100,10 +100,10 @@ export function compareRoadConfigurations(ctx, revision, pairs=revision.preferre
   const blockArea = tubeArea(blockWidth,blockDepth,blockWall);
   for (let i=0; i<=bays; i++) {
     const x = front+i*pitch;
-    member('Transverse floor joist '+(i+1), [x,-halfSpan,joistZ], [x,halfSpan,joistZ], joistArea);
+    member('Transverse floor joist '+(i+1), [x,-halfSpan,joistZ], [x,halfSpan,joistZ], joistArea,[joist.width,joist.depth]);
     if (i<bays) {
       const z=top-blockDepth/2;
-      member('Center seam block '+(i+1), [x+joist.width/2,0,z], [x+pitch-joist.width/2,0,z], blockArea);
+      member('Center seam block '+(i+1), [x+joist.width/2,0,z], [x+pitch-joist.width/2,0,z], blockArea,[blockWidth,blockDepth]);
     }
   }
   const faces = [], surface = top + design.deck.plyThicknessIn * IN;

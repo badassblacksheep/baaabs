@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {foldingFloor} from '../site/structural/floor-09/floor.mjs';
-import {deployedSeats,eventGuard,shellFit,wingGeometry} from '../site/structural/floor-09/wings.mjs';
+import {wingSupports,eventGuard,shellFit,wingGeometry} from '../site/structural/floor-09/wings.mjs';
 
 const root=new URL('../site/structural/modular-07/',import.meta.url);
 const read=p=>JSON.parse(readFileSync(new URL(p,root),'utf8'));
@@ -48,8 +48,9 @@ test('mirrored hanging leaves rotate rigidly into the floor plane and share four
       if(degrees===0){near(a[1],c[1]);near(a[2]-c[2],layout.reach);}
     }
   }
-  const seats=deployedSeats(layout);assert.equal(seats.length,8);
-  near(seats[0].points[0][0],layout.begin);near(seats[3].points[0][0],layout.end);
+  const seats=wingSupports(layout,true).filter(i=>i.group==='slide arm');assert.equal(seats.length,8);
+  const station=s=>(s.points[0][0]+s.points[1][0])/2;
+  near(station(seats[0]),layout.begin);near(station(seats[3]),layout.end);
 });
 
 test('the build drops precisely the crown sheets projecting over the full deployed floor',()=>{
@@ -105,4 +106,27 @@ test('the event guard encloses wing tips and returns and has a gated rear stair 
   assert.deepEqual(top[0].points[0],upper[0]);assert.deepEqual(top.at(-1).points[1],upper[1]);
   for(const x of [layout.begin,layout.end]) for(const sign of [-1,1])
     assert.ok(top.some(s=>s.points.every(p=>p[0]===x) && s.points.some(p=>p[1]===sign*(layout.half+layout.reach))));
+});
+
+test('each deployed slide retains engagement and retracts its full travel inside a receiver',()=>{
+  const {layout}=r;
+  const stages=[false,true].map(extended=>wingSupports(layout,extended));
+  const arms=stages.map(parts=>parts.filter(p=>p.group==='slide arm'));
+  const fixed=parts=>parts.filter(p=>p.pose==='fixed');
+  assert.deepEqual(fixed(stages[0]),fixed(stages[1]));
+  assert.equal(stages[0].filter(p=>p.group==='removable bearing saddle').length,0);
+  const seats=stages[1].filter(p=>p.group==='removable bearing saddle');
+  assert.equal(seats.length,arms[1].length);
+  const radial=box=>box.points.map(p=>Math.abs(p[1])).sort((a,b)=>a-b);
+  for(const [i,open] of arms[1].entries()){
+    const [heel,tip]=radial(open), [inboard,foldedTip]=radial(arms[0][i]);
+    near(tip-foldedTip,layout.reach);near(foldedTip,layout.half);
+    near(heel-inboard,layout.reach);assert.ok(heel<layout.half);
+    near(seats[i].points[0][2],open.points[1][2]);
+    near(seats[i].points[1][2],layout.surface-layout.thickness-layout.tubeDepth);
+    const walls=fixed(stages[0]).filter(p=>p.group==='receiver wall' &&
+      p.label.split(' · ')[0]===open.label.split(' · ')[0]);
+    assert.equal(walls.length,4);
+    for(const w of walls){const [a,b]=radial(w);near(a,inboard);near(b,foldedTip);}
+  }
 });

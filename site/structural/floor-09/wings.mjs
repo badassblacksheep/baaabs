@@ -17,13 +17,13 @@ export function wingGeometry(layout, degrees, fitted) {
       const a=begin+i*leafLength, b=a+leafLength;
       const label=side+' wing '+(i+1);
       const mid=thickness+tubeDepth/2;
-      const line=(p,q,name)=>items.push({kind:'line', layer:'wing', group:'leaf-frame', label:label+' · '+name, points:[p,q]});
-      for (const r of [0,reach]) line(point(a,r,mid),point(b,r,mid),'long edge');
+      const line=(p,q,name)=>items.push({kind:'line', layer:'wing', group:'leaf-frame', section:[layout.tubeWidth,tubeDepth], label:label+' · '+name, points:[p,q]});
+      for (const r of [layout.tubeWidth/2,reach-layout.tubeWidth/2]) line(point(a,r,mid),point(b,r,mid),'long edge');
       for (let j=0;j<=Math.round(leafLength/pitch);j++) {
-        const x=a+j*pitch;
-        line(point(x,0,mid),point(x,reach,mid),'transverse rib');
+        const x=Math.max(a+layout.tubeWidth/2,Math.min(b-layout.tubeWidth/2,a+j*pitch));
+        line(point(x,layout.tubeWidth,mid),point(x,reach-layout.tubeWidth,mid),'transverse rib');
       }
-      if (fitted) items.push({kind:'polygon',layer:'wing',face:true,label,
+      if (fitted) items.push({kind:'polygon',layer:'wing',face:true,label,down:[0,-sign*Math.cos(angle),-Math.sin(angle)],
         points:[point(a,0),point(b,0),point(b,reach),point(a,reach)]});
     }
   }
@@ -77,17 +77,42 @@ export function shellFit(layout, panels, datum) {
   return {crowns,head,headSideGapIn:Number.isFinite(headSideGap)?headSideGap/IN:null};
 }
 
-// Only the exposed travel of each arm is drawn. Receiver engagement is unsized.
-// A shared seat at each interior leaf seam has a separate latch for each leaf.
-export function deployedSeats(layout) {
-  const {begin,end,leafLength,half,reach,surface,thickness,tubeDepth}=layout;
-  const count=Math.round((end-begin)/leafLength)+1;
-  const z=surface-thickness-tubeDepth;
-  return [-1,1].flatMap(sign=>Array.from({length:count},(_,i)=>{
-    const x=begin+i*leafLength;
-    return {kind:'line',layer:'primary',guide:true,label:'Slide-out support arm',
-      points:[[x,sign*half,z],[x,sign*(half+reach),z]]};
-  }));
+// The arm keeps its full length in both poses. A removable saddle bridges the
+// gap between the low receiver line and the underside of the level leaf frame.
+export function wingSupports(layout,extended) {
+  const {begin,end,leafLength,half,reach,surface,thickness,tubeDepth,support,girder,joist}=layout;
+  const inches=k=>support[k]*IN;
+  const sleeve=inches('receiverOutsideIn'), wall=inches('receiverWallIn'), arm=inches('armOutsideIn');
+  const engage=inches('engagementIn'), length=reach+engage, seat=inches('seatLengthIn'), pin=inches('pinDiameterIn');
+  const top=surface-thickness, z=top-girder.depth-sleeve/2;
+  if (!(0<wall && arm<sleeve-2*wall && length<half && pin<engage && arm>0)) throw Error('Invalid support envelopes');
+  const items=[];
+  for(const sign of [-1,1]) for(let i=0;i<=Math.round((end-begin)/leafLength);i++) {
+    const x=begin+i*leafLength, tip=extended?reach:0;
+    const label=(sign<0?'Driver':'Passenger')+' support '+(i+1);
+    function box(role,pose,x1,x2,r1,r2,z1,z2) {
+      const y1=sign*(half+r1), y2=sign*(half+r2);
+      items.push({kind:'box',layer:'supports',group:role,pose,label:label+' · '+role,
+        points:[[x+x1,Math.min(y1,y2),z1],[x+x2,Math.max(y1,y2),z2]]});
+    }
+    // Four walls keep the receiver bore visible around the nested sliding member.
+    for(const side of [-1,1]) {
+      const dx=side*(sleeve-wall)/2;
+      box('receiver wall','fixed',dx-wall/2,dx+wall/2,-length,0,z-sleeve/2,z+sleeve/2);
+      const dz=side*(sleeve-wall)/2;
+      box('receiver wall','fixed',-sleeve/2+wall,sleeve/2-wall,-length,0,z+dz-wall/2,z+dz+wall/2);
+    }
+    // Outboard the sleeve bears against the side girder; inboard it hangs below the transverse joist.
+    box('inboard receiver hanger','fixed',-joist.width/2,joist.width/2,-length,-length+sleeve,
+      z+sleeve/2,top-joist.depth);
+    box('slide arm',extended?'event':'folded',-arm/2,arm/2,tip-length,tip,z-arm/2,z+arm/2);
+    const r=-engage/2;
+    items.push({kind:'line',layer:'supports',group:'lock pin',pose:'fixed',label:label+' · keeper pin',
+      section:[pin,pin],points:[[x-sleeve/2-wall,sign*(half+r),z],[x+sleeve/2+wall,sign*(half+r),z]]});
+    if(extended)box('removable bearing saddle','event',-seat/2,seat/2,
+      reach-layout.tubeWidth,reach,z+arm/2,surface-thickness-tubeDepth);
+  }
+  return items;
 }
 
 // The removable event guard follows the whole stepped perimeter; the seam

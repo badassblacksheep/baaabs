@@ -51,7 +51,7 @@ if (modelButton && modelStage) {
         viewer.addEventListener('load', () => { clearTimeout(timer); resolve(); }, {once:true});
         viewer.addEventListener('error', () => { clearTimeout(timer); reject(new Error('Model unavailable')); }, {once:true});
       });
-      viewer.setAttribute('src', 'assets/models/earl-survey-fit.glb?v=perforation-lod1');
+      viewer.setAttribute('src', 'assets/models/earl-survey-fit.glb?v=rev09-wings-1');
       modelStage.append(viewer);
       await loaded;
       modelStage.classList.add('is-loaded');

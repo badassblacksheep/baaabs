@@ -11,6 +11,7 @@ import numpy as np
 from dj_booth import read_accessor
 from dj_panel_layout import apply_sheet_spec, gltf_coordinates, install_piece, node_matrix, sheet_sources, transform_points
 from panel_skin import apply_panel_skin
+from floor09_assembly import install_folding_floor
 from survey_deck import install_deck
 from survey_fit import ARCHIVE_LAYOUT, ROOT, SURVEY, LongitudinalFit, donor_datums
 
@@ -145,5 +146,6 @@ if __name__ == '__main__':
     apply_survey(model)
     recipe = json.loads((ROOT / 'site/assets/earl-deck-model.json').read_text())
     install_deck(model, recipe, donor_datums(model.doc)[0])
+    install_folding_floor(model, donor_datums(model.doc)[0])
     apply_panel_skin(model)
     model.save(args.destination)

@@ -101,7 +101,7 @@ export function buildBackbone(ctx) {
   for(const piece of pieces) {
     let kg=0;
     for(const m of piece.members) {
-      drawing('primary','line',[m.a,m.b],piece.id,{group:piece.group,bay:piece.bay});
+      drawing('primary','line',[m.a,m.b],piece.id,{group:piece.group,bay:piece.bay,section:[m.width,m.depth],axis:m.axis_y});
       kg+=mass(distance(m.a,m.b),m);
     }
     part('primary',piece.id,piece.sizeM,1,kg);

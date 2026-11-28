@@ -1,6 +1,6 @@
-import {foldingFloor} from './floor.mjs?v=full-width-guard';
-import {wingGeometry,shellFit,deployedSeats,eventGuard} from './wings.mjs?v=full-width-guard';
-import {createViewer} from '../modular-07/viewer.mjs?v=full-width-guard';
+import {foldingFloor,floorAssembly} from './floor.mjs?v=wing-assembly';
+import {shellFit} from './wings.mjs?v=wing-assembly';
+import {createViewer} from '../modular-07/viewer.mjs?v=wing-assembly';
 import {IN} from '../modular-07/backbone.mjs';
 
 const byId=id=>document.getElementById(id);
@@ -13,7 +13,7 @@ async function read(url) {
 async function run() {
   const moduleUrl=new URL(import.meta.url);
   const old=new URL('../modular-07/design.json',moduleUrl);
-  const [design,shape]=await Promise.all([read(old),read(new URL('design.json?v=full-width-guard',moduleUrl))]);
+  const [design,shape]=await Promise.all([read(old),read(new URL('design.json?v=wing-assembly',moduleUrl))]);
   const [recipe,material,prior,outline,panels,datum]=await Promise.all([
     read(new URL(design.inputs.recipe,old)),read(new URL(design.inputs.material,old)),
     read(new URL(shape.baseline,moduleUrl)),read(new URL('../road-08/donor.json',moduleUrl)),
@@ -22,7 +22,7 @@ async function run() {
   const {base,layout,fixedArea,wingArea}=study;
   const fit=shellFit(layout,panels,datum);
   const donor=outline.map(points=>({layer:'donor',kind:'line',points}));
-  const visible=new Set(['primary','deck','shores','wing','donor','panels','guard']);
+  const visible=new Set(['primary','deck','shores','wing','donor','panels','guard','supports']);
   const viewer=createViewer(byId('viewport'),()=>{});
   let underside=false;
   function draw() {
@@ -30,17 +30,12 @@ async function run() {
     const fitted=byId('faces').value==='fitted';
     const overlay=byId('show-fit');
     overlay.disabled=angle===0;
-    const core=base.modes[fitted?'decked':'open'].items.filter(i=>!underside || i.layer!=='shores');
-    const items=[...(underside?[]:donor),...core,
-      ...wingGeometry(layout,angle,fitted)];
-    if(angle===90) {
-      items.push(...deployedSeats(layout));
-      if(fitted) items.push(...eventGuard(layout));
-    }
+    const floor=floorAssembly(study,angle,fitted).filter(i=>!underside || i.layer!=='shores');
+    const items=[...(underside?[]:donor),...floor];
     if(overlay.checked && angle>0) items.push(...fit.crowns,...fit.head);
     viewer.setScene(items,visible,{mode:'road',nodes:[],label:'Gold · wings     Blue · center floor'});
     const state=angle===0?'Folded for the travel study':angle===90?'Level for the event layout':'Swinging out and up';
-    byId('scene-note').textContent=state+' · '+(fitted?'plywood fitted':'bare frames')+
+    byId('scene-note').textContent=state+(angle===90?' · arms extended with bearing saddles':' · arms retracted into receivers')+' · '+(fitted?'plywood fitted':'bare frames')+
       (overlay.checked && angle>0?' · pink shows the six retained crown sheets and the head outline at floor height.':'.');
   }
   for(const id of ['wing-angle','faces','show-fit']) byId(id).onchange=draw;

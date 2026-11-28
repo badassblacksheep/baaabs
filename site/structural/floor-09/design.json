@@ -21,5 +21,16 @@
     "B-P-027",
     "B-P-029"
   ],
-  "targetPanelCount": 206
+  "targetPanelCount": 206,
+  "supportDisplay": {
+    "engagementIn": 9,
+    "receiverOutsideIn": 3,
+    "receiverWallIn": 0.1875,
+    "armOutsideIn": 2.5,
+    "seatLengthIn": 4,
+    "pinDiameterIn": 0.5,
+    "guardTubeIn": 1.5,
+    "basis": "Illustrative envelopes for the sliding mechanism and guard. Sections, bearing engagement, locking and connections are unsized."
+  },
+  "assetVersion": "rev09-wings-1"
 }

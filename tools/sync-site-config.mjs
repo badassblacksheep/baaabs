@@ -45,6 +45,14 @@ replace('the_build.html', /<input id="preview-bare-steel"[^>]*>/,
 replace('the_build.html', /<a data-panel-material[^>]*>/,
   '<a data-panel-material data-finish="'+escape(skin.name)+'" href="assets/'+escape(skin.reference)+'">');
 
+// Keep active model consumers, including static poster fallbacks, on one asset revision.
+const floorVersion=JSON.parse(read('structural/floor-09/design.json')).assetVersion;
+const currentAsset=/(earl-survey-fit\.glb|BAAABS-Animated-Eyes\.blend|earl-front-x-hero\.jpg|earl-symmetric\.jpg|earl-pitch-\d+\.jpg|earl-painted-panel-detail\.jpg|home-model\/(?:viewer\.js|shell\.mesh|poster\.jpg)|panel-layers\.js|drive-model\.mesh|(?:game|renderer)\.js|floor-09\/report\.mjs)\?v=[\w.-]+/g;
+for(const page of ['index.html','pitch.html','eyes.html','the_build.html','script.js','structural/iteration-09.html',
+  'test-drive/index.html','test-drive/game.js','test-drive/renderer.js']){
+  changes.set(page,source(page).replace(currentAsset,(_,asset)=>asset+'?v='+floorVersion));
+}
+
 const sandbox = {window:{}, module:{exports:{}}, URL};
 runInNewContext(read('assets/patch-config.js'),sandbox);
 runInNewContext(read('assets/patch.js'),sandbox);

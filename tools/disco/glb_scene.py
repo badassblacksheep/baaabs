@@ -127,6 +127,8 @@ class Scene:
 
     def visit(self, index, parent):
         node = self.gltf["nodes"][index]
+        if node.get('extras', {}).get('floor_pose') == 'folded':
+            return
         world = parent @ transform(node)
         if abs(np.linalg.det(world[:3, :3])) < 1e-8:
             return
@@ -155,7 +157,7 @@ class Scene:
                     index = self.texture(info, mat["alphaCutoff"])
                 elif component in ("rails", "poofer", "ladder"):
                     base = np.array([0.52, 0.51, 0.55, 1])
-                elif component == "deck":
+                elif component == "deck" and not node.get("extras", {}).get("floor_pose"):
                     base = np.array([0.65, 0.62, 0.60, 1])
                 elif info is not None and "TEXCOORD_0" in prim["attributes"]:
                     index = self.texture(info)

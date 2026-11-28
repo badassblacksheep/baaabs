@@ -1,6 +1,6 @@
 import {IN} from '../modular-07/backbone.mjs';
 import {compareRoadConfigurations} from '../road-08/road.mjs';
-import {wingGeometry} from './wings.mjs';
+import {wingGeometry,wingSupports,eventGuard} from './wings.mjs';
 
 export function foldingFloor(ctx,rev8,shape) {
   const base=compareRoadConfigurations(ctx,rev8);
@@ -11,7 +11,9 @@ export function foldingFloor(ctx,rev8,shape) {
   const [stockWidth,leafLength]=design.deck.stockSheetIn.map(v=>v*IN);
   const surface=base.modes.decked.topIn*IN,thickness=design.deck.plyThicknessIn*IN;
   const layout={front,rear,guard:shape.guard,begin:front+shape.wingStartBay*pitch,end:rear-shape.wingEndInsetBays*pitch,
-    half,surface,reach:shape.wingProjectionIn*IN,pitch,leafLength,thickness,tubeDepth};
+    half,surface,support:shape.supportDisplay,tubeWidth,
+    girder:frame.members.find(m=>m.name===rev8.edgeGirder),joist:frame.members.find(m=>m.name===rev8.joistSection),
+    reach:shape.wingProjectionIn*IN,pitch,leafLength,thickness,tubeDepth};
   const leavesPerSide=Math.round((layout.end-layout.begin)/leafLength);
   if(!(front<=layout.begin &&
       layout.end<=rear && layout.reach>0 && layout.reach<=stockWidth && leavesPerSide>0 &&
@@ -28,4 +30,13 @@ export function foldingFloor(ctx,rev8,shape) {
   return {base,layout,leavesPerSide,fixedArea,wingArea,steelLb,deckedLb,
     wingFrameLb,wingPlyLb:wingArea*design.deck.plyLbFt2,
     stockCore:base.deck.plyStock,stockWings:Math.ceil(2*leavesPerSide/Math.floor(stockWidth/layout.reach+1e-8))};
+}
+
+export function floorAssembly(study, degrees, fitted) {
+  const {base,layout}=study;
+  const core=base.modes[fitted?'decked':'open'].items;
+  const leaves=wingGeometry(layout,degrees,fitted);
+  const supports=wingSupports(layout,degrees===90);
+  const guard=degrees===90 && fitted ? eventGuard(layout) : [];
+  return [...core,...leaves,...supports,...guard];
 }

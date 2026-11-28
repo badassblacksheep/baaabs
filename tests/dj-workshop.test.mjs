@@ -275,6 +275,29 @@ test('bare steel preview restores the paint and layer toggles preserve the perfo
   assert.equal(panel.cutoff,spec.alphaCutoff);
 });
 
+test('the wing material poses follow panel visibility and the isolated support preset', () => {
+  const {q,cx}=workshop();
+  q('#model').hasAttribute=key=>key==='data-folding-floor';
+  for(const group of ['deckframe','mounts','panels','equipment','deck','bus'])q('#layer-'+group).checked=true;
+  function material(pose) {
+    return {name:'Workshop_deckframe_Rev09_'+pose,mode:pose==='folded'?'MASK':'OPAQUE',
+      emissiveFactor:[0,0,0], getAlphaMode(){return this.mode},getAlphaCutoff(){return .5},
+      setAlphaMode(mode){this.mode=mode}, setAlphaCutoff(){},setEmissiveFactor(){},
+      pbrMetallicRoughness:{baseColorFactor:[.5,.4,.1,pose==='folded'?0:1],
+        setBaseColorFactor(v){this.baseColorFactor=Array.from(v)}}};
+  }
+  const poses=['fixed','event','folded'], materials=poses.map(material);
+  q('#model').originalGltfJson={nodes:[],materials:materials.map((m,i)=>({name:m.name,extras:{floor_pose:poses[i]}}))};
+  q('#model').model={materials};
+  vm.runInContext(fs.readFileSync(new URL('panel-layers.js',site),'utf8'),cx);
+  const shown=()=>materials.map(m=>m.pbrMetallicRoughness.baseColorFactor[3]);
+  assert.deepEqual(shown(),[1,1,0]);
+  q('#layer-panels').checked=false;q('#layer-panels').emit('change');
+  assert.deepEqual(shown(),[1,0,1]);
+  q('#inspect-wing-supports').emit('click');assert.deepEqual(shown(),[1,1,0]);
+  q('#restore-layers').emit('click');assert.deepEqual(shown(),[1,1,0]);
+});
+
 test('camera framing resolves real cutouts up close and closes them at whole-sheep scale', () => {
   const {q,cx}=workshop();
   const spec=JSON.parse(fs.readFileSync(new URL('assets/panel-skin.json',site)));

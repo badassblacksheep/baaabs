@@ -18,6 +18,7 @@ function bakeVehicle(data){
   const model=new Geometry(), outlets=[];
   function visit(id,parents){
     const n=doc.nodes[id], chain=[n,...parents];
+    if(n.extras?.floor_pose==='folded')return; // The playa vehicle carries the deployed floor.
     for(const prim of doc.meshes[n.mesh]?.primitives||[]){
       const eye=/^Eye_([LR])_Hypnotoad_frame_00$/.exec(n.name);
       if(n.extras?.component==='eye_effect' && !eye)continue;
@@ -42,7 +43,7 @@ function bakeVehicle(data){
         continue;
       }
       if(component==='poofer'||component==='ladder'||component==='rails')color=rgb(0xbab2c0);
-      else if(component==='deck')color=rgb(0x9c795d);
+      else if(component==='deck' && !n.extras?.floor_pose)color=rgb(0x9c795d);
       else if(component==='eye_effect')color=rgb(0xffab45);
       else if(component==='structure'||component==='equipment')color=rgb(0x494555);
       else if(mat.pbrMetallicRoughness?.baseColorFactor)color=mat.pbrMetallicRoughness.baseColorFactor.slice(0,3).map(x=>Math.min(.88,x**.48));
