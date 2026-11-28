@@ -9,7 +9,7 @@ import runpy
 import numpy as np
 
 from dj_booth import read_accessor
-from dj_panel_layout import gltf_coordinates, node_matrix, sheet_sources, transform_points
+from dj_panel_layout import apply_sheet_spec, gltf_coordinates, node_matrix, sheet_sources, transform_points
 from panel_skin import apply_panel_skin
 from survey_deck import install_deck
 from survey_fit import ARCHIVE_LAYOUT, ROOT, SURVEY, LongitudinalFit, donor_datums
@@ -23,8 +23,21 @@ LAYOUT = ROOT / 'site/assets/earl-panel-layout.json'
 def fit_panels(model, layout):
     original = {p['id']: p for p in json.loads(ARCHIVE_LAYOUT.read_text())['pieces']}
     active = sheet_sources(model)
-    if active.keys() != original.keys() or active.keys() != {p['id'] for p in layout['pieces']}:
+    kept = {p['id'] for p in layout['pieces']}
+    omitted = set(layout['omitted'])
+    if active.keys() != original.keys() or kept & omitted or kept | omitted != active.keys():
         raise ValueError('Source assembly and registered panel IDs differ')
+    for pid in omitted:
+        src = active[pid]
+        node = model.doc['nodes'][src['node']]
+        node.pop('mesh')
+        node.pop('extras', None)
+        node['name'] = 'Omitted crown / ' + pid
+        mat = model.doc['materials'][src['material']]
+        mat['name'] = 'Retired_' + mat['name']
+    scene = model.doc['scenes'][model.doc.get('scene', 0)]
+    scene.setdefault('extras', {})['panel_count'] = len(kept)
+    apply_sheet_spec(model.doc, len(kept))
     for sheet in layout['pieces']:
         pid = sheet['id']
         a, b = [gltf_coordinates(p['vertices_m']) for p in (original[pid], sheet)]

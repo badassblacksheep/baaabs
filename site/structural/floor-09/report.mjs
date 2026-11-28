@@ -1,6 +1,6 @@
-import {foldingFloor} from './floor.mjs';
-import {wingGeometry,shellFit,deployedSeats} from './wings.mjs';
-import {createViewer} from '../modular-07/viewer.mjs?v=wing-color';
+import {foldingFloor} from './floor.mjs?v=full-width-guard';
+import {wingGeometry,shellFit,deployedSeats,eventGuard} from './wings.mjs?v=full-width-guard';
+import {createViewer} from '../modular-07/viewer.mjs?v=full-width-guard';
 import {IN} from '../modular-07/backbone.mjs';
 
 const byId=id=>document.getElementById(id);
@@ -13,16 +13,16 @@ async function read(url) {
 async function run() {
   const moduleUrl=new URL(import.meta.url);
   const old=new URL('../modular-07/design.json',moduleUrl);
-  const [design,shape]=await Promise.all([read(old),read(new URL('design.json',moduleUrl))]);
+  const [design,shape]=await Promise.all([read(old),read(new URL('design.json?v=full-width-guard',moduleUrl))]);
   const [recipe,material,prior,outline,panels,datum]=await Promise.all([
     read(new URL(design.inputs.recipe,old)),read(new URL(design.inputs.material,old)),
     read(new URL(shape.baseline,moduleUrl)),read(new URL('../road-08/donor.json',moduleUrl)),
-    read(new URL(design.inputs.panels,old)),read(new URL(design.inputs.shellConfig,old))]);
+    read(new URL(shape.panelLayout+'?v=wing-clearance',moduleUrl)),read(new URL(design.inputs.shellConfig,old))]);
   const study=foldingFloor({design,frame:recipe.candidate,donor:recipe.donor,material},prior,shape);
   const {base,layout,fixedArea,wingArea}=study;
   const fit=shellFit(layout,panels,datum);
   const donor=outline.map(points=>({layer:'donor',kind:'line',points}));
-  const visible=new Set(['primary','deck','shores','wing','donor','panels']);
+  const visible=new Set(['primary','deck','shores','wing','donor','panels','guard']);
   const viewer=createViewer(byId('viewport'),()=>{});
   let underside=false;
   function draw() {
@@ -30,15 +30,18 @@ async function run() {
     const fitted=byId('faces').value==='fitted';
     const overlay=byId('show-fit');
     overlay.disabled=angle===0;
-    const steel=base.modes.open.items.filter(i=>!underside || i.layer!=='shores');
-    const items=[...(underside?[]:donor),...steel,...study.trimmers,...(fitted?study.fixedFaces:[]),
+    const core=base.modes[fitted?'decked':'open'].items.filter(i=>!underside || i.layer!=='shores');
+    const items=[...(underside?[]:donor),...core,
       ...wingGeometry(layout,angle,fitted)];
-    if(angle===90) items.push(...deployedSeats(layout));
+    if(angle===90) {
+      items.push(...deployedSeats(layout));
+      if(fitted) items.push(...eventGuard(layout));
+    }
     if(overlay.checked && angle>0) items.push(...fit.crowns,...fit.head);
     viewer.setScene(items,visible,{mode:'road',nodes:[],label:'Gold · wings     Blue · center floor'});
     const state=angle===0?'Folded for the travel study':angle===90?'Level for the event layout':'Swinging out and up';
     byId('scene-note').textContent=state+' · '+(fitted?'plywood fitted':'bare frames')+
-      (overlay.checked && angle>0?' · pink shows the crown above the deployed wings and the head section at floor height.':'.');
+      (overlay.checked && angle>0?' · pink shows the six retained crown sheets and the head outline at floor height.':'.');
   }
   for(const id of ['wing-angle','faces','show-fit']) byId(id).onchange=draw;
   byId('reset').onclick=()=>{underside=false;draw();viewer.reset();};
@@ -46,7 +49,7 @@ async function run() {
     underside=button.dataset.angle==='underside';draw();viewer.angle(button.dataset.angle);
   };
   const rows=[
-    ['Fixed walking surface',num(base.areaFt2)+' ft²',num(fixedArea)+' ft² with the narrower nose'],
+    ['Fixed walking surface',num(base.areaFt2)+' ft²',num(fixedArea)+' ft² · full width through the front edge'],
     ['Side extensions','None',num(wingArea)+' ft² across both wings'],
     ['Gross deployed footprint',num(base.areaFt2)+' ft²',num(fixedArea+wingArea)+' ft² · net gain '+num(fixedArea+wingArea-base.areaFt2)+' ft²'],
     ['Intermediate shores',base.stationsIn.length+' pairs',base.stationsIn.length+' pairs plus the end portals'],
@@ -58,10 +61,8 @@ async function run() {
     th.scope='row';th.textContent=label;row.append(th);
     row.insertCell().textContent=a;row.insertCell().textContent=b;
   }
-  const minimum=fit.crowns.reduce((a,b)=>a.gapIn<=b.gapIn?a:b);
-  byId('shell-gap').textContent='At the tightest overlap the crown is only '+num(minimum.gapIn,1)+
-    ' in above the proposed wing. The pink overlay shows the parts of the registered crown that occupy standing space. Move those portions outboard in the panel phase and keep the DJ window below.';
-  byId('crown-ids').textContent=fit.crowns.map(s=>s.label).join(' · ');
+  byId('shell-fit').textContent='With the full 8 ft floor, the nearest modeled head panel is '+num(fit.headSideGapIn,1)+' in outboard of the plywood edge over the plywood thickness. This is lateral clearance to the skin. It excludes head mounts, guard hardware and movement.';
+  byId('crown-ids').textContent=panels.omitted.join(' · ');
   byId('wing-weight').textContent='A nominal leaf contributes about '+num((study.wingPlyLb+study.wingFrameLb)/(2*study.leavesPerSide))+
     ' lb of steel and plywood before hardware. Give each leaf controlled lifting and lowering, with a positively locked bearing in the open position and a captive travel latch plus secondary retention when folded.';
   byId('fold-width').textContent='With the modeled pivot at the underside of the leaf, the folded plywood faces span '+num(2*(layout.half+layout.thickness+layout.tubeDepth)/IN,1)+

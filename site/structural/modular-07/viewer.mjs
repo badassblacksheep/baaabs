@@ -1,5 +1,5 @@
 // Orthographic, depth-sorted study geometry. Model coordinates remain available in the inspector.
-const colors={wing:'#ffd369',donor:'#9b9baa',primary:'#91e8d4',shores:'#ffa35e',deck:'#94b9ff',panels:'#e7a0e5',skin:'#b3aebe',audio:'#ffe17f',context:'#737586'};
+const colors={guard:'#ebf6fb',wing:'#ffd369',donor:'#9b9baa',primary:'#91e8d4',shores:'#ffa35e',deck:'#94b9ff',panels:'#e7a0e5',skin:'#b3aebe',audio:'#ffe17f',context:'#737586'};
 const fills={wing:'rgba(238,178,65,.40)',donor:'transparent',primary:'rgba(67,169,148,.63)',shores:'rgba(230,134,80,.8)',deck:'rgba(96,136,212,.20)',panels:'rgba(191,109,186,.65)',skin:'rgba(156,148,175,.07)',audio:'rgba(222,179,69,.7)',context:'transparent'};
 const boxFaces=[[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]];
 const pointsOfBox=([a,b])=>Array.from({length:8},(_,i)=>a.map((v,k)=>i&(1<<k)?b[k]:v));

@@ -48,9 +48,19 @@ function clip(points,axis,limit,sense) {
 export function shellFit(layout, panels, datum) {
   if(panels.survey_date!==datum.surveyDate) throw Error('Shell and deck survey references differ');
   const crowns=[], head=[];
+  let headSideGap=Infinity;
   for(const sheet of panels.pieces) {
     const pts=sheet.vertices_m.map(([x,y,z])=>[x-datum.frontBumperWorldXM,y,z]);
     if(sheet.id.startsWith('H-')) {
+      // Constrain the comparison to the finished plywood's actual thickness and length.
+      let slab=clip(pts,2,layout.surface-layout.thickness,1);
+      slab=clip(slab,2,layout.surface,-1);
+      slab=clip(clip(slab,0,layout.front,1),0,layout.rear,-1);
+      if(slab.length) {
+        const ys=slab.map(p=>p[1]);
+        const distance=Math.max(0,Math.min(...ys),-Math.max(...ys));
+        headSideGap=Math.min(headSideGap,distance-layout.half);
+      }
       const ends=[];
       for(let i=0;i<pts.length;i++) {
         const a=pts[i],b=pts[(i+1)%pts.length];
@@ -62,17 +72,9 @@ export function shellFit(layout, panels, datum) {
       if(ends.length===2) head.push({kind:'line',layer:'panels',points:ends,label:sheet.id});
     }
     if(!/\bCrown\b/i.test(sheet.name) || !sheet.id.startsWith('B-')) continue;
-    const sign=sheet.id.startsWith('B-D-')?-1:1;
-    let intersection=clip(pts,0,layout.begin,1);
-    intersection=clip(intersection,0,layout.end,-1);
-    intersection=clip(intersection,1,sign*layout.half,sign);
-    intersection=clip(intersection,1,sign*(layout.half+layout.reach),-sign);
-    if(intersection.length<3) continue;
-    const lowest=Math.min(...intersection.map(p=>p[2]));
-    crowns.push({kind:'polygon',layer:'panels',points:intersection,label:sheet.id,
-      gapIn:(lowest-layout.surface)/IN});
+    crowns.push({kind:'polygon',layer:'panels',points:pts,label:sheet.id});
   }
-  return {crowns,head};
+  return {crowns,head,headSideGapIn:Number.isFinite(headSideGap)?headSideGap/IN:null};
 }
 
 // Only the exposed travel of each arm is drawn. Receiver engagement is unsized.
@@ -86,4 +88,30 @@ export function deployedSeats(layout) {
     return {kind:'line',layer:'primary',guide:true,label:'Slide-out support arm',
       points:[[x,sign*half,z],[x,sign*(half+reach),z]]};
   }));
+}
+
+// The removable event guard follows the whole stepped perimeter; the seam
+// between a level wing and the core is an internal walking edge.
+export function eventGuard(layout) {
+  const {front,rear,begin,end,half,reach,leafLength,surface,guard}=layout;
+  const outside=half+reach, gate=guard.gateWidthM/2;
+  const left=[[rear,-gate],[rear,-half],[end,-half],[end,-outside]];
+  for(let x=end-leafLength;x>begin+1e-7;x-=leafLength) left.push([x,-outside]);
+  left.push([begin,-outside],[begin,-half],[front,-half]);
+  const path=[...left,...left.map(([x,y])=>[x,-y]).reverse()];
+  const items=[];
+  for(const [i,[x,y]] of path.entries()) {
+    const top=[x,y,surface+guard.heightM];
+    items.push({layer:'guard',kind:'line',label:'Guard post',points:[[x,y,surface],top]});
+    if(i===0) continue;
+    for(const fraction of [0.5,1]) {
+      const z=surface+guard.heightM*fraction;
+      items.push({layer:'guard',kind:'line',label:'Perimeter guard',points:[[...path[i-1],z],[x,y,z]]});
+    }
+  }
+  for(const fraction of [0.5,1]) {
+    const z=surface+guard.heightM*fraction;
+    items.push({layer:'guard',kind:'line',guide:true,label:'Rear access gate',points:[[rear,-gate,z],[rear,gate,z]]});
+  }
+  return items;
 }

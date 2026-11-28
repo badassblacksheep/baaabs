@@ -5,7 +5,7 @@
   "inputs": {
     "recipe": "../../assets/earl-deck-model.json",
     "survey": "../../survey-results/measurements.json",
-    "panels": "../../assets/earl-panel-layout.json",
+    "panels": "./panel-layout.json",
     "material": "../iteration-06-materials.json",
     "archived": "../iteration-06-data.json",
     "surveyResults": "../deck-results.json",

@@ -28,7 +28,7 @@ class Eyes(unittest.TestCase):
         return [flat[i:i+width] for i in range(0,len(flat),width)]
 
     def test_non_panel_geometry_and_all_live_pick_ids(self):
-        layout = json.loads((ROOT/'site/assets/earl-panel-layout.json').read_text())
+        layout = json.loads((ROOT/'reference/panels/earl-iteration06-layout.json').read_text())
         ids = {piece['id'] for piece in layout['pieces']}
         expected_nodes = {n['name'] for n in self.before['nodes']
                           if n['name'] == 'SHEEP_HEAD' or n['name'].startswith('Eye_')}

@@ -1,9 +1,24 @@
 {
   "revision": "09",
   "baseline": "../road-08/design.json",
-  "tongueWidthIn": 48,
-  "tongueBays": 1,
   "wingProjectionIn": 24,
   "wingStartBay": 4,
-  "wingEndInsetBays": 2
+  "wingEndInsetBays": 2,
+  "guard": {
+    "heightM": 1.1,
+    "gateWidthM": 0.9
+  },
+  "panelLayout": "../../assets/earl-panel-layout.json",
+  "omitCrownIds": [
+    "B-D-013",
+    "B-D-015",
+    "B-D-017",
+    "B-D-019",
+    "B-D-021",
+    "B-P-021",
+    "B-P-023",
+    "B-P-025",
+    "B-P-027",
+    "B-P-029"
+  ]
 }

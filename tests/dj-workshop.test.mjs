@@ -172,16 +172,18 @@ test('a retired seam ID links to its surviving sheet', () => {
 });
 
 
-test('the complete original crown is visible and selectable in the workshop', () => {
+test('the workshop registers precisely the crown sheets retained around the Rev 09 floor', () => {
   const original=JSON.parse(fs.readFileSync(new URL('../reference/panels/earl-before-dj.json',site),'utf8')).panels;
   const crowns=original.filter(p=>p.id.startsWith('B-')&&p.name.includes(' Crown '));
   assert.equal(crowns.length,16);
-  assert.deepEqual(omitted,[]);
+  const floor=JSON.parse(fs.readFileSync(new URL('structural/floor-09/design.json',site),'utf8'));
+  assert.deepEqual(omitted,floor.omitCrownIds);
   const {q,window,location}=workshop();
   for(const crown of crowns){
     location.hash='#'+crown.id;
     window.emit('hashchange');
     const active=panels.find(p=>p.id===crown.id)||panels.find(p=>p.prior_ids?.includes(crown.id)||p.merged_from_ids?.includes(crown.id));
+    if(omitted.includes(crown.id)){assert.equal(active,undefined,crown.id);continue;}
     assert.ok(active,crown.id);
     assert.match(q('#title').textContent,new RegExp(active.id));
   }
@@ -310,7 +312,7 @@ test('the register lists the booth frame as a searchable driver-side special ite
   assert.equal(rows.length,1);
   assert.equal(rows[0].children[0].children[0].href,'#DJ-FRAME');
   assert.match(rows[0].children[1].textContent,/DJ booth frame · special item/);
-  assert.equal(q('#count').textContent,'0 of 206 panels · 1 special item');
+  assert.equal(q('#count').textContent,`0 of ${panel_count} panels · 1 special item`);
   q('#side').value='Passenger';
   q('#side').emit('change');
   assert.equal(q('#rows').children.length,0);

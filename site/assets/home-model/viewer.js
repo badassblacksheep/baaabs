@@ -178,7 +178,7 @@ function loadFire(version){
   image.src=new URL('flame.jpg',base);
 }
 async function loadMesh(name,version){
-  const response=await fetch(new URL(name + "?v=dj-frame1",base));
+  const response=await fetch(new URL(name + (name === "shell.mesh" ? "?v=guarded-floor9" : "?v=dj-frame1"),base));
   if(!response.ok)throw Error(name+' returned '+response.status);
   const data=await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
   if(version!==generation)return;

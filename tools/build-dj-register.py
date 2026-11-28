@@ -115,8 +115,12 @@ def build(refit=False):
     survey_fit = LongitudinalFit()
     previous = copy.deepcopy(parts)
     fit_sheets(parts, survey_fit)
+    floor = json.loads((SITE / 'structural/floor-09/design.json').read_text())
+    omitted = floor['omitCrownIds']
+    if len(set(omitted)) != len(omitted) or any(k not in parts or ' Crown ' not in parts[k]['name'] for k in omitted):
+        raise ValueError('The Rev 09 exclusion list must contain distinct registered crown sheets')
     layout=[];panels=[]
-    for k in sorted(parts):
+    for k in sorted(parts.keys() - set(omitted)):
         p=parts[k]
         prior = previous[k]
         finish(prior)
@@ -131,9 +135,10 @@ def build(refit=False):
         raise ValueError(f"Expected {seams['panel_count']} physical sheets, found {len(parts)}")
     sources={f['source'] for record in layout for f in record['faces']}
     original_ids={p['id'] for p in original['panels']}
-    if sources!=original_ids:
+    omitted_sources={f['source'] for k in omitted for f in parts[k]['source_faces']}
+    if sources & omitted_sources or sources | omitted_sources != original_ids:
         raise ValueError(f'Unmapped source facets: {sorted(sources^original_ids)}')
-    aliases=seams.get('aliases',{})
+    aliases={k:v for k,v in seams.get('aliases',{}).items() if v not in omitted}
     for retired,survivor in aliases.items():
         if retired in parts or survivor not in parts:
             raise ValueError(f'Invalid historical panel link {retired} → {survivor}')
@@ -141,8 +146,8 @@ def build(refit=False):
     special = seams['special_items']
     if len({i['id'] for i in special} | set(parts)) != len(parts) + len(special):
         raise ValueError('Duplicate ID in the panel register')
-    layout=dict(special_items=special, survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(parts),pieces=layout,splits=splits,omitted=[],aliases=aliases)
-    return dict(special_items=special,revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(parts),panels=panels,omitted=[],aliases=aliases),layout,original
+    layout=dict(special_items=special, survey_date=survey_fit.date, face_coordinates='Historical source facets before longitudinal fit; vertices_m and holes_m on each piece are the installed geometry.', panel_count=len(layout),pieces=layout,splits=splits,omitted=omitted,aliases=aliases)
+    return dict(special_items=special,revision=f'Earl · longitudinal field fit {survey_fit.date}',survey_date=survey_fit.date,panel_count=len(panels),panels=panels,omitted=omitted,aliases=aliases),layout,original
 
 
 def regenerated(refit=False):

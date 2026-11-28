@@ -6,7 +6,7 @@ import {buildPacking} from '../site/structural/modular-07/packing.mjs';
 const read = uri => JSON.parse(readFileSync(new URL(uri,import.meta.url), 'utf8'));
 const design = read('../site/structural/modular-07/design.json');
 const {donor, candidate: frame} = read('../site/assets/earl-deck-model.json');
-const panels = read('../site/assets/earl-panel-layout.json');
+const panels = read('../site/structural/modular-07/panel-layout.json');
 const material = read('../site/structural/iteration-06-materials.json');
 const shellConfig = read('../site/structural/modular-07/shell-data.json');
 import {IN as inch, buildBackbone, compareDecks} from '../site/structural/modular-07/backbone.mjs';

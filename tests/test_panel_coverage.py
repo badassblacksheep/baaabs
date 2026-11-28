@@ -59,8 +59,9 @@ class PanelCoverageTests(unittest.TestCase):
             for face in panel['faces']:
                 pid = face['source']
                 actual[pid].append(face.get('vertices_m', baseline[pid]['vertices_m']))
-        self.assertEqual(layout['omitted'], [])
-        self.assertEqual(set(actual), set(baseline))
+        omitted = set(layout['omitted'])
+        self.assertTrue(all(' Crown ' in baseline[pid]['name'] for pid in omitted))
+        self.assertEqual(set(actual), set(baseline) - omitted)
         for pid in actual:
             original = baseline[pid]
             with self.subTest(source=pid):

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {foldingFloor} from '../site/structural/floor-09/floor.mjs';
-import {deployedSeats,shellFit,wingGeometry} from '../site/structural/floor-09/wings.mjs';
+import {deployedSeats,eventGuard,shellFit,wingGeometry} from '../site/structural/floor-09/wings.mjs';
 
 const root=new URL('../site/structural/modular-07/',import.meta.url);
 const read=p=>JSON.parse(readFileSync(new URL(p,root),'utf8'));
@@ -11,19 +11,27 @@ const r=foldingFloor({design,frame:recipe.candidate,donor:recipe.donor,material:
   read('../road-08/design.json'),shape);
 const near=(a,b)=>assert.ok(Math.abs(a-b)<1e-6,a+' differs from '+b);
 
-test('Rev 09 retains the Rev 08 core steel and portals, narrows the forward deck and accounts for every changed surface',()=>{
+test('the full rectangular core and both sill-supported end portals carry over intact',()=>{
   assert.equal(r.base.stationsIn.length,5);
-  const [front]=recipe.candidate.deckBoundsM;
-  const tip=r.fixedFaces.filter(s=>s.points[0][0]===front);
-  assert.equal(tip.length,2);
-  near(Math.max(...tip.flatMap(s=>s.points.map(p=>Math.abs(p[1])))),shape.tongueWidthIn*.0254/2);
-  assert.equal(r.trimmers.length,2);
-  const sum=r.fixedFaces.reduce((total,s)=>{
-    const [a,b,c]=s.points;return total+(b[0]-a[0])*(c[1]-b[1]);
-  },0);
-  near(sum/.3048**2,r.fixedArea);near(r.fixedArea,280);near(r.wingArea,96);
-  near(r.deckedLb-r.steelLb,(r.fixedArea+r.wingArea)*design.deck.plyLbFt2);
-  assert.ok(r.deckedLb>r.base.modes.decked.installedLb && r.steelLb>r.base.modes.open.installedLb);
+  const core=r.base.modes.decked.items.filter(i=>i.face);
+  const [front,rear]=recipe.candidate.deckBoundsM;
+  const width=2*r.layout.half;
+  for(const x of [front,rear]) {
+    const ends=core.flatMap(s=>s.points.filter(p=>Math.abs(p[0]-x)<1e-7));
+    near(Math.max(...ends.map(p=>p[1]))-Math.min(...ends.map(p=>p[1])),width);
+  }
+  const steel=r.base.modes.open.items;
+  const sills=steel.filter(s=>s.label.toLowerCase().includes('transverse sill'));
+  assert.equal(sills.length,2);
+  for(const sill of sills) {
+    const [a,b]=sill.points;
+    const feet=steel.filter(s=>s.label.toLowerCase().includes('corner post') && Math.abs(s.points[0][0]-a[0])<1e-7);
+    assert.equal(feet.length,2);
+    assert.ok(feet.every(s=>s.points[0][1]>a[1] && s.points[0][1]<b[1]));
+  }
+  near(r.fixedArea,288);near(r.fixedArea+r.wingArea,384);
+  near(r.steelLb-r.base.modes.open.installedLb,r.wingFrameLb);
+  near(r.deckedLb-r.base.modes.decked.installedLb,r.wingFrameLb+r.wingPlyLb);
 });
 
 test('mirrored hanging leaves rotate rigidly into the floor plane and share four outer support lines per side',()=>{
@@ -44,16 +52,42 @@ test('mirrored hanging leaves rotate rigidly into the floor plane and share four
   near(seats[0].points[0][0],layout.begin);near(seats[3].points[0][0],layout.end);
 });
 
-test('registered head crosses the floor plane and real crown sheets overlap both deployed wings',()=>{
-  const overlap=shellFit(r.layout,read(design.inputs.panels),read(design.inputs.shellConfig));
-  assert.ok(overlap.head.length>0 && overlap.head.every(s=>s.points.every(p=>Math.abs(p[2]-r.layout.surface)<1e-8)));
-  for(const side of ['D','P']) {
-    const group=overlap.crowns.filter(s=>s.label.startsWith('B-'+side+'-'));
-    const gap=Math.min(...group.map(s=>s.gapIn));
-    assert.ok(gap>0 && gap<7);
-    for(const {points} of group) for(const [x,y] of points) {
-      assert.ok(x>=r.layout.begin-1e-7 && x<=r.layout.end+1e-7);
-      assert.ok(Math.abs(y)>=r.layout.half-1e-7 && Math.abs(y)<=r.layout.half+r.layout.reach+1e-7);
-    }
+test('the build drops precisely the crown sheets projecting over the full deployed floor',()=>{
+  const {front,rear,begin,end,half,reach}=r.layout;
+  const baseline=read(design.inputs.panels);
+  const active=read('../floor-09/'+shape.panelLayout);
+  const datum=read(design.inputs.shellConfig);
+  const {head,headSideGapIn,crowns}=shellFit(r.layout,active,datum);
+  assert.ok(head.length>0 && headSideGapIn>9 && headSideGapIn<10);
+  const rectangles=[[front,rear,-half,half],[begin,end,-half-reach,-half],[begin,end,half,half+reach]];
+  function overlaps(points,[x0,x1,y0,y1]) {
+    const rect=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+    const axes=[[1,0],[0,1],...points.map(([x,y],i)=>{
+      const [u,v]=points[(i+1)%points.length];return [v-y,x-u];
+    })];
+    return axes.every(([a,b])=>{
+      const proj=polygon=>polygon.map(([x,y])=>x*a+y*b);
+      const u=proj(points),v=proj(rect);
+      return Math.min(Math.max(...u),Math.max(...v))-Math.max(Math.min(...u),Math.min(...v))>1e-10;
+    });
   }
+  const original=shellFit(r.layout,baseline,datum).crowns;
+  const over=original.filter(c=>rectangles.some(rect=>overlaps(c.points,rect))).map(c=>c.label);
+  assert.deepEqual(active.omitted.sort(),over.sort());
+  assert.deepEqual(active.pieces.map(s=>s.id),baseline.pieces.filter(s=>!over.includes(s.id)).map(s=>s.id));
+  assert.equal(crowns.length,6);
+  assert.ok(crowns.every(c=>rectangles.every(rect=>!overlaps(c.points,rect))));
+});
+
+test('the event guard encloses wing tips and returns and has a gated rear stair entrance',()=>{
+  const {layout}=r, items=eventGuard(layout);
+  const gates=items.filter(i=>i.label==='Rear access gate');
+  assert.equal(gates.length,2);
+  const upper=gates.at(-1).points;
+  near(upper[0][0],layout.rear);near(upper[1][1]-upper[0][1],layout.guard.gateWidthM);
+  const top=items.filter(i=>i.label==='Perimeter guard' && Math.abs(i.points[0][2]-upper[0][2])<1e-8);
+  for(let i=1;i<top.length;i++) assert.deepEqual(top[i].points[0],top[i-1].points[1]);
+  assert.deepEqual(top[0].points[0],upper[0]);assert.deepEqual(top.at(-1).points[1],upper[1]);
+  for(const x of [layout.begin,layout.end]) for(const sign of [-1,1])
+    assert.ok(top.some(s=>s.points.every(p=>p[0]===x) && s.points.some(p=>p[1]===sign*(layout.half+layout.reach))));
 });
