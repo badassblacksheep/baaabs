@@ -1,0 +1,9 @@
+{
+  "revision": "09",
+  "baseline": "../road-08/design.json",
+  "tongueWidthIn": 48,
+  "tongueBays": 1,
+  "wingProjectionIn": 24,
+  "wingStartBay": 4,
+  "wingEndInsetBays": 2
+}
